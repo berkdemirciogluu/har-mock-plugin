@@ -1,10 +1,14 @@
 {
-    "extends": "./tsconfig.base.json",
-    "compilerOptions": {
-        "noEmit": true,
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true
-    },
-    "include": ["packages/core/src/**/*.ts", "packages/extension/src/**/*.ts", "packages/angular-plugin/src/**/*.ts"],
-    "exclude": ["node_modules", "dist", "coverage"]
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  },
+  "include": [
+    "packages/core/src/**/*.ts",
+    "packages/extension/src/**/*.ts",
+    "packages/angular-plugin/src/**/*.ts"
+  ],
+  "exclude": ["node_modules", "dist", "coverage"]
 }

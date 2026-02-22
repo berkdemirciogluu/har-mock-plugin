@@ -1,12 +1,12 @@
 {
-    "extends": "./tsconfig.json",
-    "compilerOptions": {
-        "inlineSources": true,
-        "sourceRoot": "/"
-    },
-    "angularCompilerOptions": {
-        "strictTemplates": true,
-        "enableI18nLegacyMessageIdFormat": false
-    },
-    "exclude": ["src/**/*.spec.ts", "node_modules"]
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "inlineSources": true,
+    "sourceRoot": "/"
+  },
+  "angularCompilerOptions": {
+    "strictTemplates": true,
+    "enableI18nLegacyMessageIdFormat": false
+  },
+  "exclude": ["src/**/*.spec.ts", "node_modules"]
 }
