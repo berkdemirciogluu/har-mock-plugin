@@ -1,6 +1,6 @@
 # Story 1.1: Monorepo Kurulumu & Temel Yapılandırma
 
-Status: done
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -114,6 +114,26 @@ so that tüm paketler ortak TypeScript strict config, ESLint, Prettier ve Jest b
 - [x] [AI-Review-R2][LOW] L1: `angular-plugin` package.json'da `license` alanı eksik — Yarn "No license field" warning veriyor. **FIX**: `"license": "MIT"` eklendi [packages/angular-plugin/package.json]
 - [x] [AI-Review-R2][LOW] L2: Node.js `punycode` deprecation warning testlerde — jsdom kaynaklı `[DEP0040]` uyarısı, aksiyonel değil, Node.js internal kullanımından kaynaklanıyor [extension test output]
 - [x] [AI-Review-R2][LOW] L3: Tüm değişiklikler commit edilmeli — Round 1 + Round 2 fix'leri commit edildi: `d39095f` [git status]
+
+### Review Follow-ups — Round 3 (AI)
+
+**🔴 HIGH (düzeltilmeli):**
+
+- [x] [AI-Review-R3][HIGH] H1: Prettier config uyumsuzluğu — `npx prettier --write` ile tüm kaynak dosyalar formatlandı; `package.json`'a `"format:check"` ve `"format:write"` scriptleri eklendi. `yarn format:check` geçiyor [package.json, jest.config.base.js, tüm src/**/*.ts]
+- [x] [AI-Review-R3][HIGH] H2: `@typescript-eslint` v7→v8.56.0 yükseltildi. TS 5.9.3 tam destekleniyor. `no-require-imports` yeni kuralı nedeniyle test dosyalarındaki `require()` çağrıları kaldırılıp idiomatic assertion'larla değiştirildi [package.json, packages/core/src/index.spec.ts, packages/extension/src/shared/path-alias.spec.ts]
+- [x] [AI-Review-R3][HIGH] H3: `git restore` ile IDE auto-format kaynaklı 4-space değişiklikler geri alındı, ardından `npx prettier --write` ile doğru formatlama uygulandı [git working tree]
+
+**🟡 MEDIUM (düzeltilmeli):**
+
+- [x] [AI-Review-R3][MEDIUM] M1: Placeholder entry point'lere `console.log` çağrıları eklendi. Webpack build sonrası: background.js 82 bytes, content.js 84 bytes — artık 0-byte değil [packages/extension/src/background/background.ts, packages/extension/src/content/content.ts]
+- [x] [AI-Review-R3][MEDIUM] M2: `format:check` ve `format:write` scriptleri root `package.json`'a eklendi. `yarn format:check` başarıyla geçiyor [package.json]
+- [x] [AI-Review-R3][MEDIUM] M3: `packages/extension/tsconfig.json` ve `packages/angular-plugin/tsconfig.json`'a `"baseUrl": "."` override eklendi. `paths` artık package-relative çözümleniyor [packages/extension/tsconfig.json, packages/angular-plugin/tsconfig.json]
+
+**🟢 LOW (iyileştirme):**
+
+- [x] [AI-Review-R3][LOW] L1: `manifest.json`'dan `"type": "module"` kaldırıldı — Webpack CommonJS/IIFE çıktı ürettiği için tutarsızlık giderildi [packages/extension/public/manifest.json]
+- [x] [AI-Review-R3][LOW] L2: M2 ile birlikte çözüldü — `format:check` ve `format:write` scriptleri eklendi [package.json]
+- [x] [AI-Review-R3][LOW] L3: `.prettierignore` dosyası oluşturuldu — `_bmad/`, `_bmad-output/`, `dist/`, `coverage/`, `node_modules/`, `.angular/` ignore ediliyor [root/.prettierignore]
 
 ## Dev Notes
 
@@ -334,12 +354,15 @@ claude-sonnet-4-6 (Dev — dev-story workflow)
 
 - ✅ Tüm 7 task ve 34 subtask tamamlandı
 - ✅ `yarn install`: 3 workspace paketi için tüm bağımlılıklar başarıyla kuruldu
-- ✅ `yarn test:all`: core (1 test ✓), extension (1 path-alias testi ✓), angular-plugin (0 test, passWithNoTests ✓)
-- ✅ `yarn lint:all`: ESLint 0 hata, 0 uyarı — `@typescript-eslint/no-explicit-any: error` aktif
+- ✅ `yarn test:all`: core (2 test ✓), extension (2 path-alias testi ✓), angular-plugin (0 test, passWithNoTests ✓)
+- ✅ `yarn lint:all`: ESLint 0 hata, 0 uyarı — `@typescript-eslint` v8.56.0 ile TS 5.9.3 destekleniyor
+- ✅ `yarn format:check`: Tüm kaynak dosyalar Prettier formatına uygun
 - ✅ `yarn build:core`: tsc ile `packages/core` başarıyla derlendi, `dist/` oluşturuldu
+- ✅ `yarn build:extension`: Webpack build başarılı — background.js (82B), content.js (84B), popup.js (504K)
 - ✅ Path alias `@har-mock/core → packages/core/src` — jest moduleNameMapper + tsconfig paths ile doğrulandı
 - ✅ MV3 manifest `"world": "MAIN"` ile oluşturuldu (kritik: fetch/XHR intercept için)
 - ✅ Angular `app.component.ts`: standalone, OnPush, selector 'hm-root', inject() pattern hazır
+- ✅ Round 3 review fix: @typescript-eslint v7→v8, Prettier formatlama, .prettierignore, baseUrl override, manifest.json düzeltmesi
 
 ### File List
 
@@ -350,6 +373,7 @@ claude-sonnet-4-6 (Dev — dev-story workflow)
 - `jest.config.base.js`
 - `.eslintrc.json`
 - `.prettierrc`
+- `.prettierignore`
 - `.gitignore`
 - `.editorconfig`
 - `README.md`
@@ -401,6 +425,8 @@ claude-sonnet-4-6 (Dev — dev-story workflow)
 
 ## Change Log
 
+- 2026-02-22: **[AI Code Review — Round 3 Fix]** Tüm 9 review action item düzeltildi: @typescript-eslint v7→v8.56.0 yükseltme, Prettier formatlama + format:check/format:write scriptleri, .prettierignore oluşturma, background/content placeholder kod, baseUrl override, manifest.json type:module kaldırma, git restore + prettier --write ile format tutarlılığı. (Fixer: claude-opus-4-6)
+- 2026-02-22: **[AI Code Review — Round 3]** Adversarial review tamamlandı. 3 HIGH, 3 MEDIUM, 3 LOW sorun tespit edildi. Ana bulgular: Prettier config uyumsuzluğu (committed dosyalar format check geçemiyor), @typescript-eslint paketleri yüklü TS 5.9.3'ü desteklemiyor, uncommitted formatting değişiklikleri, background/content 0-byte çıktı, format script eksik, baseUrl miras çakışma riski. Action item'lar "Review Follow-ups — Round 3 (AI)" olarak eklendi. Story durumu done → in-progress olarak güncellendi. (Reviewer: claude-opus-4-6)
 - 2026-02-22: **[AI Code Review — Fix]** Tüm 12 review action item düzeltildi: git init, CopyWebpackPlugin, angular-plugin devDeps, postcss pipeline, gerçek test assertion'ları, transpileOnly, editorconfig, eslint cleanup, placeholder index.ts'ler, composite:true kaldırıldı. Story review'a geri alındı. (Fixer: claude-opus-4-6)
 - 2026-02-22: **[AI Code Review]** Adversarial review tamamlandı. 3 HIGH, 4 MEDIUM, 5 LOW sorun tespit edildi. Ana bulgular: git init eksik, webpack'te manifest.json kopyalama eksik, angular-plugin devDependency eksik, Tailwind PostCSS pipeline eksik, sahte testler. Action item'lar Tasks/Subtasks'a eklendi. Story durumu review → in-progress olarak güncellendi. (Reviewer: claude-opus-4-6)
 - 2026-02-22: Story 1.1 implementasyonu tamamlandı. Yarn Workspaces monorepo kurulumu, paylaşımlı yapılandırma dosyaları (tsconfig, jest, eslint, prettier), 3 paket iskelet yapısı (core, extension, angular-plugin), cross-package path alias'ları, MV3 manifest ve Angular app bileşeni oluşturuldu. Build/test/lint doğrulaması tamamlandı. (Dev: claude-sonnet-4-6)

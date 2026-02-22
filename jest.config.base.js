@@ -3,9 +3,12 @@ const baseConfig = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   transform: {
-    '^.+\\.tsx?$': ['ts-jest', {
-      useESM: false,
-    }],
+    '^.+\\.tsx?$': [
+      'ts-jest',
+      {
+        useESM: false,
+      },
+    ],
   },
   moduleNameMapper: {
     '^@har-mock/core(.*)$': '<rootDir>/../core/src$1',
