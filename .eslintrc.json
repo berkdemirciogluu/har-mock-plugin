@@ -6,7 +6,7 @@
     "parserOptions": {
         "ecmaVersion": 2022,
         "sourceType": "module",
-        "project": ["./tsconfig.base.json", "./packages/*/tsconfig.json"]
+        "project": ["./tsconfig.eslint.json"]
     },
     "rules": {
         "@typescript-eslint/no-explicit-any": "error",

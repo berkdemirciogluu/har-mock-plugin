@@ -171,6 +171,26 @@ so that tüm paketler ortak TypeScript strict config, ESLint, Prettier ve Jest b
 - [x] [AI-Review-R5][LOW] L2: Popup bundle 504 KiB — Skeleton story için kabul edildi. AOT compilation + tree-shaking stratejisi sonraki story'lerde planlanacak [packages/extension/webpack.config.js]
 - [x] [AI-Review-R5][LOW] L3: `@angular/compiler` semantik olarak yanlış konumda — `@angular/compiler` `devDependencies`'den `dependencies`'e taşındı (JIT runtime dependency) [packages/extension/package.json]
 
+### Review Follow-ups — Round 6 (AI)
+
+**🔴 HIGH (düzeltilmeli):**
+
+- [x] [AI-Review-R6][HIGH] H1: `templateUrl` runtime'da çözümlenemez — `templateUrl` → inline `template` dönüştürüldü; `app.component.html` silindi. Build çıktısında `popup.css` ayrı dosya olarak extract ediliyor. Story 2.x'te `@ngtools/webpack` (AOT) eklenmeli [packages/extension/src/popup/app.component.ts]
+- [x] [AI-Review-R6][HIGH] H2: `@har-mock/core/*` wildcard path alias — tüm tsconfig'lerden (`tsconfig.base.json`, `packages/extension/tsconfig.json`, `packages/angular-plugin/tsconfig.json`) `@har-mock/core/*` wildcard pattern kaldırıldı. Sadece exact `@har-mock/core` barrel import'una izin veriliyor
+
+**🟡 MEDIUM (düzeltilmeli):**
+
+- [x] [AI-Review-R6][MEDIUM] M1: Root'a `tsconfig.eslint.json` eklendi — tüm paketlerin `src/**/*.ts` dosyalarını (spec dahil) kapsıyor. ESLint `parserOptions.project` tek dosyaya güncellendi. Artık fragile multi-project fallback yok [tsconfig.eslint.json, .eslintrc.json]
+- [x] [AI-Review-R6][MEDIUM] M2: Core jest.config'teki `moduleNameMapper: {}` override kaldırıldı — artık base config'teki `@har-mock/core` mapper'ı miras alınıyor. Test gerçekten path alias'ını test ediyor [packages/core/jest.config.js]
+- [x] [AI-Review-R6][MEDIUM] M3: `style-loader` → `MiniCssExtractPlugin` ile değiştirildi. CSS artık ayrı `popup.css` dosyası olarak extract ediliyor (10.2 KiB). `style-loader` devDependency'den kaldırıldı. FOUC riski ortadan kalktı (L3 ile birlikte çözüldü) [packages/extension/webpack.config.js, packages/extension/package.json]
+- [x] [AI-Review-R6][MEDIUM] M4: `angular-plugin/tsconfig.lib.json`'dan `declarationDir: "dist/types"` kaldırıldı — ng-packagr bu ayarı yoksayıyordu [packages/angular-plugin/tsconfig.lib.json]
+
+**🟢 LOW (iyileştirme):**
+
+- [x] [AI-Review-R6][LOW] L1: `experimentalDecorators` + `emitDecoratorMetadata` `tsconfig.base.json`'dan kaldırıldı — sadece Angular paketlerinin tsconfig'lerinde (`extension/tsconfig.json`, `angular-plugin/tsconfig.json`) ve `tsconfig.eslint.json`'da tanımlı. Core paketi (saf TypeScript) artık gereksiz dekoratör desteği taşımıyor [tsconfig.base.json]
+- [x] [AI-Review-R6][LOW] L2: Story dokümantasyonu tutarlılık kontrolü yapıldı — File List, Change Log ve Dev Notes güncellemeleri Round 6 fix'leriyle senkronize edildi [story]
+- [x] [AI-Review-R6][LOW] L3: M3 ile birlikte çözüldü — `style-loader` → `MiniCssExtractPlugin`. CSS artık ayrı dosya olarak extract ediliyor, FOUC riski yok [packages/extension/webpack.config.js]
+
 ## Dev Notes
 
 ### Kritik Mimari Kısıtlamalar
@@ -401,6 +421,7 @@ claude-sonnet-4-6 (Dev — dev-story workflow)
 - ✅ Round 3 review fix: @typescript-eslint v7→v8, Prettier formatlama, .prettierignore, baseUrl override, manifest.json düzeltmesi
 - ✅ Round 4 review fix: yarn format:check gerçekten geçiyor (2 spec dosyası `prettier --write` ile formatlandı), .gitattributes eklendi (LF/CRLF sorunu çözüldü), ESLint deprecated `no-extra-semi` + `no-mixed-spaces-and-tabs` kuralları devre dışı bırakıldı, `tsconfig.lib.json` View Engine angularCompilerOptions Ivy-only seçenekleriyle güncellendi, jest.config'lerden redundant moduleNameMapper kaldırıldı, README scriptleri güncellendi
 - ✅ Round 5 review fix: `*.tsbuildinfo` gitignore'a eklendi ve tracking'den çıkarıldı, File List 5 eksik dosya ile güncellendi, `@angular/build` devDep kaldırıldı, `app.component.ts` coverage exclusion'a eklendi, core tsconfig redundant `declaration`/`declarationMap` kaldırıldı, `@angular/compiler` dependencies'e taşındı
+- ✅ Round 6 review fix: `templateUrl` → inline `template` (popup crash fix), `@har-mock/core/*` wildcard kaldırıldı, `tsconfig.eslint.json` eklendi, core jest.config moduleNameMapper override kaldırıldı, `style-loader` → `MiniCssExtractPlugin`, `declarationDir` kaldırıldı, `experimentalDecorators` base'den Angular paketlerine taşındı
 
 ### File List
 
@@ -408,6 +429,7 @@ claude-sonnet-4-6 (Dev — dev-story workflow)
 
 - `package.json`
 - `tsconfig.base.json`
+- `tsconfig.eslint.json`
 - `jest.config.base.js`
 - `.eslintrc.json`
 - `.prettierrc`
@@ -443,7 +465,6 @@ claude-sonnet-4-6 (Dev — dev-story workflow)
 - `packages/extension/public/manifest.json`
 - `packages/extension/src/popup/main.ts`
 - `packages/extension/src/popup/app.component.ts`
-- `packages/extension/src/popup/app.component.html`
 - `packages/extension/src/popup/index.html`
 - `packages/extension/src/background/background.ts`
 - `packages/extension/src/content/content.ts`
@@ -472,6 +493,7 @@ claude-sonnet-4-6 (Dev — dev-story workflow)
 
 ## Change Log
 
+- 2026-02-22: **[AI Code Review Round 6 Fix]** Tüm 9 review action item düzeltildi: `templateUrl` → inline `template` (popup crash fix, `app.component.html` silindi), `@har-mock/core/*` wildcard tüm tsconfig'lerden kaldırıldı, `tsconfig.eslint.json` oluşturuldu (ESLint tek TS programı kullanıyor), core jest.config `moduleNameMapper: {}` override kaldırıldı, `style-loader` → `MiniCssExtractPlugin` (CSS ayrı dosya, FOUC riski yok), `declarationDir` ng-packagr config'den kaldırıldı, `experimentalDecorators` base tsconfig'den Angular paketlerine taşındı. Tüm testler, lint ve format:check geçiyor. Build başarılı: popup.css 10.2 KiB ayrı extract. Story → review. (Dev: claude-opus-4-6)
 - 2026-02-22: **[AI Code Review Round 5 Fix]** Tüm 7 review action item düzeltildi: `*.tsbuildinfo` `.gitignore`'a eklendi ve `git rm --cached` ile tracking'den çıkarıldı, File List 5 eksik dosya (`styles.css`, `icon-*.png`, `yarn.lock`) ile güncellendi, `@angular/build` gereksiz devDependency kaldırıldı, `app.component.ts` coverage exclusion'a eklendi, core `tsconfig.json`'dan redundant `declaration`/`declarationMap` kaldırıldı, `@angular/compiler` `dependencies`'e taşındı, L2 (bundle size) kabul edildi. Tüm testler, lint ve format:check geçiyor. Story → review. Commit: 9b6e077 (Dev: claude-opus-4-6)
 - 2026-02-22: **[AI Code Review — Round 5]** Adversarial review tamamlandı. 1 HIGH, 3 MEDIUM, 3 LOW sorun tespit edildi. Ana bulgular: `tsconfig.tsbuildinfo` git'e committed (build artifact), story File List 5 dosya eksik, `@angular/build` gereksiz dependency, `app.component.ts` 0% coverage. Action item'lar "Review Follow-ups — Round 5 (AI)" olarak eklendi. Story durumu review → in-progress. (Reviewer: claude-opus-4-6)
 - 2026-02-22: **[AI Code Review Round 4 Fix]** Tüm 6 review action item düzeltildi: `yarn format:check` gerçekten geçiyor (2 spec dosyası `prettier --write` ile formatlandı), `.gitattributes` oluşturuldu (LF/CRLF sorunu çözüldü), ESLint deprecated `no-extra-semi`/`no-mixed-spaces-and-tabs` devre dışı, `tsconfig.lib.json` Ivy-only `angularCompilerOptions` ile güncellendi, jest.config'lerden redundant `moduleNameMapper` kaldırıldı, README format scriptleri eklendi. L1 (duplicate commit) kabul edildi — git geçmişi değiştirme risk oluşturduyor. Commit: c4f8a9e (Dev: claude-sonnet-4-6)
