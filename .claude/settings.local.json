@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__atlassian__createJiraIssue",
+      "mcp__atlassian__transitionJiraIssue"
+    ]
+  }
+}

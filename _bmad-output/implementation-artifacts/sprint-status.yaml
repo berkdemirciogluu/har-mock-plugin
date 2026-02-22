@@ -43,8 +43,8 @@ development_status:
     # Epic 1: Proje Altyapısı & Paylaşımlı Core Engine
     epic-1: in-progress
     1-1-monorepo-kurulumu-temel-yapilandirma: done
-    1-2-har-parser-validator: backlog
-    1-3-auto-parameterization-engine: backlog
+    1-2-har-parser-validator: done
+    1-3-auto-parameterization-engine: ready-for-dev
     1-4-url-matcher-pattern-compiler: backlog
     1-5-priority-chain-rule-engine-error-class-hierarchy: backlog
     epic-1-retrospective: optional
