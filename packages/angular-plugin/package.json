@@ -1,0 +1,26 @@
+{
+  "name": "har-mock-plugin",
+  "version": "0.0.1",
+  "peerDependencies": {
+    "@angular/common": ">=15.0.0",
+    "@angular/core": ">=15.0.0"
+  },
+  "dependencies": {
+    "@har-mock/core": "*"
+  },
+  "scripts": {
+    "build": "ng-packagr -p ng-package.json",
+    "test": "jest --config jest.config.js --passWithNoTests",
+    "test:coverage": "jest --config jest.config.js --coverage"
+  },
+  "devDependencies": {
+    "@angular/compiler": "^18.0.0",
+    "@angular/compiler-cli": "^18.0.0",
+    "@types/jest": "^29.5.12",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "ng-packagr": "^18.0.0",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.4.5"
+  }
+}

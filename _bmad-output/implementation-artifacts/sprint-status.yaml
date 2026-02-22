@@ -1,0 +1,84 @@
+# generated: 2026-02-22
+# project: har-mock-plugin
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-02-22
+project: har-mock-plugin
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # Epic 1: Proje Altyapısı & Paylaşımlı Core Engine
+  epic-1: in-progress
+  1-1-monorepo-kurulumu-temel-yapilandirma: review
+  1-2-har-parser-validator: backlog
+  1-3-auto-parameterization-engine: backlog
+  1-4-url-matcher-pattern-compiler: backlog
+  1-5-priority-chain-rule-engine-error-class-hierarchy: backlog
+  epic-1-retrospective: optional
+
+  # Epic 2: Chrome Extension — HAR Replay Temeli
+  epic-2: backlog
+  2-1-extension-monorepo-kurulumu-background-sw-content-script-popup-shell: backlog
+  2-2-background-service-worker-state-yonetimi-port-hub: backlog
+  2-3-har-yukleme-ui-drag-drop-file-picker: backlog
+  2-4-fetch-xhr-intercept-har-response-replay: backlog
+  2-5-default-on-intercept-replay-mode-toggle-extension-toggle: backlog
+  2-6-har-timing-replay: backlog
+  epic-2-retrospective: optional
+
+  # Epic 3: Chrome Extension — Monitor & Response Editing
+  epic-3: backlog
+  3-1-background-popup-live-feed-push: backlog
+  3-2-monitor-tab-request-feed-ui: backlog
+  3-3-codemirror-6-json-editor-component: backlog
+  3-4-response-viewer-inline-edit-persist: backlog
+  3-5-exclude-list-yonetimi: backlog
+  epic-3-retrospective: optional
+
+  # Epic 4: Chrome Extension — Rule-Based Mock
+  epic-4: backlog
+  4-1-rule-form-ui-yeni-rule-olusturma: backlog
+  4-2-rule-list-ui-listeleme-duzenleme-silme: backlog
+  4-3-rule-first-priority-chain-harsiz-calisma-integration: backlog
+  epic-4-retrospective: optional
+
+  # Epic 5: Angular Plugin
+  epic-5: backlog
+  5-1-angular-plugin-paket-kurulumu-provideharMock-api: backlog
+  5-2-asset-based-har-yukleme-httpclient-interceptor: backlog
+  5-3-double-lock-production-safety: backlog
+  5-4-guard-bypass-mekanizmasi: backlog
+  epic-5-retrospective: optional

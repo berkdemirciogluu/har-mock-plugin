@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>har-mock-plugin — UX Design Directions</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  :root {
+    --bg-surface: #FFFFFF;
+    --bg-section: #F8FAFC;
+    --bg-hover: #F1F5F9;
+    --border-default: #E2E8F0;
+    --text-primary: #0F172A;
+    --text-secondary: #64748B;
+    --text-muted: #94A3B8;
+    --har-green: #10B981;
+    --har-green-bg: #ECFDF5;
+    --rule-blue: #6366F1;
+    --rule-blue-bg: #EEF2FF;
+    --pass-gray: #94A3B8;
+    --pass-gray-bg: #F8FAFC;
+    --error-red: #EF4444;
+    --error-red-bg: #FEF2F2;
+    --accent: #6366F1;
+    --accent-hover: #4F46E5;
+    --accent-light: #EEF2FF;
+    --method-get: #10B981;
+    --method-post: #F59E0B;
+    --method-put: #3B82F6;
+    --method-delete: #EF4444;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: #F1F5F9;
+    color: var(--text-primary);
+    line-height: 1.5;
+  }
+
+  /* Page Layout */
+  .page-header {
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border-default);
+    padding: 24px 40px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .page-header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .page-header p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  .direction-nav {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .direction-nav button {
+    padding: 6px 16px;
+    border: 1px solid var(--border-default);
+    border-radius: 9999px;
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .direction-nav button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .direction-nav button.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  .directions-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 40px;
+  }
+
+  .direction-section {
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+  .direction-section.active {
+    display: block;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .direction-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .direction-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+    max-width: 600px;
+  }
+
+  .mockup-grid {
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  /* Popup Mockup Shell */
+  .popup-shell {
+    width: 400px;
+    background: var(--bg-surface);
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+    overflow: hidden;
+    border: 1px solid var(--border-default);
+    flex-shrink: 0;
+  }
+
+  .popup-shell.wide {
+    width: 440px;
+  }
+
+  /* Tab Bar */
+  .tab-bar {
+    display: flex;
+    height: 36px;
+    border-bottom: 1px solid var(--border-default);
+    background: var(--bg-surface);
+  }
+  .tab-item {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    position: relative;
+    transition: color 0.15s;
+    border: none;
+    background: none;
+  }
+  .tab-item:hover {
+    color: var(--text-primary);
+  }
+  .tab-item.active {
+    color: var(--accent);
+  }
+  .tab-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 16px;
+    right: 16px;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 2px 2px 0 0;
+  }
+
+  /* Tab Bar Variant: Pill */
+  .tab-bar.pill {
+    padding: 4px;
+    gap: 2px;
+    background: var(--bg-section);
+    border-bottom: none;
+  }
+  .tab-bar.pill .tab-item {
+    border-radius: 6px;
+    height: 28px;
+  }
+  .tab-bar.pill .tab-item.active {
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+  .tab-bar.pill .tab-item.active::after {
+    display: none;
+  }
+
+  /* Tab Bar Variant: Icon */
+  .tab-bar.icon-tabs .tab-item {
+    gap: 6px;
+  }
+  .tab-icon {
+    font-size: 14px;
+  }
+
+  /* Content Area */
+  .content-area {
+    max-height: 520px;
+    overflow-y: auto;
+  }
+
+  /* Accordion */
+  .accordion-section {
+    border-bottom: 1px solid var(--border-default);
+  }
+  .accordion-header {
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    height: 40px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    gap: 8px;
+    transition: background 0.1s;
+  }
+  .accordion-header:hover {
+    background: var(--bg-hover);
+  }
+  .accordion-chevron {
+    font-size: 10px;
+    color: var(--text-muted);
+    transition: transform 0.2s;
+  }
+  .accordion-header.open .accordion-chevron {
+    transform: rotate(90deg);
+  }
+  .accordion-badge {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--har-green);
+    background: var(--har-green-bg);
+    padding: 2px 8px;
+    border-radius: 9999px;
+  }
+  .accordion-body {
+    padding: 0 16px 12px;
+  }
+
+  /* Drop Zone */
+  .drop-zone {
+    border: 2px dashed var(--border-default);
+    border-radius: 8px;
+    padding: 24px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+    transition: all 0.15s;
+  }
+  .drop-zone:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-light);
+  }
+  .drop-zone-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+  }
+  .drop-zone-text {
+    font-weight: 500;
+  }
+  .drop-zone-sub {
+    font-size: 11px;
+    margin-top: 4px;
+  }
+
+  /* HAR Loaded State */
+  .har-loaded {
+    background: var(--bg-section);
+    border-radius: 8px;
+    padding: 12px;
+  }
+  .har-file-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .har-file-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--har-green-bg);
+    color: var(--har-green);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .har-file-name {
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  .har-file-meta {
+    font-size: 11px;
+    color: var(--har-green);
+    font-weight: 500;
+  }
+
+  /* Toggle Row */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+  }
+  .toggle-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .toggle {
+    width: 28px;
+    height: 16px;
+    background: var(--border-default);
+    border-radius: 9999px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .toggle.on {
+    background: var(--accent);
+  }
+  .toggle-knob {
+    width: 12px;
+    height: 12px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.15s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  }
+  .toggle.on .toggle-knob {
+    transform: translateX(12px);
+  }
+
+  /* Mode Selector */
+  .mode-selector {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-section);
+    border-radius: 6px;
+    padding: 2px;
+    margin-top: 8px;
+  }
+  .mode-btn {
+    flex: 1;
+    padding: 6px 8px;
+    font-size: 11px;
+    font-weight: 500;
+    border: none;
+    background: transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all 0.15s;
+  }
+  .mode-btn.active {
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+
+  /* Monitor Feed */
+  .feed-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    gap: 8px;
+    border-bottom: 1px solid var(--border-default);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .feed-row:hover {
+    background: var(--bg-hover);
+  }
+  .feed-row:last-child {
+    border-bottom: none;
+  }
+
+  .method-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    min-width: 36px;
+    text-align: center;
+    letter-spacing: 0.5px;
+  }
+  .method-get { background: #ECFDF5; color: var(--method-get); }
+  .method-post { background: #FFFBEB; color: var(--method-post); }
+  .method-put { background: #EFF6FF; color: var(--method-put); }
+  .method-del { background: var(--error-red-bg); color: var(--method-delete); }
+
+  .feed-url {
+    flex: 1;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 12px;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .match-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    white-space: nowrap;
+  }
+  .match-har { background: var(--har-green-bg); color: var(--har-green); }
+  .match-rule { background: var(--rule-blue-bg); color: var(--rule-blue); }
+  .match-pass { background: var(--pass-gray-bg); color: var(--pass-gray); }
+
+  /* Status Badge */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+  .status-dot.green { background: var(--har-green); }
+
+  /* Rule Form */
+  .rule-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .rule-input {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .rule-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-light);
+  }
+  .rule-input-row {
+    display: flex;
+    gap: 8px;
+  }
+  .rule-input-row .rule-input {
+    flex: 1;
+  }
+  .rule-input-sm {
+    width: 80px !important;
+    flex: none !important;
+  }
+
+  .btn-primary {
+    padding: 6px 16px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-primary:hover {
+    background: var(--accent-hover);
+  }
+
+  .rule-list-item {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    background: var(--bg-section);
+    border-radius: 6px;
+    gap: 8px;
+    font-size: 12px;
+    margin-top: 8px;
+  }
+  .rule-pattern {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    color: var(--text-primary);
+    flex: 1;
+  }
+  .rule-status {
+    font-weight: 700;
+    color: var(--error-red);
+  }
+
+  /* Exclude List */
+  .exclude-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+    gap: 8px;
+    border-bottom: 1px solid var(--border-default);
+  }
+  .exclude-item:last-child { border-bottom: none; }
+  .exclude-url {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 12px;
+    color: var(--text-secondary);
+    flex: 1;
+  }
+  .exclude-remove {
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .exclude-remove:hover {
+    color: var(--error-red);
+  }
+
+  /* Description Panel */
+  .desc-panel {
+    flex: 1;
+    min-width: 300px;
+    max-width: 500px;
+  }
+  .desc-panel h3 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--text-primary);
+  }
+  .desc-panel ul {
+    list-style: none;
+    padding: 0;
+  }
+  .desc-panel li {
+    padding: 6px 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .desc-panel li::before {
+    content: '→';
+    color: var(--accent);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .desc-panel .trait {
+    display: inline-block;
+    padding: 2px 8px;
+    background: var(--accent-light);
+    color: var(--accent);
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    margin: 4px 4px 4px 0;
+  }
+
+  /* Response Editor */
+  .response-editor {
+    background: var(--bg-section);
+    border-radius: 6px;
+    margin: 0 16px 12px;
+    overflow: hidden;
+  }
+  .response-editor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-default);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .response-editor-body {
+    padding: 8px 12px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    white-space: pre;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+  .json-key { color: var(--rule-blue); }
+  .json-string { color: var(--har-green); }
+  .json-bool { color: var(--method-post); }
+
+  /* Feed timestamp */
+  .feed-time {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  /* Comparison section */
+  .comparison-section {
+    margin-top: 48px;
+    padding-top: 32px;
+    border-top: 2px solid var(--border-default);
+  }
+  .comparison-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 24px;
+    margin-top: 24px;
+  }
+  .comparison-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>har-mock-plugin — UX Design Directions</h1>
+  <p>Chrome Extension popup tasarım yönleri keşfi. Her varyasyonu inceleyin ve en uygun yaklaşımı seçin.</p>
+  <div class="direction-nav">
+    <button class="active" onclick="showDirection('d1', this)">Direction 1: Classic Clean</button>
+    <button onclick="showDirection('d2', this)">Direction 2: Pill Tabs</button>
+    <button onclick="showDirection('d3', this)">Direction 3: Icon Tabs</button>
+    <button onclick="showDirection('d4', this)">Direction 4: Dense Feed</button>
+    <button onclick="showDirection('d5', this)">Direction 5: Card Sections</button>
+    <button onclick="showDirection('d6', this)">Direction 6: Side-by-Side</button>
+  </div>
+</div>
+
+<div class="directions-container">
+
+  <!-- Direction 1: Classic Clean -->
+  <div id="d1" class="direction-section active">
+    <h2 class="direction-title">Direction 1: Classic Clean</h2>
+    <p class="direction-desc">VS Code'dan ilham alan underline tab bar, temiz accordion bölümleri, standart feed satırları. En okunabilir ve tanıdık yaklaşım.</p>
+    
+    <div class="mockup-grid">
+      <!-- Controls Tab -->
+      <div class="popup-shell">
+        <div class="tab-bar">
+          <button class="tab-item active">Controls</button>
+          <button class="tab-item">Monitor</button>
+        </div>
+        <div class="content-area">
+          <!-- HAR Section - Loaded -->
+          <div class="accordion-section">
+            <div class="accordion-header open">
+              <span class="accordion-chevron">▶</span>
+              HAR
+              <span class="accordion-badge">14 endpoint</span>
+            </div>
+            <div class="accordion-body">
+              <div class="har-loaded">
+                <div class="har-file-info">
+                  <div class="har-file-icon">H</div>
+                  <div>
+                    <div class="har-file-name">bug-report-2026.har</div>
+                    <div class="har-file-meta">14 endpoint eşleştirildi • intercept aktif</div>
+                  </div>
+                </div>
+                <div class="mode-selector">
+                  <button class="mode-btn">Sequential</button>
+                  <button class="mode-btn active">Last-Match</button>
+                </div>
+                <div class="toggle-row" style="margin-top: 8px;">
+                  <span class="toggle-label">HAR Timing Replay</span>
+                  <div class="toggle"><div class="toggle-knob"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Rules Section - Collapsed -->
+          <div class="accordion-section">
+            <div class="accordion-header">
+              <span class="accordion-chevron">▶</span>
+              Rules
+              <span class="accordion-badge" style="background: var(--rule-blue-bg); color: var(--rule-blue);">1 rule</span>
+            </div>
+          </div>
+          
+          <!-- Settings Section - Collapsed -->
+          <div class="accordion-section">
+            <div class="accordion-header">
+              <span class="accordion-chevron">▶</span>
+              Settings
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monitor Tab -->
+      <div class="popup-shell">
+        <div class="tab-bar">
+          <button class="tab-item">Controls</button>
+          <button class="tab-item active">Monitor</button>
+        </div>
+        <div class="content-area">
+          <div class="feed-row">
+            <span class="method-badge method-get">GET</span>
+            <span class="feed-url">/api/users/{id}/dashboard</span>
+            <span class="match-badge match-har">HAR ✓</span>
+          </div>
+          <div class="feed-row">
+            <span class="method-badge method-get">GET</span>
+            <span class="feed-url">/api/notifications</span>
+            <span class="match-badge match-har">HAR ✓</span>
+          </div>
+          <div class="feed-row">
+            <span class="method-badge method-post">POST</span>
+            <span class="feed-url">/api/analytics/track</span>
+            <span class="match-badge match-pass">Passthrough →</span>
+          </div>
+          <div class="feed-row">
+            <span class="method-badge method-get">GET</span>
+            <span class="feed-url">/api/users/{id}/settings</span>
+            <span class="match-badge match-har">HAR ✓</span>
+          </div>
+          <div class="feed-row">
+            <span class="method-badge method-get">GET</span>
+            <span class="feed-url">/api/billing/status</span>
+            <span class="match-badge match-rule">Rule ✓</span>
+          </div>
+          <div class="feed-row">
+            <span class="method-badge method-put">PUT</span>
+            <span class="feed-url">/api/users/{id}/preferences</span>
+            <span class="match-badge match-har">HAR ✓</span>
+          </div>
+          <div class="feed-row">
+            <span class="method-badge method-get">GET</span>
+            <span class="feed-url">/api/teams/{id}/members</span>
+            <span class="match-badge match-har">HAR ✓</span>
+          </div>
+          <div class="feed-row">
+            <span class="method-badge method-del">DEL</span>
+            <span class="feed-url">/api/sessions/{id}</span>
+            <span class="match-badge match-pass">Passthrough →</span>
+          </div>
+          <div class="feed-row">
+            <span class="method-badge method-get">GET</span>
+            <span class="feed-url">/api/auth/check</span>
+            <span class="match-badge match-har">HAR ✓</span>
+          </div>
+          <div class="feed-row">
+            <span class="method-badge method-post">POST</span>
+            <span class="feed-url">/api/logs</span>
+            <span class="match-badge match-pass">Passthrough →</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="desc-panel">
+        <h3>Özellikler</h3>
+        <div>
+          <span class="trait">Underline Tabs</span>
+          <span class="trait">Clean Accordion</span>
+          <span class="trait">Standard Feed</span>
+        </div>
+        <ul>
+          <li>Klasik underline tab göstergesi — Chrome DevTools ve VS Code'dan tanıdık</li>
+          <li>Temiz accordion: chevron + başlık + badge. Minimal, net</li>
+          <li>Feed satırları: method badge → URL → eşleşme etiketi. Tek satır, tek bakış</li>
+          <li>HAR yüklü durumda dosya bilgisi + endpoint sayısı + mode toggle bir arada</li>
+          <li>En güvenli seçim — developer'ların alışık olduğu pattern'lar</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Direction 2: Pill Tabs -->
+  <div id="d2" class="direction-section">
+    <h2 class="direction-title">Direction 2: Pill Tabs</h2>
+    <p class="direction-desc">Segmented control tarzı pill tab bar. Daha modern ve kompakt his. Tab alanı daha az yer kaplar.</p>
+    
+    <div class="mockup-grid">
+      <div class="popup-shell">
+        <div class="tab-bar pill">
+          <button class="tab-item active">Controls</button>
+          <button class="tab-item">Monitor</button>
+        </div>
+        <div class="content-area" style="padding-top: 4px;">
+          <div class="accordion-section">
+            <div class="accordion-header open">
+              <span class="accordion-chevron">▶</span>
+              HAR
+              <span class="accordion-badge">14 endpoint</span>
+            </div>
+            <div class="accordion-body">
+              <div class="har-loaded">
+                <div class="har-file-info">
+                  <div class="har-file-icon">H</div>
+                  <div>
+                    <div class="har-file-name">bug-report-2026.har</div>
+                    <div class="har-file-meta">14 endpoint eşleştirildi • intercept aktif</div>
+                  </div>
+                </div>
+                <div class="mode-selector">
+                  <button class="mode-btn">Sequential</button>
+                  <button class="mode-btn active">Last-Match</button>
+                </div>
+                <div class="toggle-row" style="margin-top: 8px;">
+                  <span class="toggle-label">HAR Timing Replay</span>
+                  <div class="toggle"><div class="toggle-knob"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="accordion-section">
+            <div class="accordion-header">
+              <span class="accordion-chevron">▶</span>
+              Rules
+              <span class="accordion-badge" style="background: var(--rule-blue-bg); color: var(--rule-blue);">1 rule</span>
+            </div>
+          </div>
+          
+          <div class="accordion-section">
+            <div class="accordion-header">
+              <span class="accordion-chevron">▶</span>
+              Settings
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="popup-shell">
+        <div class="tab-bar pill">
+          <button class="tab-item">Controls</button>
+          <button class="tab-item active">Monitor</button>
+        </div>
+        <div class="content-area" style="padding-top: 4px;">
+          <div class="feed-row">
+            <span class="method-badge method-get">GET</span>
+            <span class="feed-url">/api/users/{id}/dashboard</span>
+            <span class="match-badge match-har">HAR ✓</span>
+          </div>
+          <div class="feed-row">
+            <span class="method-badge method-get">GET</span>
+            <span class="feed-url">/api/notifications</span>
+            <span class="match-badge match-har">HAR ✓</span>
+          </div>
+          <div class="feed-row">
+            <span class="method-badge method-post">POST</span>
+            <span class="feed-url">/api/analytics/track</span>
+            <span class="match-badge match-pass">Passthrough →</span>
+          </div>
+          <div class="feed-row">
+            <span class="method-badge method-get">GET</span>
+            <span class="feed-url">/api/users/{id}/settings</span>
+            <span class="match-badge match-har">HAR ✓</span>
+          </div>
+          <div class="feed-row">
+            <span class="method-badge method-get">GET</span>
+            <span class="feed-url">/api/billing/status</span>
+            <span class="match-badge match-rule">Rule ✓</span>
+          </div>
+          <div class="feed-row">
+            <span class="method-badge method-put">PUT</span>
+            <span class="feed-url">/api/users/{id}/preferences</span>
+            <span class="match-badge match-har">HAR ✓</span>
+          </div>
+          <div class="feed-row">
+            <span class="method-badge method-get">GET</span>
+            <span class="feed-url">/api/teams/{id}/members</span>
+            <span class="match-badge match-har">HAR ✓</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="desc-panel">
+        <h3>Özellikler</h3>
+        <div>
+          <span class="trait">Pill Tabs</span>
+          <span class="trait">Segmented Control</span>
+          <span class="trait">Modern Feel</span>
+        </div>
+        <ul>
+          <li>Pill/segmented control tab bar — iOS Settings, macOS tarzı modern his</li>
+          <li>Tab göstergesi gölge ile — underline yerine "seçili kart" efekti</li>
+          <li>Arka plan farklı tonda — tab ve içerik arasında net ayrım</li>
+          <li>Daha kompakt: tab bar daha az dikey alan kaplar</li>
+          <li>Daha modern ve "app-like" hissettiriyor</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Direction 3: Icon Tabs -->
+  <div id="d3" class="direction-section">
+    <h2 class="direction-title">Direction 3: Icon + Text Tabs</h2>
+    <p class="direction-desc">Tab'larda ikon + metin kombinasyonu. Görsel tanıma hızını artırır, tab amacını ikonla destekler.</p>
+    
+    <div class="mockup-grid">
+      <div class="popup-shell">
+        <div class="tab-bar icon-tabs">
+          <button class="tab-item active">
+            <span class="tab-icon">⚙️</span> Controls
+          </button>
+          <button class="tab-item">
+            <span class="tab-icon">📡</span> Monitor
+          </button>
+        </div>
+        <div class="content-area">
+          <div class="accordion-section">
+            <div class="accordion-header open">
+              <span class="accordion-chevron">▶</span>
+              📼 HAR
+              <span class="accordion-badge">14 endpoint</span>
+            </div>
+            <div class="accordion-body">
+              <div class="har-loaded">
+                <div class="har-file-info">
+                  <div class="har-file-icon">H</div>
+                  <div>
+                    <div class="har-file-name">bug-report-2026.har</div>
+                    <div class="har-file-meta">14 endpoint eşleştirildi • intercept aktif</div>
+                  </div>
+                </div>
+                <div class="mode-selector">
+                  <button class="mode-btn">⏪ Sequential</button>
+                  <button class="mode-btn active">⏭ Last-Match</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="accordion-section">
+            <div class="accordion-header">
+              <span class="accordion-chevron">▶</span>
+              📋 Rules
+              <span class="accordion-badge" style="background: var(--rule-blue-bg); color: var(--rule-blue);">1 rule</span>
+            </div>
+          </div>
+          
+          <div class="accordion-section">
+            <div class="accordion-header">
+              <span class="accordion-chevron">▶</span>
+              ⚙️ Settings
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="popup-shell">
+        <div class="tab-bar icon-tabs">
+          <button class="tab-item">
+            <span class="tab-icon">⚙️</span> Controls
+          </button>
+          <button class="tab-item active">
+            <span class="tab-icon">📡</span> Monitor
+          </button>
+        </div>
+        <div class="content-area">
+          <div class="feed-row">
+            <span class="method-badge method-get">GET</span>
+            <span class="feed-url">/api/users/{id}/dashboard</span>
+            <span class="match-badge match-har">HAR ✓</span>
+            <span class="feed-time">12ms</span>
+          </div>
+          <div class="feed-row">
+            <span class="method-badge method-get">GET</span>
+            <span class="feed-url">/api/notifications</span>
+            <span class="match-badge match-har">HAR ✓</span>
+            <span class="feed-time">8ms</span>
+          </div>
+          <div class="feed-row">
+            <span class="method-badge method-post">POST</span>
+            <span class="feed-url">/api/analytics/track</span>
+            <span class="match-badge match-pass">Pass →</span>
+            <span class="feed-time">245ms</span>
+          </div>
+          <div class="feed-row">
+            <span class="method-badge method-get">GET</span>
+            <span class="feed-url">/api/users/{id}/settings</span>
+            <span class="match-badge match-har">HAR ✓</span>
+            <span class="feed-time">5ms</span>
+          </div>
+          <div class="feed-row">
+            <span class="method-badge method-get">GET</span>
+            <span class="feed-url">/api/billing/status</span>
+            <span class="match-badge match-rule">Rule ✓</span>
+            <span class="feed-time">3ms</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="desc-panel">
+        <h3>Özellikler</h3>
+        <div>
+          <span class="trait">Icon + Text</span>
+          <span class="trait">Emoji Accents</span>
+          <span class="trait">Response Time</span>
+        </div>
+        <ul>
+          <li>Tab'larda ikon + metin — görsel tarama hızını artırır</li>
+          <li>Accordion başlıklarında emoji ikonlar — 📼 HAR (kaset metaforu!), 📋 Rules, ⚙️ Settings</li>
+          <li>Mode seçiminde de emoji: ⏪ Sequential, ⏭ Last-Match — kaset metaforu görselleşmiş</li>
+          <li>Monitor'de response süresi kolonu eklendi (12ms, 245ms) — ekstra bilgi</li>
+          <li>Daha playful ve keşfedilmeye davet eden his</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Direction 4: Dense Feed -->
+  <div id="d4" class="direction-section">
+    <h2 class="direction-title">Direction 4: Dense Feed + Expanded Row</h2>
+    <p class="direction-desc">Daha yoğun feed satırları ve tıklanınca açılan response detay paneli. Developer Tools'un Network tab'ı gibi.</p>
+    
+    <div class="mockup-grid">
+      <div class="popup-shell">
+        <div class="tab-bar">
+          <button class="tab-item">Controls</button>
+          <button class="tab-item active">Monitor</button>
+        </div>
+        <div class="content-area">
+          <div class="feed-row" style="padding: 6px 16px;">
+            <span class="method-badge method-get">GET</span>
+            <span class="feed-url">/api/users/{id}/dashboard</span>
+            <span class="match-badge match-har">HAR ✓</span>
+          </div>
+          <div class="feed-row" style="padding: 6px 16px; background: var(--bg-hover);">
+            <span class="method-badge method-get">GET</span>
+            <span class="feed-url">/api/notifications</span>
+            <span class="match-badge match-har">HAR ✓</span>
+          </div>
+          <!-- Expanded Row -->
+          <div class="response-editor">
+            <div class="response-editor-header">
+              <span>Response Body</span>
+              <button class="btn-primary" style="padding: 3px 10px; font-size: 11px;">Save</button>
+            </div>
+            <div class="response-editor-body">{
+  <span class="json-key">"notifications"</span>: [
+    {
+      <span class="json-key">"id"</span>: <span class="json-string">"a1b2c3"</span>,
+      <span class="json-key">"title"</span>: <span class="json-string">"Yeni mesajınız var"</span>,
+      <span class="json-key">"read"</span>: <span class="json-bool">false</span>
+    }
+  ],
+  <span class="json-key">"total"</span>: 3
+}</div>
+          </div>
+          <div class="feed-row" style="padding: 6px 16px;">
+            <span class="method-badge method-post">POST</span>
+            <span class="feed-url">/api/analytics/track</span>
+            <span class="match-badge match-pass">Passthrough →</span>
+          </div>
+          <div class="feed-row" style="padding: 6px 16px;">
+            <span class="method-badge method-get">GET</span>
+            <span class="feed-url">/api/users/{id}/settings</span>
+            <span class="match-badge match-har">HAR ✓</span>
+          </div>
+          <div class="feed-row" style="padding: 6px 16px;">
+            <span class="method-badge method-get">GET</span>
+            <span class="feed-url">/api/billing/status</span>
+            <span class="match-badge match-rule">Rule ✓</span>
+          </div>
+          <div class="feed-row" style="padding: 6px 16px;">
+            <span class="method-badge method-put">PUT</span>
+            <span class="feed-url">/api/users/{id}/preferences</span>
+            <span class="match-badge match-har">HAR ✓</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="desc-panel">
+        <h3>Özellikler</h3>
+        <div>
+          <span class="trait">Dense Feed</span>
+          <span class="trait">Expanded Row</span>
+          <span class="trait">Inline JSON Editor</span>
+        </div>
+        <ul>
+          <li>Daha sıkışık feed satırları (6px padding) — daha fazla satır görünür</li>
+          <li>Satıra tıklayınca response detayı INLINE açılır — ayrı bir panel yok</li>
+          <li>JSON editör syntax highlighting ile — key, string, boolean renk kodlu</li>
+          <li>"Save" butonu response'u HAR session'ına persist eder</li>
+          <li>Chrome DevTools Network tab'ının kompakt hissini yakalamaya çalışır</li>
+          <li>Daha fazla bilgi, daha az alan — information density yüksek</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Direction 5: Card Sections -->
+  <div id="d5" class="direction-section">
+    <h2 class="direction-title">Direction 5: Card-Based Sections</h2>
+    <p class="direction-desc">Accordion yerine kart bazlı bölümler. Her bölüm bağımsız bir kart — daha fazla görsel ayrım ama daha fazla padding.</p>
+    
+    <div class="mockup-grid">
+      <div class="popup-shell wide">
+        <div class="tab-bar">
+          <button class="tab-item active">Controls</button>
+          <button class="tab-item">Monitor</button>
+        </div>
+        <div class="content-area" style="padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+          <!-- HAR Card -->
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: 8px; overflow: hidden;">
+            <div style="padding: 10px 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-default); background: var(--bg-section);">
+              <span style="font-size: 13px; font-weight: 600;">HAR</span>
+              <span class="accordion-badge">14 endpoint</span>
+              <div style="margin-left: auto;">
+                <div class="status-badge"><div class="status-dot green"></div> Aktif</div>
+              </div>
+            </div>
+            <div style="padding: 12px;">
+              <div class="har-loaded" style="background: transparent; padding: 0;">
+                <div class="har-file-info">
+                  <div class="har-file-icon">H</div>
+                  <div>
+                    <div class="har-file-name">bug-report-2026.har</div>
+                    <div class="har-file-meta">14 endpoint eşleştirildi</div>
+                  </div>
+                </div>
+                <div class="mode-selector">
+                  <button class="mode-btn">Sequential</button>
+                  <button class="mode-btn active">Last-Match</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rules Card -->
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: 8px; overflow: hidden;">
+            <div style="padding: 10px 12px; display: flex; align-items: center; gap: 8px; background: var(--bg-section);">
+              <span style="font-size: 13px; font-weight: 600;">Rules</span>
+              <span class="accordion-badge" style="background: var(--rule-blue-bg); color: var(--rule-blue);">1 rule</span>
+            </div>
+          </div>
+
+          <!-- Settings Card -->
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: 8px; overflow: hidden;">
+            <div style="padding: 10px 12px; display: flex; align-items: center; gap: 8px; background: var(--bg-section);">
+              <span style="font-size: 13px; font-weight: 600;">Settings</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="desc-panel">
+        <h3>Özellikler</h3>
+        <div>
+          <span class="trait">Card Layout</span>
+          <span class="trait">Border Separation</span>
+          <span class="trait">Status Indicator</span>
+        </div>
+        <ul>
+          <li>Her bölüm bağımsız bir kart — border + radius ile net görsel ayrım</li>
+          <li>Kart başlığında section adı + badge + status göstergesi</li>
+          <li>"Aktif" yeşil dot ile intercept durumu — VS Code status bar mantığı</li>
+          <li>Arka plan farklı tonda (gri) — kartlar beyaz üzerinde float ediyor</li>
+          <li>Dezavantaj: Daha fazla padding = daha az içerik alanı. Kompakt popup'ta alan kaybı</li>
+          <li>Avantaj: Her bölüm çok net ayrılıyor — bilgi grupları belirgin</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Direction 6: Rules Expanded -->
+  <div id="d6" class="direction-section">
+    <h2 class="direction-title">Direction 6: Controls — Rules Expanded</h2>
+    <p class="direction-desc">Rules accordion'u açık durumda. Rule tanımlama formu ve mevcut rule listesi görünür. Gelişmiş kullanım senaryosu.</p>
+    
+    <div class="mockup-grid">
+      <div class="popup-shell">
+        <div class="tab-bar">
+          <button class="tab-item active">Controls</button>
+          <button class="tab-item">Monitor</button>
+        </div>
+        <div class="content-area">
+          <!-- HAR Collapsed -->
+          <div class="accordion-section">
+            <div class="accordion-header">
+              <span class="accordion-chevron">▶</span>
+              HAR
+              <span class="accordion-badge">14 endpoint</span>
+            </div>
+          </div>
+          
+          <!-- Rules Expanded -->
+          <div class="accordion-section">
+            <div class="accordion-header open">
+              <span class="accordion-chevron">▶</span>
+              Rules
+              <span class="accordion-badge" style="background: var(--rule-blue-bg); color: var(--rule-blue);">1 rule</span>
+            </div>
+            <div class="accordion-body">
+              <div class="rule-form">
+                <div class="rule-input" style="color: var(--text-muted);">/api/billing/*</div>
+                <div class="rule-input-row">
+                  <select class="rule-input rule-input-sm" style="width: 70px;">
+                    <option>GET</option>
+                  </select>
+                  <div class="rule-input rule-input-sm" style="width: 56px; text-align: center;">500</div>
+                  <div class="rule-input" style="flex: 1; color: var(--text-muted);">delay (ms)</div>
+                </div>
+                <div class="rule-input" style="min-height: 48px; color: var(--text-muted);">{"error": "internal_error"}</div>
+                <button class="btn-primary" style="align-self: flex-end;">Add Rule</button>
+              </div>
+              
+              <div class="rule-list-item">
+                <span class="method-badge method-get" style="font-size: 9px;">GET</span>
+                <span class="rule-pattern">/api/billing/*</span>
+                <span class="rule-status">500</span>
+                <span class="exclude-remove">×</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Settings Expanded -->
+          <div class="accordion-section">
+            <div class="accordion-header open">
+              <span class="accordion-chevron">▶</span>
+              Settings
+            </div>
+            <div class="accordion-body">
+              <div class="toggle-row">
+                <span class="toggle-label">Extension aktif</span>
+                <div class="toggle on"><div class="toggle-knob"></div></div>
+              </div>
+              <div style="margin-top: 8px;">
+                <div style="font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Exclude List</div>
+                <div class="exclude-item">
+                  <span class="exclude-url">/api/analytics/*</span>
+                  <span class="exclude-remove">×</span>
+                </div>
+                <div class="exclude-item">
+                  <span class="exclude-url">/api/logs</span>
+                  <span class="exclude-remove">×</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="desc-panel">
+        <h3>Özellikler</h3>
+        <div>
+          <span class="trait">Full Rule Form</span>
+          <span class="trait">Exclude List</span>
+          <span class="trait">Multi-Accordion</span>
+        </div>
+        <ul>
+          <li>Rule formu: URL pattern input + method dropdown + status code + response body + delay</li>
+          <li>Mevcut rule'lar liste halinde — method badge + pattern + status + silme butonu</li>
+          <li>Settings bölümünde Extension toggle + exclude list birlikte</li>
+          <li>Exclude listesinde URL pattern + × silme — basit ve net</li>
+          <li>Birden fazla accordion aynı anda açık — developer ihtiyaç duyduğu bölümleri görebiliyor</li>
+          <li>Bu direction Journey 3'ü (rule-based error test) canlı gösteriyor</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comparison -->
+  <div class="comparison-section">
+    <h2 class="direction-title">Karşılaştırma Özeti</h2>
+    <p class="direction-desc" style="max-width: 800px;">Tüm direction'ların güçlü ve zayıf yanlarını karşılaştırın. Birden fazla direction'dan element birleştirmek de mümkün.</p>
+    
+    <div style="margin-top: 24px; overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+        <thead>
+          <tr style="background: var(--bg-section); border-bottom: 2px solid var(--border-default);">
+            <th style="padding: 10px 16px; text-align: left; font-weight: 600; min-width: 140px;">Direction</th>
+            <th style="padding: 10px 16px; text-align: left; font-weight: 600;">Tab Stili</th>
+            <th style="padding: 10px 16px; text-align: left; font-weight: 600;">İçerik Yapısı</th>
+            <th style="padding: 10px 16px; text-align: left; font-weight: 600;">Information Density</th>
+            <th style="padding: 10px 16px; text-align: left; font-weight: 600;">Tanıdıklık</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid var(--border-default);">
+            <td style="padding: 10px 16px; font-weight: 600;">1. Classic Clean</td>
+            <td style="padding: 10px 16px; color: var(--text-secondary);">Underline</td>
+            <td style="padding: 10px 16px; color: var(--text-secondary);">Accordion</td>
+            <td style="padding: 10px 16px; color: var(--text-secondary);">Orta</td>
+            <td style="padding: 10px 16px;"><span style="color: var(--har-green); font-weight: 600;">Yüksek</span></td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border-default);">
+            <td style="padding: 10px 16px; font-weight: 600;">2. Pill Tabs</td>
+            <td style="padding: 10px 16px; color: var(--text-secondary);">Pill/Segment</td>
+            <td style="padding: 10px 16px; color: var(--text-secondary);">Accordion</td>
+            <td style="padding: 10px 16px; color: var(--text-secondary);">Orta</td>
+            <td style="padding: 10px 16px;"><span style="color: var(--method-post); font-weight: 600;">Orta</span></td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border-default);">
+            <td style="padding: 10px 16px; font-weight: 600;">3. Icon Tabs</td>
+            <td style="padding: 10px 16px; color: var(--text-secondary);">Icon + Text</td>
+            <td style="padding: 10px 16px; color: var(--text-secondary);">Accordion + Emoji</td>
+            <td style="padding: 10px 16px; color: var(--text-secondary);">Orta</td>
+            <td style="padding: 10px 16px;"><span style="color: var(--method-post); font-weight: 600;">Orta</span></td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border-default);">
+            <td style="padding: 10px 16px; font-weight: 600;">4. Dense Feed</td>
+            <td style="padding: 10px 16px; color: var(--text-secondary);">Underline</td>
+            <td style="padding: 10px 16px; color: var(--text-secondary);">Dense + Inline Edit</td>
+            <td style="padding: 10px 16px;"><span style="color: var(--har-green); font-weight: 600;">Yüksek</span></td>
+            <td style="padding: 10px 16px;"><span style="color: var(--har-green); font-weight: 600;">Yüksek</span></td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border-default);">
+            <td style="padding: 10px 16px; font-weight: 600;">5. Card Sections</td>
+            <td style="padding: 10px 16px; color: var(--text-secondary);">Underline</td>
+            <td style="padding: 10px 16px; color: var(--text-secondary);">Cards</td>
+            <td style="padding: 10px 16px;"><span style="color: var(--error-red); font-weight: 600;">Düşük</span></td>
+            <td style="padding: 10px 16px;"><span style="color: var(--method-post); font-weight: 600;">Orta</span></td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 16px; font-weight: 600;">6. Rules Expanded</td>
+            <td style="padding: 10px 16px; color: var(--text-secondary);">Underline</td>
+            <td style="padding: 10px 16px; color: var(--text-secondary);">Multi-Accordion</td>
+            <td style="padding: 10px 16px;"><span style="color: var(--har-green); font-weight: 600;">Yüksek</span></td>
+            <td style="padding: 10px 16px;"><span style="color: var(--har-green); font-weight: 600;">Yüksek</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function showDirection(id, btn) {
+  document.querySelectorAll('.direction-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.direction-nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+
+</body>
+</html>
