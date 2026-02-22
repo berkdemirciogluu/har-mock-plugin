@@ -9,7 +9,7 @@
     "build:core": "yarn workspace @har-mock/core build",
     "build:extension": "yarn workspace @har-mock/extension build",
     "build:plugin": "yarn workspace har-mock-plugin build",
-    "test:all": "yarn workspaces run test",
+    "test:all": "yarn workspaces run test:coverage",
     "lint:all": "eslint \"packages/*/src/**/*.ts\" --max-warnings 0"
   },
   "devDependencies": {

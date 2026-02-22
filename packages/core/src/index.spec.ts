@@ -1,10 +1,14 @@
 // Path alias doğrulama testi
 // Story 1.1 — AC #3: @har-mock/core barrel export çalışıyor mu?
-import {} from '@har-mock/core';
+import * as core from '@har-mock/core';
 
 describe('core barrel export', () => {
-  it('should export without errors (placeholder module)', () => {
-    // @har-mock/core barrel import başarılı olursa bu test geçer
-    expect(true).toBe(true);
-  });
+    it('should resolve @har-mock/core as a valid module', () => {
+        expect(core).toBeDefined();
+        expect(typeof core).toBe('object');
+    });
+
+    it('should be importable via require without throwing', () => {
+        expect(() => { require('@har-mock/core'); }).not.toThrow();
+    });
 });
