@@ -1,6 +1,6 @@
 # Story 1.1: Monorepo Kurulumu & Temel Yapılandırma
 
-Status: review
+Status: in-progress
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -134,6 +134,24 @@ so that tüm paketler ortak TypeScript strict config, ESLint, Prettier ve Jest b
 - [x] [AI-Review-R3][LOW] L1: `manifest.json`'dan `"type": "module"` kaldırıldı — Webpack CommonJS/IIFE çıktı ürettiği için tutarsızlık giderildi [packages/extension/public/manifest.json]
 - [x] [AI-Review-R3][LOW] L2: M2 ile birlikte çözüldü — `format:check` ve `format:write` scriptleri eklendi [package.json]
 - [x] [AI-Review-R3][LOW] L3: `.prettierignore` dosyası oluşturuldu — `_bmad/`, `_bmad-output/`, `dist/`, `coverage/`, `node_modules/`, `.angular/` ignore ediliyor [root/.prettierignore]
+
+### Review Follow-ups — Round 4 (AI)
+
+**🔴 HIGH (düzeltilmeli):**
+
+- [ ] [AI-Review-R4][HIGH] H1: `yarn format:check` BAŞARISIZ — `packages/core/src/index.spec.ts` ve `packages/extension/src/shared/path-alias.spec.ts` hâlâ 4-space indentation kullanıyor ancak `.prettierrc`'de `tabWidth: 2`. Story'deki "format:check geçiyor" iddiası yanlış. Round 3 H1 fix'i tam uygulanmamış [packages/core/src/index.spec.ts, packages/extension/src/shared/path-alias.spec.ts]
+
+**🟡 MEDIUM (düzeltilmeli):**
+
+- [ ] [AI-Review-R4][MEDIUM] M1: `.gitattributes` dosyası eksik — `.editorconfig`'te `end_of_line = lf` tanımlı ama Windows'ta `core.autocrlf = true`. Prettier LF yazıyor, git CRLF'e çeviriyor → sürekli format farkı oluşuyor. `* text=auto eol=lf` ayarlı `.gitattributes` oluşturulmalı [root/]
+- [ ] [AI-Review-R4][MEDIUM] M2: ESLint deprecated kurallar: `no-extra-semi` ve `no-mixed-spaces-and-tabs` eslint:recommended'dan geliyor. ESLint 9 flat config migration planlanmalı [.eslintrc.json]
+- [ ] [AI-Review-R4][MEDIUM] M3: `angular-plugin/tsconfig.lib.json` deprecated `angularCompilerOptions` — `strictMetadataEmit`, `skipTemplateCodegen`, `enableResourceInlining` View Engine (Angular <13) seçenekleri. Angular 15+ (Ivy-only) hedefi için etkisiz, kaldırılmalı veya güncel Ivy seçenekleriyle değiştirilmeli [packages/angular-plugin/tsconfig.lib.json]
+
+**🟢 LOW (iyileştirme):**
+
+- [ ] [AI-Review-R4][LOW] L1: Duplicate git commit mesajları — `183dea6` ve `deea253` birebir aynı mesaja sahip. Hatalı amend/rebase işlemi [git log]
+- [ ] [AI-Review-R4][LOW] L2: README.md güncel değil — `format:check` ve `format:write` scriptleri belgelenmemiş [README.md]
+- [ ] [AI-Review-R4][LOW] L3: Extension & angular-plugin jest.config'lerde `moduleNameMapper` redundant — base config zaten aynı mapper'ı içeriyor, `...baseConfig` spread ile duplikasyon gereksiz [packages/extension/jest.config.js, packages/angular-plugin/jest.config.js]
 
 ## Dev Notes
 
@@ -425,6 +443,7 @@ claude-sonnet-4-6 (Dev — dev-story workflow)
 
 ## Change Log
 
+- 2026-02-22: **[AI Code Review — Round 4]** Adversarial review tamamlandı. 1 HIGH, 3 MEDIUM, 3 LOW sorun tespit edildi. Ana bulgular: Prettier format check hâlâ başarısız (2 spec dosyası 4-space indent), .gitattributes eksik (LF/CRLF karışımı), ESLint deprecated kurallar, tsconfig.lib.json deprecated angularCompilerOptions, README güncel değil. Action item'lar eklendi, story durumu review → in-progress. (Reviewer: claude-opus-4-6)
 - 2026-02-22: **[AI Code Review — Round 3 Fix]** Tüm 9 review action item düzeltildi: @typescript-eslint v7→v8.56.0 yükseltme, Prettier formatlama + format:check/format:write scriptleri, .prettierignore oluşturma, background/content placeholder kod, baseUrl override, manifest.json type:module kaldırma, git restore + prettier --write ile format tutarlılığı. (Fixer: claude-opus-4-6)
 - 2026-02-22: **[AI Code Review — Round 3]** Adversarial review tamamlandı. 3 HIGH, 3 MEDIUM, 3 LOW sorun tespit edildi. Ana bulgular: Prettier config uyumsuzluğu (committed dosyalar format check geçemiyor), @typescript-eslint paketleri yüklü TS 5.9.3'ü desteklemiyor, uncommitted formatting değişiklikleri, background/content 0-byte çıktı, format script eksik, baseUrl miras çakışma riski. Action item'lar "Review Follow-ups — Round 3 (AI)" olarak eklendi. Story durumu done → in-progress olarak güncellendi. (Reviewer: claude-opus-4-6)
 - 2026-02-22: **[AI Code Review — Fix]** Tüm 12 review action item düzeltildi: git init, CopyWebpackPlugin, angular-plugin devDeps, postcss pipeline, gerçek test assertion'ları, transpileOnly, editorconfig, eslint cleanup, placeholder index.ts'ler, composite:true kaldırıldı. Story review'a geri alındı. (Fixer: claude-opus-4-6)

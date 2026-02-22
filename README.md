@@ -2,11 +2,11 @@
 
 Yarn Workspaces tabanlı monorepo. Üç paketten oluşur:
 
-| Paket | Açıklama |
-|---|---|
-| `packages/core` (`@har-mock/core`) | HAR parser, URL matcher, rule engine — saf TypeScript |
-| `packages/extension` (`@har-mock/extension`) | Chrome Extension (MV3), Angular popup UI |
-| `packages/angular-plugin` (`har-mock-plugin`) | Angular ng-packagr kütüphanesi |
+| Paket                                         | Açıklama                                              |
+| --------------------------------------------- | ----------------------------------------------------- |
+| `packages/core` (`@har-mock/core`)            | HAR parser, URL matcher, rule engine — saf TypeScript |
+| `packages/extension` (`@har-mock/extension`)  | Chrome Extension (MV3), Angular popup UI              |
+| `packages/angular-plugin` (`har-mock-plugin`) | Angular ng-packagr kütüphanesi                        |
 
 ## Kurulum
 
@@ -16,13 +16,15 @@ yarn install
 
 ## Scriptler
 
-| Script | Açıklama |
-|---|---|
-| `yarn build:core` | `@har-mock/core` paketini derle |
-| `yarn build:extension` | Chrome Extension'ı derle |
-| `yarn build:plugin` | Angular plugin'i derle |
-| `yarn test:all` | Tüm paketlerin testlerini çalıştır |
-| `yarn lint:all` | Tüm paketleri ESLint ile kontrol et |
+| Script                 | Açıklama                                     |
+| ---------------------- | -------------------------------------------- |
+| `yarn build:core`      | `@har-mock/core` paketini derle              |
+| `yarn build:extension` | Chrome Extension'ı derle                     |
+| `yarn build:plugin`    | Angular plugin'i derle                       |
+| `yarn test:all`        | Tüm paketlerin testlerini çalıştır           |
+| `yarn lint:all`        | Tüm paketleri ESLint ile kontrol et          |
+| `yarn format:check`    | Prettier format kurallarına uyumu kontrol et |
+| `yarn format:write`    | Tüm dosyaları Prettier ile otomatik formatla |
 
 ## Paket Bağımlılık Matrisi
 
