@@ -1,6 +1,6 @@
 # Story 1.1: Monorepo Kurulumu & Temel Yapılandırma
 
-Status: in-progress
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -113,7 +113,7 @@ so that tüm paketler ortak TypeScript strict config, ESLint, Prettier ve Jest b
 
 - [x] [AI-Review-R2][LOW] L1: `angular-plugin` package.json'da `license` alanı eksik — Yarn "No license field" warning veriyor. **FIX**: `"license": "MIT"` eklendi [packages/angular-plugin/package.json]
 - [x] [AI-Review-R2][LOW] L2: Node.js `punycode` deprecation warning testlerde — jsdom kaynaklı `[DEP0040]` uyarısı, aksiyonel değil, Node.js internal kullanımından kaynaklanıyor [extension test output]
-- [ ] [AI-Review-R2][LOW] L3: Tüm değişiklikler commit edilmeli — Round 1 + Round 2 fix'leri working tree'de uncommitted durumda [git status]
+- [x] [AI-Review-R2][LOW] L3: Tüm değişiklikler commit edilmeli — Round 1 + Round 2 fix'leri commit edildi: `d39095f` [git status]
 
 ## Dev Notes
 
