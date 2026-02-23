@@ -225,6 +225,22 @@ describe('parameterize', () => {
     expect(pattern.segments).toEqual([]);
   });
 
+  // ─── Trailing slash handling ─────────────────────────────────────
+
+  it('should ignore trailing slash and not create nullable segment', () => {
+    const entries = [createEntry('https://api.example.com/api/users/')];
+
+    const result = parameterize(entries);
+
+    expect(result).toHaveLength(1);
+    const pattern = result[0]!;
+    expect(pattern.template).toBe('/api/users');
+    expect(pattern.segments).toEqual([
+      { kind: 'static', value: 'api' },
+      { kind: 'static', value: 'users' },
+    ]);
+  });
+
   // ─── Fallback URL parsing edge cases ───────────────────────────
 
   it('should handle relative path URL (invalid URL fallback)', () => {

@@ -1,6 +1,6 @@
 # Story 1.3: Auto-Parameterization Engine
 
-Status: in-progress
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -341,10 +341,10 @@ Hata yok — tüm testler ilk denemede geçti. Sadece 2 düzeltme yapıldı:
 - ✅ Task 2: `segment-classifier.ts` — `classifySegment()` fonksiyonu, `SEGMENT_PATTERNS` as const objesi (UUID > Numeric > Hex > Base64 > Nullable sırasıyla), sıralı regex testi ile deterministik classification.
 - ✅ Task 3: `auto-parameterizer.ts` — `parameterize()` fonksiyonu, `new URL()` ile pathname çıkarma + fallback, segment splitting, template oluşturma, 1:1 entry-pattern mapping.
 - ✅ Task 4: `segment-classifier.spec.ts` — 28 test: UUID (3), Numeric (4), Hex (3), Base64 (3), Nullable (3), Static (3), Edge case (4), False positive (5).
-- ✅ Task 5: `auto-parameterizer.spec.ts` — 20 test: UUID URL, Numeric URL, Hex URL, JWT URL, Nullable (2), Aynı template, Karma dynamic, Boş entries, Query/fragment, Original korunması, Method (2), Root path, Fallback URL parsing (4).
+- ✅ Task 5: `auto-parameterizer.spec.ts` — 19 test: UUID URL, Numeric URL, Hex URL, JWT URL, Nullable (2), Aynı template, Karma dynamic, Boş entries, Query/fragment, Original korunması, Method (2), Root path, Trailing slash, Fallback URL parsing (4).
 - ✅ Task 6: barrel export, lint, format, build, test:coverage — tüm doğrulama geçti.
 - 📊 Coverage: auto-parameterizer %100, segment-classifier %100 (stmts, branch, funcs, lines)
-- 📊 Test: 98 test, 5 suite, 0 failure
+- 📊 Test: 99 test, 5 suite, 0 failure
 - 📊 Lint: 0 hata, 0 uyarı
 - 📊 Build: TypeScript derleme başarılı
 
@@ -359,7 +359,9 @@ Hata yok — tüm testler ilk denemede geçti. Sadece 2 düzeltme yapıldı:
 - `packages/core/src/auto-parameterizer/auto-parameterizer.spec.ts` — YENİ: auto-parameterizer testleri (20 test)
 - `packages/core/src/auto-parameterizer/index.ts` — GÜNCELLEME: parameterize ve classifySegment re-export
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — GÜNCELLEME: story status ready-for-dev → review
+- `.github/copilot-instructions.md` — GÜNCELLEME: BMAD proje konfigürasyonu
 
 ### Change Log
 
-- **2026-02-23:** Story 1.3 Auto-Parameterization Engine implementasyonu tamamlandı. `UrlPattern` tip tanımları, `classifySegment()` segment classifier, `parameterize()` auto-parameterizer fonksiyonları ve 48 test (28 classifier + 20 parameterizer) eklendi. Tüm dosyalar %100 coverage, 0 lint hatası, Prettier uyumlu, TypeScript build başarılı.
+- **2026-02-23:** Story 1.3 Auto-Parameterization Engine implementasyonu tamamlandı. `UrlPattern` tip tanımları, `classifySegment()` segment classifier, `parameterize()` auto-parameterizer fonksiyonları ve 47 test (28 classifier + 19 parameterizer) eklendi. Tüm dosyalar %100 coverage, 0 lint hatası, Prettier uyumlu, TypeScript build başarılı.
+- **2026-02-23 (Code Review):** Adversarial review fix'leri: (1) Trailing slash bug düzeltildi — `/api/users/` yanlışlıkla nullable segment üretiyordu, `splitPathSegments` güncellendi + test eklendi; (2) Duplicate import birleştirildi (`auto-parameterizer.ts`); (3) Dev Agent Record test sayıları düzeltildi (20→19, 48→47, 98→99); (4) File List'e eksik `.github/copilot-instructions.md` eklendi; (5) Story Status `in-progress` → `review` senkronize edildi.

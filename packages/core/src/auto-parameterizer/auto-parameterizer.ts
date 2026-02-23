@@ -10,8 +10,7 @@
  * @see Architecture Doc — Auto-Parameterization Algorithm
  */
 
-import type { HarEntry } from '../types';
-import type { UrlPattern, PatternSegment } from '../types';
+import type { HarEntry, UrlPattern, PatternSegment } from '../types';
 import { classifySegment } from './segment-classifier';
 
 /**
@@ -89,7 +88,15 @@ function splitPathSegments(pathname: string): string[] {
 
   // Leading '/' nedeniyle ilk eleman her zaman boş string — onu atla
   // Ama path içindeki boş string'ler nullable segment olarak korunmalı
-  return parts.slice(1);
+  const segments = parts.slice(1);
+
+  // Trailing slash'tan gelen sondaki boş string'i kaldır (ör: /api/users/)
+  // Ama path ortasındaki boş segment'leri koru (ör: /api/items//details → nullable)
+  if (segments.length > 0 && segments[segments.length - 1] === '') {
+    return segments.slice(0, -1);
+  }
+
+  return segments;
 }
 
 /**
