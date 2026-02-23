@@ -82,7 +82,7 @@
 3. `mcp_com_atlassian_transitionJiraIssue` ile hedef duruma geçiş yapılır
 4. Yeni story/epic oluşturulduğunda `mcp_com_atlassian_createJiraIssue` ile Jira'da da oluşturulur ve issue key `sprint-status.yaml`'a eklenir
 5. Jira güncellemesi başarısız olursa kullanıcıya bilgi verilir, ama sprint-status.yaml yine de güncellenir
-6. Geliştirme sırasında yapılan her geliştirme adımında (dosya değişiklikleri tamamlandığında) `git add` + `git commit` yapılmalıdır. Story review'a gönderilmeden önce tüm değişiklikler commit'lenmiş olmalıdır.
+6. Geliştirme sırasında yapılan her geliştirme adımında (dosya değişiklikleri tamamlandığında) `git add` + `git commit` yapılmalıdır. Story review'a gönderilmeden önce tüm değişiklikler commit'lenmiş olmalıdır. Commit atilmadan once onay istenmelidir.
 7. Her commit sonrasında, ilgili Jira task'ına `mcp_com_atlassian_addCommentToJiraIssue` ile yorum eklenir. Yorum formatı:
    ```
    🔧 Commit: <commitId>

@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "mcp__atlassian__createJiraIssue",
-      "mcp__atlassian__transitionJiraIssue"
+      "mcp__atlassian__transitionJiraIssue",
+      "Bash(yarn test:all:*)",
+      "Bash(yarn lint:all:*)",
+      "Bash(yarn format:check:*)",
+      "Bash(npx prettier:*)",
+      "Bash(yarn build:core:*)"
     ]
   }
 }
