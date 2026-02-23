@@ -52,3 +52,13 @@ export interface UrlPattern {
   readonly segments: readonly PatternSegment[];
   readonly method: string;
 }
+
+// ─── Match Result ──────────────────────────────────────────────
+
+/**
+ * URL eşleşme sonucu.
+ * matchUrl() tarafından döndürülür; eşleşen UrlPattern'ı içerir.
+ */
+export interface MatchResult {
+  readonly pattern: UrlPattern;
+}

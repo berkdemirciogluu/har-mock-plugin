@@ -24,4 +24,5 @@ export type {
   DynamicSegment,
   PatternSegment,
   UrlPattern,
+  MatchResult,
 } from './url-pattern.types';

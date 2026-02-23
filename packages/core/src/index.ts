@@ -22,6 +22,7 @@ export type {
   DynamicSegment,
   PatternSegment,
   UrlPattern,
+  MatchResult,
 } from './types';
 
 // Errors
@@ -33,3 +34,7 @@ export { parseHar, validateHarSchema } from './har-parser';
 
 // Auto-Parameterizer
 export { parameterize, classifySegment } from './auto-parameterizer';
+
+// URL Matcher
+export { matchUrl, compilePattern } from './url-matcher';
+export type { CompiledPattern } from './url-matcher';
