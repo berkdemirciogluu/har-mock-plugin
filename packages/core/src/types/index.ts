@@ -17,3 +17,11 @@ export type {
   HarLog,
   HarRawRoot,
 } from './har.types';
+
+export type {
+  ParamType,
+  StaticSegment,
+  DynamicSegment,
+  PatternSegment,
+  UrlPattern,
+} from './url-pattern.types';

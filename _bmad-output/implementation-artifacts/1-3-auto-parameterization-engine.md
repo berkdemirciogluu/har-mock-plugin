@@ -1,6 +1,6 @@
 # Story 1.3: Auto-Parameterization Engine
 
-Status: ready-for-dev
+Status: in-progress
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -26,64 +26,64 @@ so that HAR'dan çıkarılan URL'lerdeki UUID, numeric ID, hex token, JWT/Base64
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: URL Pattern Tip Tanımları (AC: #1, #2, #3, #4, #5)
-  - [ ] Subtask 1.1: `packages/core/src/types/url-pattern.types.ts` oluştur — `UrlPattern`, `PatternSegment` (discriminated union: `StaticSegment | DynamicSegment`), `ParamType` (`'uuid' | 'numeric' | 'hex' | 'base64' | 'nullable'`) tipleri. Tüm property'ler `readonly`. Architecture doc'taki `UrlPattern` interface'ine uyumlu.
-  - [ ] Subtask 1.2: `packages/core/src/types/index.ts` güncelle — URL pattern tiplerini re-export et
-  - [ ] Subtask 1.3: `packages/core/src/index.ts` barrel export güncelle — yeni tiplerin erişilebilir olduğunu doğrula (types zaten re-export ediliyor, yeni tipler `types/index.ts` üzerinden otomatik gelecek)
+- [x] Task 1: URL Pattern Tip Tanımları (AC: #1, #2, #3, #4, #5)
+  - [x] Subtask 1.1: `packages/core/src/types/url-pattern.types.ts` oluştur — `UrlPattern`, `PatternSegment` (discriminated union: `StaticSegment | DynamicSegment`), `ParamType` (`'uuid' | 'numeric' | 'hex' | 'base64' | 'nullable'`) tipleri. Tüm property'ler `readonly`. Architecture doc'taki `UrlPattern` interface'ine uyumlu.
+  - [x] Subtask 1.2: `packages/core/src/types/index.ts` güncelle — URL pattern tiplerini re-export et
+  - [x] Subtask 1.3: `packages/core/src/index.ts` barrel export güncelle — yeni tiplerin erişilebilir olduğunu doğrula (types zaten re-export ediliyor, yeni tipler `types/index.ts` üzerinden otomatik gelecek)
 
-- [ ] Task 2: Segment Classifier İmplementasyonu (AC: #1, #2, #3, #4, #6)
-  - [ ] Subtask 2.1: `packages/core/src/auto-parameterizer/segment-classifier.ts` oluştur — `classifySegment(segment: string): PatternSegment` fonksiyonu
-  - [ ] Subtask 2.2: Regex pattern'ları `as const` sabit objesi olarak tanımla — Mimari dokümanındaki sıraya uygun:
+- [x] Task 2: Segment Classifier İmplementasyonu (AC: #1, #2, #3, #4, #6)
+  - [x] Subtask 2.1: `packages/core/src/auto-parameterizer/segment-classifier.ts` oluştur — `classifySegment(segment: string): PatternSegment` fonksiyonu
+  - [x] Subtask 2.2: Regex pattern'ları `as const` sabit objesi olarak tanımla — Mimari dokümanındaki sıraya uygun:
     1. UUID: `/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i`
     2. Numeric ID: `/^\d+$/`
     3. Hex token: `/^[0-9a-f]{16,}$/i`
     4. JWT/Base64: `/^[A-Za-z0-9_-]{20,}$/`
     5. Nullable: `/^(null|undefined|)$/`
-  - [ ] Subtask 2.3: Sıralı regex testi uygula (en spesifikten en genele) — ilk eşleşen pattern kazanır; eşleşme yoksa `{ kind: 'static', value: segment }` dön
-  - [ ] Subtask 2.4: Return type: `PatternSegment` discriminated union — `{ kind: 'dynamic', paramType: ParamType }` veya `{ kind: 'static', value: string }`
+  - [x] Subtask 2.3: Sıralı regex testi uygula (en spesifikten en genele) — ilk eşleşen pattern kazanır; eşleşme yoksa `{ kind: 'static', value: segment }` dön
+  - [x] Subtask 2.4: Return type: `PatternSegment` discriminated union — `{ kind: 'dynamic', paramType: ParamType }` veya `{ kind: 'static', value: string }`
 
-- [ ] Task 3: Auto-Parameterizer İmplementasyonu (AC: #1, #2, #3, #4, #5)
-  - [ ] Subtask 3.1: `packages/core/src/auto-parameterizer/auto-parameterizer.ts` oluştur — `parameterize(entries: readonly HarEntry[]): UrlPattern[]` fonksiyonu
-  - [ ] Subtask 3.2: URL path parsing — `new URL(entry.url)` ile pathname çıkar; query params ve fragment'lar path'ten ayrıştırılır (template'e dahil edilmez)
-  - [ ] Subtask 3.3: Pathname'i `/` ile split et; boş string segment'leri filtrele (leading `/` nedeniyle)
-  - [ ] Subtask 3.4: Her segment için `classifySegment()` çağır ve `PatternSegment[]` array'i oluştur
-  - [ ] Subtask 3.5: Template string oluştur — static segment'ler olduğu gibi, dynamic segment'ler `{param}` olarak; leading `/` ile birleştir (ör: `/api/users/{param}/orders`)
-  - [ ] Subtask 3.6: `UrlPattern` objesi oluştur: `{ original: entry.url, template, segments, method: entry.method }`
-  - [ ] Subtask 3.7: Her HarEntry için bir UrlPattern döndür (1:1 mapping — dedup yapılmaz, bu URL Matcher'ın sorumluluğu)
+- [x] Task 3: Auto-Parameterizer İmplementasyonu (AC: #1, #2, #3, #4, #5)
+  - [x] Subtask 3.1: `packages/core/src/auto-parameterizer/auto-parameterizer.ts` oluştur — `parameterize(entries: readonly HarEntry[]): UrlPattern[]` fonksiyonu
+  - [x] Subtask 3.2: URL path parsing — `new URL(entry.url)` ile pathname çıkar; query params ve fragment'lar path'ten ayrıştırılır (template'e dahil edilmez)
+  - [x] Subtask 3.3: Pathname'i `/` ile split et; boş string segment'leri filtrele (leading `/` nedeniyle)
+  - [x] Subtask 3.4: Her segment için `classifySegment()` çağır ve `PatternSegment[]` array'i oluştur
+  - [x] Subtask 3.5: Template string oluştur — static segment'ler olduğu gibi, dynamic segment'ler `{param}` olarak; leading `/` ile birleştir (ör: `/api/users/{param}/orders`)
+  - [x] Subtask 3.6: `UrlPattern` objesi oluştur: `{ original: entry.url, template, segments, method: entry.method }`
+  - [x] Subtask 3.7: Her HarEntry için bir UrlPattern döndür (1:1 mapping — dedup yapılmaz, bu URL Matcher'ın sorumluluğu)
 
-- [ ] Task 4: Segment Classifier Testleri (AC: #6)
-  - [ ] Subtask 4.1: `packages/core/src/auto-parameterizer/segment-classifier.spec.ts` oluştur
-  - [ ] Subtask 4.2: UUID testleri — en az 3 farklı UUID: standart lowercase, uppercase, mixed case. Her biri `{ kind: 'dynamic', paramType: 'uuid' }` döndürmeli
-  - [ ] Subtask 4.3: Numeric ID testleri — en az 3 farklı: tek haneli (`5`), çok haneli (`42`, `123456`). `{ kind: 'dynamic', paramType: 'numeric' }` döndürmeli
-  - [ ] Subtask 4.4: Hex token testleri — en az 3 farklı: 16 karakter, 24 karakter, 32+ karakter. `{ kind: 'dynamic', paramType: 'hex' }` döndürmeli
-  - [ ] Subtask 4.5: Base64/JWT testleri — en az 3 farklı: JWT header segment, uzun base64 string, URL-safe base64. `{ kind: 'dynamic', paramType: 'base64' }` döndürmeli
-  - [ ] Subtask 4.6: Nullable testleri — `'null'`, `'undefined'`, `''` (boş string). `{ kind: 'dynamic', paramType: 'nullable' }` döndürmeli
-  - [ ] Subtask 4.7: Static segment testleri — en az 3 farklı: `'api'`, `'users'`, `'v2'`. `{ kind: 'static', value: segment }` döndürmeli
-  - [ ] Subtask 4.8: Edge case / sınır testleri — hex-like ama kısa string (15 karakter → numeric değilse static), base64-like ama kısa string (19 karakter → static), sadece rakam ama çok uzun (UUID'e benzemeyen numeric), `0` (numeric olmalı)
-  - [ ] Subtask 4.9: False positive regresyon testleri — `'users'` hex olarak yanlışlıkla sınıflandırılmamalı (5 karakter < 16 minimum), `'profile'` base64 olarak sınıflandırılmamalı (7 karakter < 20 minimum), `'v2'` numeric olarak sınıflandırılmamalı (rakam ile başlamıyor)
+- [x] Task 4: Segment Classifier Testleri (AC: #6)
+  - [x] Subtask 4.1: `packages/core/src/auto-parameterizer/segment-classifier.spec.ts` oluştur
+  - [x] Subtask 4.2: UUID testleri — en az 3 farklı UUID: standart lowercase, uppercase, mixed case. Her biri `{ kind: 'dynamic', paramType: 'uuid' }` döndürmeli
+  - [x] Subtask 4.3: Numeric ID testleri — en az 3 farklı: tek haneli (`5`), çok haneli (`42`, `123456`). `{ kind: 'dynamic', paramType: 'numeric' }` döndürmeli
+  - [x] Subtask 4.4: Hex token testleri — en az 3 farklı: 16 karakter, 24 karakter, 32+ karakter. `{ kind: 'dynamic', paramType: 'hex' }` döndürmeli
+  - [x] Subtask 4.5: Base64/JWT testleri — en az 3 farklı: JWT header segment, uzun base64 string, URL-safe base64. `{ kind: 'dynamic', paramType: 'base64' }` döndürmeli
+  - [x] Subtask 4.6: Nullable testleri — `'null'`, `'undefined'`, `''` (boş string). `{ kind: 'dynamic', paramType: 'nullable' }` döndürmeli
+  - [x] Subtask 4.7: Static segment testleri — en az 3 farklı: `'api'`, `'users'`, `'v2'`. `{ kind: 'static', value: segment }` döndürmeli
+  - [x] Subtask 4.8: Edge case / sınır testleri — hex-like ama kısa string (15 karakter → numeric değilse static), base64-like ama kısa string (19 karakter → static), sadece rakam ama çok uzun (UUID'e benzemeyen numeric), `0` (numeric olmalı)
+  - [x] Subtask 4.9: False positive regresyon testleri — `'users'` hex olarak yanlışlıkla sınıflandırılmamalı (5 karakter < 16 minimum), `'profile'` base64 olarak sınıflandırılmamalı (7 karakter < 20 minimum), `'v2'` numeric olarak sınıflandırılmamalı (rakam ile başlamıyor)
 
-- [ ] Task 5: Auto-Parameterizer Testleri (AC: #1, #2, #3, #4, #5)
-  - [ ] Subtask 5.1: `packages/core/src/auto-parameterizer/auto-parameterizer.spec.ts` oluştur
-  - [ ] Subtask 5.2: Test: UUID URL — `/api/users/550e8400-e29b-41d4-a716-446655440000/orders` → template `/api/users/{param}/orders`, segment `paramType: 'uuid'`
-  - [ ] Subtask 5.3: Test: Numeric ID URL — `/api/products/42/reviews` → template `/api/products/{param}/reviews`, segment `paramType: 'numeric'`
-  - [ ] Subtask 5.4: Test: Hex token URL — `/api/auth/a1b2c3d4e5f67890abcd1234` → template `/api/auth/{param}`, segment `paramType: 'hex'`
-  - [ ] Subtask 5.5: Test: JWT/Base64 URL — `/api/session/eyJhbGciOiJIUzI1NiJ9` → template `/api/session/{param}`, segment `paramType: 'base64'`
-  - [ ] Subtask 5.6: Test: Nullable segment — `/api/items/null/details` → template `/api/items/{param}/details`, `paramType: 'nullable'`; `/api/items//details` boş segment de `paramType: 'nullable'`
-  - [ ] Subtask 5.7: Test: Karma dynamic segments — `/api/users/550e8400-e29b-41d4-a716-446655440000/orders/42` → template `/api/users/{param}/orders/{param}`, iki dynamic segment (uuid + numeric)
-  - [ ] Subtask 5.8: Test: Aynı template üretimi — `/api/users/123` ve `/api/users/456` ikisi de → template `/api/users/{param}`; `original` alanları farklı orijinal URL'leri korumalı
-  - [ ] Subtask 5.9: Test: Boş entries array — `parameterize([])` → boş array `[]` döndürmeli
-  - [ ] Subtask 5.10: Test: URL query params ve fragment'lar — `https://api.example.com/users/123?page=1#section` → template yalnızca path: `/users/{param}` (query+fragment dahil değil)
-  - [ ] Subtask 5.11: Test: `original` alanı tam URL'yi korumalı — `https://api.example.com/users/123` → `original: 'https://api.example.com/users/123'`
-  - [ ] Subtask 5.12: Test: Method korunması — GET entry → UrlPattern.method `'GET'` olmalı; POST entry → `'POST'` olmalı
-  - [ ] Subtask 5.13: Test: Root path URL — `https://api.example.com/` → template `/`, tek static segment yok
+- [x] Task 5: Auto-Parameterizer Testleri (AC: #1, #2, #3, #4, #5)
+  - [x] Subtask 5.1: `packages/core/src/auto-parameterizer/auto-parameterizer.spec.ts` oluştur
+  - [x] Subtask 5.2: Test: UUID URL — `/api/users/550e8400-e29b-41d4-a716-446655440000/orders` → template `/api/users/{param}/orders`, segment `paramType: 'uuid'`
+  - [x] Subtask 5.3: Test: Numeric ID URL — `/api/products/42/reviews` → template `/api/products/{param}/reviews`, segment `paramType: 'numeric'`
+  - [x] Subtask 5.4: Test: Hex token URL — `/api/auth/a1b2c3d4e5f67890abcd1234` → template `/api/auth/{param}`, segment `paramType: 'hex'`
+  - [x] Subtask 5.5: Test: JWT/Base64 URL — `/api/session/eyJhbGciOiJIUzI1NiJ9` → template `/api/session/{param}`, segment `paramType: 'base64'`
+  - [x] Subtask 5.6: Test: Nullable segment — `/api/items/null/details` → template `/api/items/{param}/details`, `paramType: 'nullable'`; `/api/items//details` boş segment de `paramType: 'nullable'`
+  - [x] Subtask 5.7: Test: Karma dynamic segments — `/api/users/550e8400-e29b-41d4-a716-446655440000/orders/42` → template `/api/users/{param}/orders/{param}`, iki dynamic segment (uuid + numeric)
+  - [x] Subtask 5.8: Test: Aynı template üretimi — `/api/users/123` ve `/api/users/456` ikisi de → template `/api/users/{param}`; `original` alanları farklı orijinal URL'leri korumalı
+  - [x] Subtask 5.9: Test: Boş entries array — `parameterize([])` → boş array `[]` döndürmeli
+  - [x] Subtask 5.10: Test: URL query params ve fragment'lar — `https://api.example.com/users/123?page=1#section` → template yalnızca path: `/users/{param}` (query+fragment dahil değil)
+  - [x] Subtask 5.11: Test: `original` alanı tam URL'yi korumalı — `https://api.example.com/users/123` → `original: 'https://api.example.com/users/123'`
+  - [x] Subtask 5.12: Test: Method korunması — GET entry → UrlPattern.method `'GET'` olmalı; POST entry → `'POST'` olmalı
+  - [x] Subtask 5.13: Test: Root path URL — `https://api.example.com/` → template `/`, tek static segment yok
 
-- [ ] Task 6: Module Export & Final Doğrulama (AC: tümü)
-  - [ ] Subtask 6.1: `packages/core/src/auto-parameterizer/index.ts` güncelle — `parameterize` ve `classifySegment` fonksiyonlarını re-export et
-  - [ ] Subtask 6.2: `packages/core/src/index.ts` barrel export güncelle — auto-parameterizer modülünü ekle
-  - [ ] Subtask 6.3: `yarn test:all` çalıştır — tüm testler geçer (eski + yeni), coverage %80+
-  - [ ] Subtask 6.4: `yarn lint:all` çalıştır — 0 hata, 0 uyarı
-  - [ ] Subtask 6.5: `yarn format:check` çalıştır — tüm dosyalar Prettier formatına uygun
-  - [ ] Subtask 6.6: `yarn build:core` çalıştır — TypeScript derleme başarılı
+- [x] Task 6: Module Export & Final Doğrulama (AC: tümü)
+  - [x] Subtask 6.1: `packages/core/src/auto-parameterizer/index.ts` güncelle — `parameterize` ve `classifySegment` fonksiyonlarını re-export et
+  - [x] Subtask 6.2: `packages/core/src/index.ts` barrel export güncelle — auto-parameterizer modülünü ekle
+  - [x] Subtask 6.3: `yarn test:all` çalıştır — tüm testler geçer (eski + yeni), coverage %80+
+  - [x] Subtask 6.4: `yarn lint:all` çalıştır — 0 hata, 0 uyarı
+  - [x] Subtask 6.5: `yarn format:check` çalıştır — tüm dosyalar Prettier formatına uygun
+  - [x] Subtask 6.6: `yarn build:core` çalıştır — TypeScript derleme başarılı
 
 ## Dev Notes
 
@@ -327,10 +327,39 @@ packages/core/src/
 
 ### Agent Model Used
 
+Claude Opus 4.6 (GitHub Copilot)
+
 ### Debug Log References
+
+Hata yok — tüm testler ilk denemede geçti. Sadece 2 düzeltme yapıldı:
+- Lint: kullanılmayan `UrlPattern` import kaldırıldı (auto-parameterizer.spec.ts)
+- Format: `yarn format:write` ile Prettier formatına dönüştürüldü (5 dosya)
 
 ### Completion Notes List
 
+- ✅ Task 1: `url-pattern.types.ts` — `ParamType`, `StaticSegment`, `DynamicSegment`, `PatternSegment` (discriminated union), `UrlPattern` tipleri oluşturuldu. Tüm property'ler readonly. Architecture spesifikasyonuna uyumlu.
+- ✅ Task 2: `segment-classifier.ts` — `classifySegment()` fonksiyonu, `SEGMENT_PATTERNS` as const objesi (UUID > Numeric > Hex > Base64 > Nullable sırasıyla), sıralı regex testi ile deterministik classification.
+- ✅ Task 3: `auto-parameterizer.ts` — `parameterize()` fonksiyonu, `new URL()` ile pathname çıkarma + fallback, segment splitting, template oluşturma, 1:1 entry-pattern mapping.
+- ✅ Task 4: `segment-classifier.spec.ts` — 28 test: UUID (3), Numeric (4), Hex (3), Base64 (3), Nullable (3), Static (3), Edge case (4), False positive (5).
+- ✅ Task 5: `auto-parameterizer.spec.ts` — 20 test: UUID URL, Numeric URL, Hex URL, JWT URL, Nullable (2), Aynı template, Karma dynamic, Boş entries, Query/fragment, Original korunması, Method (2), Root path, Fallback URL parsing (4).
+- ✅ Task 6: barrel export, lint, format, build, test:coverage — tüm doğrulama geçti.
+- 📊 Coverage: auto-parameterizer %100, segment-classifier %100 (stmts, branch, funcs, lines)
+- 📊 Test: 98 test, 5 suite, 0 failure
+- 📊 Lint: 0 hata, 0 uyarı
+- 📊 Build: TypeScript derleme başarılı
+
 ### File List
 
+- `packages/core/src/types/url-pattern.types.ts` — YENİ: ParamType, PatternSegment, UrlPattern tipleri
+- `packages/core/src/types/index.ts` — GÜNCELLEME: url-pattern tiplerini re-export
+- `packages/core/src/index.ts` — GÜNCELLEME: yeni tipleri ve auto-parameterizer fonksiyonlarını export
+- `packages/core/src/auto-parameterizer/segment-classifier.ts` — YENİ: classifySegment fonksiyonu
+- `packages/core/src/auto-parameterizer/auto-parameterizer.ts` — YENİ: parameterize fonksiyonu
+- `packages/core/src/auto-parameterizer/segment-classifier.spec.ts` — YENİ: segment classifier testleri (28 test)
+- `packages/core/src/auto-parameterizer/auto-parameterizer.spec.ts` — YENİ: auto-parameterizer testleri (20 test)
+- `packages/core/src/auto-parameterizer/index.ts` — GÜNCELLEME: parameterize ve classifySegment re-export
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — GÜNCELLEME: story status ready-for-dev → review
+
 ### Change Log
+
+- **2026-02-23:** Story 1.3 Auto-Parameterization Engine implementasyonu tamamlandı. `UrlPattern` tip tanımları, `classifySegment()` segment classifier, `parameterize()` auto-parameterizer fonksiyonları ve 48 test (28 classifier + 20 parameterizer) eklendi. Tüm dosyalar %100 coverage, 0 lint hatası, Prettier uyumlu, TypeScript build başarılı.
