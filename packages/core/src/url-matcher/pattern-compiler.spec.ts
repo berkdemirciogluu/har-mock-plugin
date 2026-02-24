@@ -1,24 +1,5 @@
 import { compilePattern } from './pattern-compiler';
-import type { UrlPattern } from '../types/url-pattern.types';
-
-// ─── Test Fixture Helper ───────────────────────────────────────
-
-function createPattern(template: string, method: string = 'GET'): UrlPattern {
-  const segments = template
-    .split('/')
-    .filter((s) => s !== '')
-    .map((s) =>
-      s === '{param}'
-        ? ({ kind: 'dynamic', paramType: 'uuid' } as const)
-        : ({ kind: 'static', value: s } as const),
-    );
-  return {
-    original: `https://example.com${template}`,
-    template,
-    segments,
-    method,
-  };
-}
+import { createPattern } from './test-utils';
 
 // ─── Tests ────────────────────────────────────────────────────
 
@@ -148,6 +129,52 @@ describe('compilePattern', () => {
       const compiled = compilePattern(pattern);
 
       expect(compiled.regex.test('/api/health/')).toBe(true);
+    });
+  });
+
+  describe('root path edge case (AC #4, M4)', () => {
+    it('root template "/" — compiles to regex matching only root', () => {
+      const pattern = createPattern('/');
+      const compiled = compilePattern(pattern);
+
+      expect(compiled.regex.test('/')).toBe(true);
+      expect(compiled.regex.test('/api')).toBe(false);
+    });
+
+    it('root template "/" — staticSegmentCount: 0 (no segments)', () => {
+      const pattern = createPattern('/');
+      const compiled = compilePattern(pattern);
+
+      expect(compiled.staticSegmentCount).toBe(0);
+    });
+  });
+
+  describe('paramType variety in fixture (L3)', () => {
+    it('numeric paramType — createPattern uses numeric', () => {
+      const pattern = createPattern('/api/items/{param}', 'GET', 'numeric');
+      const dynamicSeg = pattern.segments.find((s) => s.kind === 'dynamic');
+
+      expect(dynamicSeg).toBeDefined();
+      if (dynamicSeg?.kind === 'dynamic') {
+        expect(dynamicSeg.paramType).toBe('numeric');
+      }
+    });
+
+    it('nullable paramType — createPattern uses nullable', () => {
+      const pattern = createPattern('/api/items/{param}', 'GET', 'nullable');
+      const dynamicSeg = pattern.segments.find((s) => s.kind === 'dynamic');
+
+      expect(dynamicSeg).toBeDefined();
+      if (dynamicSeg?.kind === 'dynamic') {
+        expect(dynamicSeg.paramType).toBe('nullable');
+      }
+    });
+
+    it('hex paramType — still matches hex-like value in URL', () => {
+      const pattern = createPattern('/api/tokens/{param}', 'GET', 'hex');
+      const compiled = compilePattern(pattern);
+
+      expect(compiled.regex.test('/api/tokens/a1b2c3d4')).toBe(true);
     });
   });
 });

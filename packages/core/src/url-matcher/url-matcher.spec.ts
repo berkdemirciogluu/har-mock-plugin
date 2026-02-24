@@ -1,24 +1,5 @@
 import { matchUrl } from './url-matcher';
-import type { UrlPattern } from '../types/url-pattern.types';
-
-// ─── Test Fixture Helper ───────────────────────────────────────
-
-function createPattern(template: string, method: string = 'GET'): UrlPattern {
-  const segments = template
-    .split('/')
-    .filter((s) => s !== '')
-    .map((s) =>
-      s === '{param}'
-        ? ({ kind: 'dynamic', paramType: 'uuid' } as const)
-        : ({ kind: 'static', value: s } as const),
-    );
-  return {
-    original: `https://example.com${template}`,
-    template,
-    segments,
-    method,
-  };
-}
+import { createPattern } from './test-utils';
 
 // ─── Tests ────────────────────────────────────────────────────
 
@@ -116,7 +97,7 @@ describe('matchUrl', () => {
 
   describe('nullable segment (AC #3, FR9)', () => {
     it('matches "null" value in dynamic segment position', () => {
-      const patterns = [createPattern('/api/items/{param}/details', 'GET')];
+      const patterns = [createPattern('/api/items/{param}/details', 'GET', 'nullable')];
       const result = matchUrl('/api/items/null/details', 'GET', patterns);
 
       expect(result).not.toBeNull();
@@ -158,6 +139,20 @@ describe('matchUrl', () => {
 
       expect(result).not.toBeNull();
     });
+
+    it('strips hash fragment in path-only input (M2)', () => {
+      const patterns = [createPattern('/api/users/{param}', 'GET')];
+      const result = matchUrl('/api/users/123#section', 'GET', patterns);
+
+      expect(result).not.toBeNull();
+    });
+
+    it('strips hash fragment combined with query string in path-only input (M2)', () => {
+      const patterns = [createPattern('/api/users/{param}', 'GET')];
+      const result = matchUrl('/api/users/123?page=1#top', 'GET', patterns);
+
+      expect(result).not.toBeNull();
+    });
   });
 
   describe('edge cases', () => {
@@ -193,6 +188,36 @@ describe('matchUrl', () => {
       expect(withSlash).not.toBeNull();
       expect(withoutSlash).not.toBeNull();
       expect(withSlash?.pattern).toBe(withoutSlash?.pattern);
+    });
+
+    it('root path "/" matches root pattern (M4)', () => {
+      const patterns = [createPattern('/', 'GET')];
+      const result = matchUrl('/', 'GET', patterns);
+
+      expect(result).not.toBeNull();
+    });
+
+    it('root path "/" does not match non-root patterns (M4)', () => {
+      const patterns = [createPattern('/api/users', 'GET')];
+      const result = matchUrl('/', 'GET', patterns);
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('paramType variety in fixture (L3)', () => {
+    it('numeric paramType — matches numeric ID in URL', () => {
+      const patterns = [createPattern('/api/items/{param}', 'GET', 'numeric')];
+      const result = matchUrl('/api/items/42', 'GET', patterns);
+
+      expect(result).not.toBeNull();
+    });
+
+    it('hex paramType — matches hex token in URL', () => {
+      const patterns = [createPattern('/api/tokens/{param}', 'GET', 'hex')];
+      const result = matchUrl('/api/tokens/a1b2c3d4', 'GET', patterns);
+
+      expect(result).not.toBeNull();
     });
   });
 });

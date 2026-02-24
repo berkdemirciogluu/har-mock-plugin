@@ -22,7 +22,7 @@ function extractPathname(requestUrl: string): string {
     return new URL(requestUrl).pathname;
   } catch {
     // Path-only input — query ve fragment'ı ayır
-    return requestUrl.split('?')[0]!.split('#')[0]!;
+    return (requestUrl.split('?')[0] ?? requestUrl).split('#')[0] ?? requestUrl;
   }
 }
 
@@ -60,9 +60,10 @@ export function matchUrl(
   try {
     const pathname = normalizePathname(extractPathname(requestUrl));
 
-    const compiled = patterns.map((p) => compilePattern(p));
-
-    const sorted = [...compiled].sort((a, b) => b.staticSegmentCount - a.staticSegmentCount);
+    // .map() already returns a new array — no spread copy needed before .sort()
+    const sorted = patterns
+      .map((p) => compilePattern(p))
+      .sort((a, b) => b.staticSegmentCount - a.staticSegmentCount);
 
     const match = sorted.find(
       (p) => p.method.toUpperCase() === requestMethod.toUpperCase() && p.regex.test(pathname),
@@ -70,6 +71,8 @@ export function matchUrl(
 
     return match !== undefined ? { pattern: match.pattern } : null;
   } catch {
+    // Unreachable in practice: compilePattern and RegExp.test() do not throw
+    // for valid UrlPattern inputs. Guard kept as a safety net.
     /* istanbul ignore next */
     return null;
   }
