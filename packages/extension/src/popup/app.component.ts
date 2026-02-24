@@ -1,18 +1,25 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { TabBarComponent } from './components/tab-bar/tab-bar.component';
+import { ControlsTabComponent } from './components/controls-tab/controls-tab.component';
+import { MonitorTabComponent } from './components/monitor-tab/monitor-tab.component';
 
 @Component({
   selector: 'hm-root',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TabBarComponent, ControlsTabComponent, MonitorTabComponent],
   template: `
-    <!-- Story 2.3'te HAR yükleme UI'ı eklenecek -->
-    <div class="w-popup max-w-popup p-4">
-      <h1>HAR Mock Plugin</h1>
+    <div class="w-[400px] min-h-[500px] max-h-[600px] overflow-y-auto bg-white">
+      <hm-tab-bar [activeTab]="activeTab()" (tabChange)="activeTab.set($event)" />
+      @if (activeTab() === 'controls') {
+        <hm-controls-tab />
+      }
+      @if (activeTab() === 'monitor') {
+        <hm-monitor-tab />
+      }
     </div>
   `,
-  imports: [],
 })
 export class AppComponent {
-  // constructor injection YASAK — inject() kullanılır
-  // @Input()/@Output() YASAK — input()/output() signal kullanılır
+  readonly activeTab = signal<'controls' | 'monitor'>('controls');
 }
