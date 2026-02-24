@@ -26,3 +26,11 @@ export type {
   UrlPattern,
   MatchResult,
 } from './url-pattern.types';
+
+export type {
+  MockRule,
+  MockResponse,
+  MockRequest,
+  ResolveSource,
+  ResolveResult,
+} from './rule.types';

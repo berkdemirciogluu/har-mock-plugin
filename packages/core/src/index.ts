@@ -23,11 +23,20 @@ export type {
   PatternSegment,
   UrlPattern,
   MatchResult,
+  MockRule,
+  MockResponse,
+  MockRequest,
+  ResolveSource,
+  ResolveResult,
 } from './types';
 
 // Errors
 export { HarMockError } from './errors';
 export { HarParseError } from './errors';
+export { UrlMatchError } from './errors';
+export { RuleValidationError } from './errors';
+export { StorageError } from './errors';
+export { MessagingError } from './errors';
 
 // HAR Parser
 export { parseHar, validateHarSchema } from './har-parser';
@@ -38,3 +47,9 @@ export { parameterize, classifySegment } from './auto-parameterizer';
 // URL Matcher
 export { matchUrl, compilePattern } from './url-matcher';
 export type { CompiledPattern } from './url-matcher';
+
+// Rule Engine
+export { evaluate } from './rule-engine';
+
+// Priority Chain
+export { resolve } from './priority-chain';

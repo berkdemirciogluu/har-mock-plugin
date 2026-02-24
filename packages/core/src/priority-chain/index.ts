@@ -1,2 +1,1 @@
-// Story 1.5'te doldurulacak
-export {};
+export { resolve } from './priority-chain';
