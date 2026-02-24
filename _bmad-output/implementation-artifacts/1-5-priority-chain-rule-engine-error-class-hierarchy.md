@@ -1,6 +1,6 @@
 # Story 1.5: Priority Chain, Rule Engine & Error Class Hierarchy
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -508,6 +508,7 @@ Claude Opus 4.6 (GitHub Copilot)
 ### Change Log
 
 - **2026-02-25**: Story 1.5 implementasyonu tamamlandı — PriorityChain, RuleEngine, Error Class Hierarchy. 8 task, 219 test (tümü pass), %100 coverage.
+- **2026-02-25**: Code review fix'leri — M1: `utils/url-utils.ts` oluşturuldu, duplicate `extractPathname`/`normalizePath` kaldırıldı; M2: PriorityChain testinde yanıltıcı açıklama düzeltildi; M3: `evaluate()` defensive copy eklendi; M4: HAR method mismatch testi eklendi. 221 test (tümü pass).
 
 ### File List
 
@@ -523,6 +524,7 @@ Claude Opus 4.6 (GitHub Copilot)
 - `packages/core/src/rule-engine/test-utils.ts`
 - `packages/core/src/priority-chain/priority-chain.ts`
 - `packages/core/src/priority-chain/priority-chain.spec.ts`
+- `packages/core/src/utils/url-utils.ts`
 
 **Güncellenen dosyalar:**
 - `packages/core/src/types/index.ts` — yeni type re-export'lar
@@ -530,3 +532,4 @@ Claude Opus 4.6 (GitHub Copilot)
 - `packages/core/src/rule-engine/index.ts` — placeholder → `evaluate` export
 - `packages/core/src/priority-chain/index.ts` — placeholder → `resolve` export
 - `packages/core/src/index.ts` — barrel export: yeni types, errors, evaluate, resolve
+- `packages/core/src/url-matcher/url-matcher.ts` — duplicate helpers kaldırıldı, `utils/url-utils` import edildi

@@ -11,6 +11,7 @@
 import type { UrlPattern, MatchResult } from '../types/url-pattern.types';
 import { compilePattern } from './pattern-compiler';
 import type { CompiledPattern } from './pattern-compiler';
+import { extractPathname, normalizePathname } from '../utils/url-utils';
 
 // ─── Compilation Cache ─────────────────────────────────────────
 
@@ -28,32 +29,6 @@ function getCompiledPattern(urlPattern: UrlPattern): CompiledPattern {
     compilationCache.set(urlPattern, compiled);
   }
   return compiled;
-}
-
-// ─── Helpers ───────────────────────────────────────────────────
-
-/**
- * URL'den pathname çıkarır.
- * Tam URL (https://...) ve path-only (/api/...) inputlarını destekler.
- */
-function extractPathname(requestUrl: string): string {
-  try {
-    return new URL(requestUrl).pathname;
-  } catch {
-    // Path-only input — query ve fragment'ı ayır
-    // String.split() always returns at least one element — [0] is guaranteed defined
-    const pathOnly = requestUrl.split('?')[0] as string;
-    return pathOnly.split('#')[0] as string;
-  }
-}
-
-/**
- * Trailing slash normalize eder.
- * '/api/users/123/' → '/api/users/123'
- * '/' → '/'  (root path korunur)
- */
-function normalizePathname(pathname: string): string {
-  return pathname.endsWith('/') && pathname.length > 1 ? pathname.slice(0, -1) : pathname;
 }
 
 // ─── matchUrl ──────────────────────────────────────────────────

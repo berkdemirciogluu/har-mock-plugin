@@ -206,8 +206,8 @@ describe('resolve', () => {
     });
   });
 
-  describe('exception durumunda null — sessiz passthrough', () => {
-    it('returns null when URL pattern matching has no HAR entry match', () => {
+  describe('URL pattern match but no HAR entries → null', () => {
+    it('returns null when URL pattern matches but HAR entries array is empty', () => {
       const pattern = createUrlPattern('/api/users', 'GET');
       const request = createMockRequest({
         url: 'https://api.example.com/api/users',
@@ -236,6 +236,46 @@ describe('resolve', () => {
       const result = resolve(request, [], [harEntry], [pattern]);
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe('HAR method mismatch', () => {
+    it('returns null when HAR entry exists but method does not match', () => {
+      const harEntry = createHarEntry({
+        url: 'https://api.example.com/api/users',
+        method: 'POST',
+        status: 201,
+      });
+      const pattern = createUrlPattern('/api/users', 'GET');
+      const request = createMockRequest({
+        url: 'https://api.example.com/api/users',
+        method: 'GET',
+      });
+
+      // Pattern matches but findHarEntry filters by method — POST entry should not match GET request
+      const result = resolve(request, [], [harEntry], [pattern]);
+
+      expect(result).toBeNull();
+    });
+
+    it('returns HAR response when method matches', () => {
+      const harEntry = createHarEntry({
+        url: 'https://api.example.com/api/users',
+        method: 'POST',
+        status: 201,
+        responseBody: '{"created":true}',
+      });
+      const pattern = createUrlPattern('/api/users', 'POST');
+      const request = createMockRequest({
+        url: 'https://api.example.com/api/users',
+        method: 'POST',
+      });
+
+      const result = resolve(request, [], [harEntry], [pattern]);
+
+      expect(result).not.toBeNull();
+      expect(result?.source).toBe('har');
+      expect(result?.response.statusCode).toBe(201);
     });
   });
 });

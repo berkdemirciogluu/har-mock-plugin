@@ -53,6 +53,17 @@
 | tech-writer         | Paige       | Technical Writer                                                     | documentation, Mermaid diagrams, standards compliance, concept explanation               |
 | ux-designer         | Sally       | UX Designer                                                          | user research, interaction design, UI patterns, experience strategy                      |
 
+## MCP Araç Erişim Kuralı
+
+**Deferred (ertelenmiş) MCP araçları kullanılmadan önce `tool_search_tool_regex` ile yüklenmeli.** Atlassian (Jira/Confluence), Browser ve diğer MCP araçları "deferred tool" olarak tanımlıdır — doğrudan çağrılamaz, önce keşfedilmeli. Bir MCP aracına erişilemediği varsayılmamalı; mutlaka `tool_search_tool_regex` ile aranmalı, bulunamazsa ancak o zaman kullanıcıya bilgi verilmeli.
+
+**Örnek:**
+
+```
+// YANLIŞ: "Jira MCP araçlarına erişemiyorum" demek
+// DOĞRU: tool_search_tool_regex ile "mcp_com_atlassian" araması yapıp yüklemek
+```
+
 ## Jira Sync Kuralı
 
 **Bu kural tüm agentlar ve workflowlar için geçerlidir.**

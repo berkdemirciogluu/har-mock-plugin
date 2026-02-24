@@ -9,31 +9,9 @@
  */
 
 import type { MockRequest, MockResponse, MockRule } from '../types/rule.types';
+import { extractPathname, normalizePathname } from '../utils/url-utils';
 
 // ─── Helpers ───────────────────────────────────────────────────
-
-/**
- * URL'den pathname çıkarır.
- * Tam URL (https://...) ve path-only (/api/...) inputlarını destekler.
- */
-function extractPathname(url: string): string {
-  try {
-    return new URL(url).pathname;
-  } catch {
-    // Path-only input — query ve fragment'ı ayır
-    const pathOnly = url.split('?')[0] as string;
-    return pathOnly.split('#')[0] as string;
-  }
-}
-
-/**
- * Trailing slash normalize eder.
- * '/api/users/' → '/api/users'
- * '/' → '/' (root path korunur)
- */
-function normalizePath(path: string): string {
-  return path.endsWith('/') && path.length > 1 ? path.slice(0, -1) : path;
-}
 
 /**
  * Rule URL pattern'ını request URL ile eşleştirir.
@@ -42,8 +20,8 @@ function normalizePath(path: string): string {
  * - Wildcard match: pattern '/*' ile bitiyorsa → prefix match
  */
 function matchRulePattern(requestUrl: string, rulePattern: string): boolean {
-  const requestPath = normalizePath(extractPathname(requestUrl));
-  const normalizedPattern = normalizePath(rulePattern);
+  const requestPath = normalizePathname(extractPathname(requestUrl));
+  const normalizedPattern = normalizePathname(rulePattern);
 
   // Wildcard: '/api/data/*' → prefix match
   if (normalizedPattern.endsWith('/*')) {
@@ -87,7 +65,7 @@ export function evaluate(request: MockRequest, rules: readonly MockRule[]): Mock
         return {
           statusCode: rule.statusCode,
           body: rule.responseBody,
-          headers: rule.responseHeaders,
+          headers: [...rule.responseHeaders], // defensive copy
           delay: rule.delay,
         };
       }
