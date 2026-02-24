@@ -660,7 +660,7 @@ har-mock-plugin/
 │   │   ├── package.json
 │   │   ├── tsconfig.json
 │   │   ├── jest.config.js
-│   │   ├── webpack.config.js           # Popup + background + content script build
+│   │   ├── webpack.config.js           # Popup + background + content script build (@ngtools/webpack AOT + babel-loader Angular Linker)
 │   │   ├── tailwind.config.js
 │   │   │
 │   │   ├── public/
@@ -681,7 +681,7 @@ har-mock-plugin/
 │   │       │   ├── message-handler.spec.ts
 │   │       │   └── index.ts
 │   │       │
-│   │       ├── content/                # Content Script (world: MAIN)
+│   │       ├── content/                # Content Script (world: ISOLATED; Story 2.4'te MAIN world injection stratejisi eklenecek)
 │   │       │   ├── content.ts          # Entry: monkey-patch + port baglantisi
 │   │       │   ├── fetch-interceptor.ts # window.fetch override
 │   │       │   ├── xhr-interceptor.ts  # XMLHttpRequest override
@@ -802,6 +802,8 @@ har-mock-plugin/
 **Entegrasyon Noktalari:**
 - `manifest.json` -> content script entry: `src/content/content.ts`, background: `src/background/background.ts`
 - Webpack -> 3 ayri entry point: `popup/main.ts`, `background/background.ts`, `content/content.ts`
+- Webpack build pipeline: `@ngtools/webpack` (AngularWebpackPlugin, AOT) + `babel-loader` (`@angular/compiler-cli/linker/babel` — Angular partial declarations linker)
+- Angular 18 paketleri APF (Angular Package Format) ile partial declarations formatta yayinlanir — `babel-loader` ile linker plugin bu deklarasyonlari runtime-uyumlu hale donusturur
 - `ng-packagr` -> `@har-mock/angular` ESM paketi; `public-api.ts` uzerinden disa acilir
 - `@har-mock/core` -> workspace icinde path alias (`@har-mock/core -> packages/core/src/index.ts`), yayinlamada ESM
 

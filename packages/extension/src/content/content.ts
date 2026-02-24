@@ -1,7 +1,8 @@
 /**
- * Content Script — MAIN world entry point
+ * Content Script — ISOLATED world entry point
  * Establishes port connection to background SW
- * Story 2.4'te fetch/XHR intercept logic eklenecek
+ * Runs in ISOLATED world (chrome.runtime available)
+ * Story 2.4'te MAIN world injection stratejisi ile fetch/XHR intercept eklenecek
  */
 import { PORT_NAME_CONTENT_PREFIX, MessageType, type Message } from '../shared';
 

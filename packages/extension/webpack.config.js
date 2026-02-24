@@ -2,6 +2,7 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const { AngularWebpackPlugin } = require('@ngtools/webpack');
 
 module.exports = (env, argv) => {
   const mode = argv && argv.mode === 'development' ? 'development' : 'production';
@@ -27,14 +28,24 @@ module.exports = (env, argv) => {
     module: {
       rules: [
         {
-          test: /\.tsx?$/,
+          test: /\.[cm]?tsx?$/,
+          use: [
+            {
+              loader: '@ngtools/webpack',
+            },
+          ],
+        },
+        {
+          test: /\.[cm]?js$/,
+          resolve: { fullySpecified: false },
           use: {
-            loader: 'ts-loader',
+            loader: 'babel-loader',
             options: {
-              transpileOnly: true,
+              plugins: ['@angular/compiler-cli/linker/babel'],
+              compact: false,
+              cacheDirectory: true,
             },
           },
-          exclude: /node_modules/,
         },
         {
           test: /\.css$/,
@@ -43,6 +54,10 @@ module.exports = (env, argv) => {
       ],
     },
     plugins: [
+      new AngularWebpackPlugin({
+        tsconfig: path.resolve(__dirname, 'tsconfig.json'),
+        jitMode: false,
+      }),
       new HtmlWebpackPlugin({
         template: './src/popup/index.html',
         filename: 'popup/index.html',

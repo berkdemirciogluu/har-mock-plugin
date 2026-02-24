@@ -353,12 +353,13 @@ ac2b662 fix(review): story 1.4 code review fixes — shared test-utils, hash/roo
 51f084c claude.md ve mcp ayarlari yapildi
 ```
 
-### Content Script MAIN World — Önemli Kısıtlamalar
+### Content Script World Stratejisi — ISOLATED → MAIN Geçişi
 
-- `"world": "MAIN"` ile inject edilen content script sayfanın JS context'inde çalışır
-- `chrome.runtime.connect()` MAIN world'de de çalışır (Chrome MV3 desteği)
-- Content script'te `window.fetch` ve `XMLHttpRequest` override mümkün (Story 2.4'te yapılacak)
+- **Mevcut durum (Story 2.1):** Content script ISOLATED world'de çalışır (manifest.json'da `"world"` belirtilmemiş → default ISOLATED)
+- ISOLATED world'de `chrome.runtime.connect()` sorunsuz çalışır — port bağlantısı aktif
+- **Story 2.4'te:** Fetch/XHR monkey-patching için MAIN world injection stratejisi eklenecek. MAIN world'de sayfanın JS context'ine erişim mümkün — `window.fetch` ve `XMLHttpRequest` override yapılabilir
 - Bu story'de content script sadece port bağlantısı kurar — intercept logic Story 2.4'te
+- MAIN world injection yaklaşım seçenekleri (Story 2.4'te değerlendirilecek): manifest.json'da `"world": "MAIN"` veya ISOLATED script'ten `chrome.scripting.executeScript()` ile dynamic injection
 
 ### Test Stratejisi — Chrome API Mock'ları
 
@@ -450,6 +451,7 @@ Claude Opus 4.6 (GitHub Copilot)
 - **zone.js/testing Jest uyumsuzluğu**: `zone.js/testing` Jasmine patch'liyor, Jest'te `TypeError: Cannot read properties of undefined (reading 'each')` hatası → `jest-preset-angular/setup-env/zone` kullanıldı
 - **Angular ESM modülleri transform edilmedi**: `@angular/compiler` ESM export'ları Jest'te `SyntaxError: Unexpected token 'export'` → `transformIgnorePatterns` eklendi
 - **Angular JIT NG0303 hataları**: Component'ler testlerde tanınmadı → `jest-preset-angular` preset'i ile çözüldü
+- **Angular Linker JIT compilation hatası (Chrome popup runtime)**: Angular 18 paketleri APF (Angular Package Format) partial declarations formatında yayınlanıyor (`ɵɵngDeclareInjectable`, `ɵɵngDeclareFactory`). `ts-loader transpileOnly: true` bu declarationları link etmiyordu → `@ngtools/webpack` (AOT) + `babel-loader` (`@angular/compiler-cli/linker/babel`) eklendi. Partial declarations artık build sırasında final form'larına (`ɵɵdefineInjectable` vb.) dönüştürülüyor
 - **setupFilesAfterSetup typo**: Jest config property `setupFilesAfterEnv` olmalı → düzeltildi
 - **async arrow without await**: Lint hatası `beforeEach(async () => {` → `async` kaldırıldı
 - **accordion effect allowSignalWrites**: Signal write in effect → `effect({ allowSignalWrites: true })` eklendi
@@ -461,7 +463,7 @@ Claude Opus 4.6 (GitHub Copilot)
 - yarn lint:all → 0 hata, 0 uyarı
 - yarn format:check → tüm dosyalar Prettier formatına uygun
 - yarn build:extension → başarılı, tüm output dosyaları doğrulandı
-- AOT compiler kararı: Inline template kullanımına devam edildi (Seçenek B) — webpack config değişikliği gerektirmeden çalışıyor
+- AOT compiler kararı: Başlangıçta Seçenek B (inline template) ile devam edildi, ancak Angular Linker sorunu nedeniyle `@ngtools/webpack` (AngularWebpackPlugin, AOT) + `babel-loader` (`@angular/compiler-cli/linker/babel`) eklendi. Angular 18 partial declarations artık build sırasında düzgün link ediliyor
 - Angular component kurallarına tam uyum: standalone, OnPush, signal input/output, inject(), hm- prefix
 - Chrome messaging protocol: Port-based long-lived connections, switch/case dispatch
 
@@ -473,6 +475,13 @@ Claude Opus 4.6 (GitHub Copilot)
   - H2: PONG yanıtına `payload: undefined` eklenerek Message<T> protocol tutarlılığı sağlandı
   - M1: Subtask 4.2/4.4/4.6/4.8 açıklamaları inline template gerçekliğini yansıtacak şekilde güncellendi
   - M2: AccordionComponent effect'ine initialization guard eklendi (input değişikliklerinde state override önlendi)
+- 2026-02-25: Angular Linker Hotfix — Chrome popup JIT compilation hatası giderildi:
+  - H1 (Critical): `ts-loader` → `@ngtools/webpack` (AngularWebpackPlugin AOT) geçişi yapıldı
+  - H2 (Critical): `babel-loader` + `@angular/compiler-cli/linker/babel` eklendi — Angular 18 partial declarations (APF) linker ile çözümlendi
+  - H3: Content script `"world": "MAIN"` → ISOLATED world'e çevrildi (manifest.json'dan "world" kaldırıldı). MAIN world injection stratejisi Story 2.4'te ele alınacak
+  - H4: tsconfig.json exclude listesine `src/test-setup.ts` ve `src/content/index.ts` eklendi (unused file uyarıları giderildi)
+  - H5: manifest.json indentation düzeltildi (4-space → 2-space Prettier uyumu)
+  - Sonuç: popup.js bundle boyutu 495KB → 426KB'ye düştü (linker optimizasyonu), `minVersion` partial declarations tamamen eliminate edildi
 
 ### File List
 
