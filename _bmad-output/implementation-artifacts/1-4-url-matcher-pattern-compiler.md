@@ -1,6 +1,6 @@
 # Story 1.4: URL Matcher & Pattern Compiler
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -83,7 +83,7 @@ so that gelen request URL'leri auto-parameterization'dan üretilen `UrlPattern[]
   - [x] Subtask 6.5: `yarn format:check` çalıştır — tüm dosyalar Prettier formatına uygun
   - [x] Subtask 6.6: `yarn build:core` çalıştır — TypeScript derleme başarılı
 
-### Review Follow-ups (AI)
+### Review Follow-ups Round 1 (AI)
 
 - [x] [AI-Review][MEDIUM] M1: `matchUrl` içinde gereksiz array kopyası — `[...compiled].sort(...)` yerine `compiled.sort(...)` kullanılmalı; `.map()` zaten yeni array döndürüyor [packages/core/src/url-matcher/url-matcher.ts:L67]
 - [x] [AI-Review][MEDIUM] M2: Hash fragment (#) stripping testi eksik — `extractPathname()` `#fragment` ayırıyor ancak test yok; `/api/users/123#section` senaryosu eklenmeli [packages/core/src/url-matcher/url-matcher.spec.ts]
@@ -92,6 +92,14 @@ so that gelen request URL'leri auto-parameterization'dan üretilen `UrlPattern[]
 - [x] [AI-Review][LOW] L1: `istanbul ignore next` açıklama yorumu eksik — catch bloğunda neden unreachable olduğuna dair gerekçe yazılmalı [packages/core/src/url-matcher/url-matcher.ts:L74]
 - [x] [AI-Review][LOW] L2: Non-null assertion (`!`) yerine nullish coalescing (`??`) tercih edilmeli — `requestUrl.split('?')[0]!.split('#')[0]!` satırında [packages/core/src/url-matcher/url-matcher.ts:L24]
 - [x] [AI-Review][LOW] L3: Test helper'da sabit `paramType: 'uuid'` — tüm dynamic segmentler için tek paramType kullanılıyor; farklı türleri (numeric, hex, nullable) de yansıtmalı [packages/core/src/url-matcher/pattern-compiler.spec.ts, url-matcher.spec.ts]
+
+### Review Follow-ups Round 2 (AI)
+
+- [x] [AI-Review][MEDIUM] M1: `requestMethod.toUpperCase()` her pattern için tekrar hesaplanıyor — döngü öncesi cache'lenmeli [packages/core/src/url-matcher/url-matcher.ts]
+- [x] [AI-Review][MEDIUM] M2: `??` operatörleri unreachable dead branch oluşturuyor (branch coverage %83) — `as string` type assertion ile değiştirildi [packages/core/src/url-matcher/url-matcher.ts:L25]
+- [x] [AI-Review][MEDIUM] M3: Pattern regex her `matchUrl()` çağrısında yeniden derleniyor — `WeakMap<UrlPattern, CompiledPattern>` cache eklendi [packages/core/src/url-matcher/url-matcher.ts]
+- [x] [AI-Review][LOW] L1: Eşit `staticSegmentCount` durumunda tiebreak davranışı test edilmemiş — edge case testleri eklendi [packages/core/src/url-matcher/url-matcher.spec.ts]
+- [x] [AI-Review][LOW] L2: Method filtreleme `sort()` sonrası `find()` içinde yapılıyor — `filter()` sort öncesine taşındı [packages/core/src/url-matcher/url-matcher.ts]
 
 ## Dev Notes
 
@@ -429,7 +437,8 @@ Herhangi bir debug log oluşturulmadı — implementasyon ilk denemede başarıy
 - **Task 5**: `url-matcher.spec.ts` — 22 test, tümü geçti. Exact match, dynamic segment, priority tiebreak, method mismatch, case-insensitive method, nullable segment, no match, full URL / path-only input, boş array, trailing slash toleransı senaryoları kapsandı.
 - **Task 6**: Barrel export güncellendi. `yarn test:all` → 134 test geçti, %100 coverage. `yarn lint:all` → 0 hata/uyarı. `yarn format:check` → temiz. `yarn build:core` → TypeScript derleme başarılı.
 - **Önemli Tasarım Kararı**: `compilePattern()` template string'i parse etmek yerine `UrlPattern.segments` array'ini kullanır — bu daha güvenli çünkü segmentler zaten auto-parameterizer tarafından sınıflandırılmış durumda.
-- **Review Follow-ups (2026-02-24)**: 7 bulgu giderildi. M1: spread operatörü kaldırıldı (`.map().sort()` zinciri). M2: hash fragment testi eklendi. M3: `createPattern` helper `test-utils.ts` shared dosyasına taşındı. M4: root path `/` edge case testleri eklendi (pattern-compiler + url-matcher). L1: `istanbul ignore next` satırına gerekçe yorumu eklendi. L2: non-null assertion `!` → nullish coalescing `??` değiştirildi. L3: `createPattern` helper'a `paramType` parametresi eklendi (varsayılan: `'uuid'`); `numeric`, `nullable`, `hex` kullanan testler yazıldı. Toplam test sayısı 134 → 145 oldu.
+- **Review Follow-ups Round 1 (2026-02-24)**: 7 bulgu giderildi. M1: spread operatörü kaldırıldı (`.map().sort()` zinciri). M2: hash fragment testi eklendi. M3: `createPattern` helper `test-utils.ts` shared dosyasına taşındı. M4: root path `/` edge case testleri eklendi (pattern-compiler + url-matcher). L1: `istanbul ignore next` satırına gerekçe yorumu eklendi. L2: non-null assertion `!` → nullish coalescing `??` değiştirildi. L3: `createPattern` helper'a `paramType` parametresi eklendi (varsayılan: `'uuid'`); `numeric`, `nullable`, `hex` kullanan testler yazıldı. Toplam test sayısı 134 → 145 oldu.
+- **Review Follow-ups Round 2 (2026-02-24)**: 5 bulgu giderildi (3M, 2L). M1: `requestMethod.toUpperCase()` döngü öncesi cache'lendi. M2: `??` → `as string` (dead branch elimination, branch coverage %83 → %100). M3: `WeakMap<UrlPattern, CompiledPattern>` compilation cache eklendi. L1: eşit staticSegmentCount tiebreak testleri eklendi. L2: method filter sort öncesine taşındı. Toplam test sayısı 145 → 147 oldu.
 
 ### File List
 
@@ -450,3 +459,4 @@ Herhangi bir debug log oluşturulmadı — implementasyon ilk denemede başarıy
 - 2026-02-23: Story 1.4 implementasyonu tamamlandı. UrlMatcher & PatternCompiler modülleri oluşturuldu. 35 yeni test eklendi (pattern-compiler: 13, url-matcher: 22). Tüm AC'lar karşılandı. Coverage %100.
 - 2026-02-24: Code review tamamlandı — 4 MEDIUM, 3 LOW bulgu. Action item olarak eklendi. Status: review → in-progress.
 - 2026-02-24: Code review bulgularının tamamı giderildi — 7 review item çözüldü (4 MEDIUM, 3 LOW). `test-utils.ts` oluşturuldu. 11 yeni test eklendi (toplam 145). url-matcher.ts iyileştirildi (M1, L1, L2). Status: in-progress → review.
+- 2026-02-24: Code review Round 2 tamamlandı — 5 bulgu giderildi (3 MEDIUM, 2 LOW). WeakMap compilation cache eklendi. Branch coverage %100'e çıkarıldı. 2 yeni test eklendi (toplam 147). Status: review → done.

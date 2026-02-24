@@ -10,6 +10,25 @@
 
 import type { UrlPattern, MatchResult } from '../types/url-pattern.types';
 import { compilePattern } from './pattern-compiler';
+import type { CompiledPattern } from './pattern-compiler';
+
+// ─── Compilation Cache ─────────────────────────────────────────
+
+/**
+ * WeakMap-based compilation cache.
+ * Aynı UrlPattern referansı tekrar geldiğinde regex yeniden derlenmez.
+ * WeakMap kullandığı için UrlPattern GC'ye uygun kaldığında cache entry'si de temizlenir.
+ */
+const compilationCache = new WeakMap<UrlPattern, CompiledPattern>();
+
+function getCompiledPattern(urlPattern: UrlPattern): CompiledPattern {
+  let compiled = compilationCache.get(urlPattern);
+  if (!compiled) {
+    compiled = compilePattern(urlPattern);
+    compilationCache.set(urlPattern, compiled);
+  }
+  return compiled;
+}
 
 // ─── Helpers ───────────────────────────────────────────────────
 
@@ -22,7 +41,9 @@ function extractPathname(requestUrl: string): string {
     return new URL(requestUrl).pathname;
   } catch {
     // Path-only input — query ve fragment'ı ayır
-    return (requestUrl.split('?')[0] ?? requestUrl).split('#')[0] ?? requestUrl;
+    // String.split() always returns at least one element — [0] is guaranteed defined
+    const pathOnly = requestUrl.split('?')[0] as string;
+    return pathOnly.split('#')[0] as string;
   }
 }
 
@@ -59,15 +80,15 @@ export function matchUrl(
 ): MatchResult | null {
   try {
     const pathname = normalizePathname(extractPathname(requestUrl));
+    const normalizedMethod = requestMethod.toUpperCase();
 
-    // .map() already returns a new array — no spread copy needed before .sort()
+    // Filter by method first (reduces sort set), then sort by specificity
     const sorted = patterns
-      .map((p) => compilePattern(p))
+      .map((p) => getCompiledPattern(p))
+      .filter((p) => p.method.toUpperCase() === normalizedMethod)
       .sort((a, b) => b.staticSegmentCount - a.staticSegmentCount);
 
-    const match = sorted.find(
-      (p) => p.method.toUpperCase() === requestMethod.toUpperCase() && p.regex.test(pathname),
-    );
+    const match = sorted.find((p) => p.regex.test(pathname));
 
     return match !== undefined ? { pattern: match.pattern } : null;
   } catch {

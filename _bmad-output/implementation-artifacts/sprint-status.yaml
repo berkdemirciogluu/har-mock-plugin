@@ -55,7 +55,7 @@ development_status:
     1-1-monorepo-kurulumu-temel-yapilandirma: done                       # SCRUM-10
     1-2-har-parser-validator: done                                       # SCRUM-11
     1-3-auto-parameterization-engine: done                               # SCRUM-12
-    1-4-url-matcher-pattern-compiler: review                            # SCRUM-13
+    1-4-url-matcher-pattern-compiler: done                             # SCRUM-13
     1-5-priority-chain-rule-engine-error-class-hierarchy: backlog         # SCRUM-14
     epic-1-retrospective: optional
 

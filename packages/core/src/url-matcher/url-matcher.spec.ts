@@ -203,6 +203,32 @@ describe('matchUrl', () => {
 
       expect(result).toBeNull();
     });
+
+    it('equal staticSegmentCount — returns first matching pattern from input order (L1)', () => {
+      // Both have staticSegmentCount: 2 — sort is stable, input order preserved
+      const patternA = createPattern('/api/{param}/details', 'GET');
+      const patternB = createPattern('/api/{param}/summary', 'GET');
+      const patterns = [patternA, patternB];
+
+      const result = matchUrl('/api/123/details', 'GET', patterns);
+
+      expect(result).not.toBeNull();
+      expect(result?.pattern).toBe(patternA);
+    });
+
+    it('equal staticSegmentCount — reversed input order returns first match (L1)', () => {
+      const patternA = createPattern('/api/{param}/details', 'GET');
+      const patternB = createPattern('/api/{param}/summary', 'GET');
+      // Reversed order
+      const patterns = [patternB, patternA];
+
+      const result = matchUrl('/api/123/details', 'GET', patterns);
+
+      // patternA still matches /api/123/details, patternB does NOT match it
+      // So result is patternA regardless of order (different templates)
+      expect(result).not.toBeNull();
+      expect(result?.pattern).toBe(patternA);
+    });
   });
 
   describe('paramType variety in fixture (L3)', () => {
