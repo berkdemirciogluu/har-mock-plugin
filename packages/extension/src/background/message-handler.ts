@@ -7,7 +7,7 @@ import { type Message, MessageType } from '../shared';
 export function handleMessage(message: Message, port: chrome.runtime.Port): void {
   switch (message.type) {
     case MessageType.PING:
-      port.postMessage({ type: MessageType.PONG });
+      port.postMessage({ type: MessageType.PONG, payload: undefined });
       break;
 
     case MessageType.STATE_SYNC:

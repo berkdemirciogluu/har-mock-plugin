@@ -76,6 +76,7 @@ export class AccordionComponent {
   readonly bodyId = computed(() => `accordion-body-${this.instanceId}`);
 
   readonly isExpanded = signal(false);
+  private initialized = false;
 
   readonly badgeClasses = computed(() => {
     switch (this.badgeVariant()) {
@@ -89,10 +90,15 @@ export class AccordionComponent {
   });
 
   constructor() {
-    // Initialize from persisted state or input
+    // Initialize from persisted state or input — runs only once
     effect(
       () => {
         const key = this.persistKey();
+        const expandedInput = this.expanded();
+        if (this.initialized) {
+          return;
+        }
+        this.initialized = true;
         if (key) {
           const stored = localStorage.getItem(`hm-accordion-${key}`);
           if (stored !== null) {
@@ -100,7 +106,7 @@ export class AccordionComponent {
             return;
           }
         }
-        this.isExpanded.set(this.expanded());
+        this.isExpanded.set(expandedInput);
       },
       { allowSignalWrites: true },
     );

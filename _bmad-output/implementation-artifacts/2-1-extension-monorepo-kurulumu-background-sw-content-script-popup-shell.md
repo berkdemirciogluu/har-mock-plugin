@@ -1,6 +1,6 @@
 # Story 2.1: Extension Monorepo Kurulumu — Background SW, Content Script, Popup Shell
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -99,7 +99,7 @@ so that popup açılabilsin, background service worker ve content script yüklen
     - Template (inline veya ayrı .html): İki tab butonu, underline indicator (2px indigo)
     - Accessibility: `role="tablist"`, her tab `role="tab"` + `aria-selected`
     - Tailwind ile stil: `border-b border-slate-200`, aktif tab `border-indigo-500 text-indigo-600 font-medium`, inaktif `text-slate-500 hover:text-slate-700`
-  - [x] Subtask 4.2: `packages/extension/src/popup/components/tab-bar/tab-bar.component.html` oluştur:
+  - [x] Subtask 4.2: Tab bar template'ini inline `template:` olarak component dosyasına ekle (webpack JIT nedeniyle `templateUrl` kullanılamaz — bkz. Dev Notes):
     ```html
     <div class="flex border-b border-slate-200" role="tablist">
       <button
@@ -130,7 +130,7 @@ so that popup açılabilsin, background service worker ve content script yüklen
     - Content projection: `<ng-content>` ile accordion body içeriği dışarıdan verilir
     - `persistKey` set edilmişse `localStorage`'a açık/kapalı state kaydet
     - Accessibility: header `role="button"`, `aria-expanded`, body `role="region"`, `aria-labelledby`
-  - [x] Subtask 4.4: `packages/extension/src/popup/components/accordion/accordion.component.html` oluştur
+  - [x] Subtask 4.4: Accordion template'ini inline `template:` olarak component dosyasına ekle (webpack JIT nedeniyle `templateUrl` kullanılamaz — bkz. Dev Notes)
   - [x] Subtask 4.5: `packages/extension/src/popup/components/controls-tab/controls-tab.component.ts` oluştur:
     - `selector: 'hm-controls-tab'`
     - `standalone: true`, `ChangeDetectionStrategy.OnPush`
@@ -140,13 +140,13 @@ so that popup açılabilsin, background service worker ve content script yüklen
       - Rules: "Rule yönetimi (Story 4.1)"
       - Settings: "Extension ayarları (Story 2.5)"
     - Accordion'ları import et ve kullan
-  - [x] Subtask 4.6: `packages/extension/src/popup/components/controls-tab/controls-tab.component.html` oluştur
+  - [x] Subtask 4.6: Controls tab template'ini inline `template:` olarak component dosyasına ekle (webpack JIT nedeniyle `templateUrl` kullanılamaz — bkz. Dev Notes)
   - [x] Subtask 4.7: `packages/extension/src/popup/components/monitor-tab/monitor-tab.component.ts` oluştur:
     - `selector: 'hm-monitor-tab'`
     - `standalone: true`, `ChangeDetectionStrategy.OnPush`
     - Placeholder: empty state mesajı "Henüz intercept edilmiş request yok. Sayfayı yenileyip bir istek başlatın."
     - Sonraki story'lerde (Story 3.1, 3.2) gerçek feed component'i eklenecek
-  - [x] Subtask 4.8: `packages/extension/src/popup/components/monitor-tab/monitor-tab.component.html` oluştur
+  - [x] Subtask 4.8: Monitor tab template'ini inline `template:` olarak component dosyasına ekle (webpack JIT nedeniyle `templateUrl` kullanılamaz — bkz. Dev Notes)
   - [x] Subtask 4.9: `packages/extension/src/popup/app.component.ts` güncelle:
     - Tab state signal: `activeTab = signal<'controls' | 'monitor'>('controls')`
     - `hm-tab-bar`, `hm-controls-tab`, `hm-monitor-tab` component'lerini import et
@@ -468,6 +468,11 @@ Claude Opus 4.6 (GitHub Copilot)
 ### Change Log
 
 - 2025-02-25: Story 2.1 tam implementasyon — shared types, background SW, content script, Angular popup shell, unit tests
+- 2026-02-25: Code Review (AI) — 4 fix uygulandı:
+  - H1: popup/index.html çift CSS link kaldırıldı (404 riski giderildi)
+  - H2: PONG yanıtına `payload: undefined` eklenerek Message<T> protocol tutarlılığı sağlandı
+  - M1: Subtask 4.2/4.4/4.6/4.8 açıklamaları inline template gerçekliğini yansıtacak şekilde güncellendi
+  - M2: AccordionComponent effect'ine initialization guard eklendi (input değişikliklerinde state override önlendi)
 
 ### File List
 
@@ -497,6 +502,6 @@ Claude Opus 4.6 (GitHub Copilot)
 - `packages/extension/src/content/content.ts` — Placeholder → gerçek port bağlantısı
 - `packages/extension/src/popup/app.component.ts` — Skeleton → tab bar + conditional tab rendering
 - `packages/extension/src/popup/app.component.spec.ts` — Tab geçişi ve layout testleri
-- `packages/extension/src/popup/index.html` — CSS link eklendi
+- `packages/extension/src/popup/index.html` — CSS link eklendi → Code Review: çift link düzeltildi
 - `packages/extension/jest.config.js` — jest-preset-angular preset, transform, setupFilesAfterEnv
 - `packages/extension/package.json` — jest-preset-angular@14.6.2, @angular/platform-browser-dynamic devDeps

@@ -49,6 +49,7 @@ describe('handleMessage', () => {
 
     expect(port.postMessage).toHaveBeenCalledWith({
       type: MessageType.PONG,
+      payload: undefined,
     });
   });
 
@@ -83,6 +84,6 @@ describe('handleMessage', () => {
 
     // PING should produce PONG, STATE_SYNC should be silent
     expect(port.postMessage).toHaveBeenCalledTimes(1);
-    expect(port.postMessage).toHaveBeenCalledWith({ type: MessageType.PONG });
+    expect(port.postMessage).toHaveBeenCalledWith({ type: MessageType.PONG, payload: undefined });
   });
 });
