@@ -10,7 +10,7 @@ export const PORT_NAME_CONTENT_PREFIX = 'har-mock-content-';
 export const PORT_NAME_POPUP = 'har-mock-popup';
 
 /** Window messaging channel — MAIN ↔ ISOLATED world bridge */
-export const HAR_MOCK_CHANNEL = '__HAR_MOCK__';
+export const HAR_MOCK_CHANNEL = '__HAR_MOCK__' as const;
 
 /** Mock resolver timeout (ms) — background SW yanıt vermezse passthrough */
 export const MATCH_QUERY_TIMEOUT_MS = 5000;

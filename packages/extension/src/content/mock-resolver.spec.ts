@@ -136,8 +136,8 @@ describe('MockResolver', () => {
     it('should generate unique requestIds for concurrent requests', () => {
       const postSpy = jest.spyOn(window, 'postMessage').mockImplementation(() => undefined);
 
-      resolver.resolve('https://api.com/a', 'GET');
-      resolver.resolve('https://api.com/b', 'GET');
+      void resolver.resolve('https://api.com/a', 'GET');
+      void resolver.resolve('https://api.com/b', 'GET');
 
       expect(postSpy).toHaveBeenCalledTimes(2);
       const id1 = (postSpy.mock.calls[0]?.[0] as Record<string, unknown>)['requestId'];

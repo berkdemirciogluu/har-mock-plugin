@@ -1,6 +1,6 @@
 # Story 2.4: Fetch & XHR Intercept + HAR Response Replay
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -1019,3 +1019,4 @@ Claude Sonnet 4.6 (GitHub Copilot)
 | Date | Changed By | Summary |
 |------|------------|---------|
 | 2025-07-25 | Claude Sonnet 4.6 | Story 2.4 tam implementasyonu: dual-world intercept mimarisi, MockResolver, fetch/XHR interceptor'ları, window↔port köprüsü, requestId echoing. 223 test GREEN, build OK, format OK. |
+| 2026-02-25 | Claude Opus 4.6 (Code Review) | H1: 5 ESLint hatası düzeltildi (unbound-method, no-this-alias, no-floating-promises). H2: XHR applyMockToXhr double-fire kaldırıldı (dispatchEvent zaten IDL handler'ları tetikler). M1: HAR_MOCK_CHANNEL DRY ihlali giderildi (window-messaging.types → import+re-export from shared/constants). 223 test GREEN, build OK, format OK, lint clean. |

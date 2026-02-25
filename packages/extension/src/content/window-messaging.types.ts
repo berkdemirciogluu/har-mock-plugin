@@ -3,8 +3,9 @@
  * Chrome port messaging ile KARIŞTIRILMAMALI — bu window.postMessage tabanlı
  */
 
-/** Channel identifier — diğer window mesajlarından ayırt etmek için */
-export const HAR_MOCK_CHANNEL = '__HAR_MOCK__' as const;
+/** Channel identifier — shared/constants.ts'den import + re-export (tek kaynak DRY) */
+import { HAR_MOCK_CHANNEL } from '../shared/constants';
+export { HAR_MOCK_CHANNEL };
 
 /** MAIN → ISOLATED: URL match sorgusu */
 export interface WindowMatchQuery {

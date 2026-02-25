@@ -18,7 +18,9 @@ const xhrMeta = new WeakMap<XMLHttpRequest, { method: string; url: string; async
  * open() → method/url kaydet; send() → resolver.resolve() → mock veya passthrough.
  */
 export function interceptXhr(resolver: MockResolver): void {
+  // eslint-disable-next-line @typescript-eslint/unbound-method
   originalOpen = XMLHttpRequest.prototype.open;
+  // eslint-disable-next-line @typescript-eslint/unbound-method
   originalSend = XMLHttpRequest.prototype.send;
 
   XMLHttpRequest.prototype.open = function xhrOpen(
@@ -47,6 +49,7 @@ export function interceptXhr(resolver: MockResolver): void {
       return;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const xhr = this;
     resolver
       .resolve(meta.url, meta.method)
@@ -116,20 +119,10 @@ function applyMockToXhr(
   });
 
   // Event dispatch — readystatechange → load → loadend
+  // dispatchEvent IDL event handler'ları (onreadystatechange, onload, onloadend) da otomatik tetikler
   xhr.dispatchEvent(new Event('readystatechange'));
   xhr.dispatchEvent(new ProgressEvent('load'));
   xhr.dispatchEvent(new ProgressEvent('loadend'));
-
-  // onreadystatechange callback (eski style event handler desteği)
-  if (typeof xhr.onreadystatechange === 'function') {
-    xhr.onreadystatechange(new Event('readystatechange') as ProgressEvent);
-  }
-  if (typeof xhr.onload === 'function') {
-    xhr.onload(new ProgressEvent('load'));
-  }
-  if (typeof xhr.onloadend === 'function') {
-    xhr.onloadend(new ProgressEvent('loadend'));
-  }
 }
 
 /** URL'yi absolute path'e çöz */
