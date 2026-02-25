@@ -9,7 +9,7 @@ export type ReplayMode = 'sequential' | 'last-match';
   template: `
     <div
       class="flex rounded overflow-hidden border border-slate-200"
-      role="group"
+      role="radiogroup"
       aria-label="Replay mode seçimi"
     >
       <button

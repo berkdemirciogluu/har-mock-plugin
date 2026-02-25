@@ -205,6 +205,28 @@ describe('ControlsTabComponent', () => {
         expect.any(String),
       );
     });
+
+    it('should call sendMessage with UPDATE_SETTINGS and last-match mode', () => {
+      component.onReplayModeChange('last-match');
+      expect(mockMessagingService.sendMessage).toHaveBeenCalledWith(
+        'UPDATE_SETTINGS',
+        { settings: { replayMode: 'last-match' } },
+        expect.any(String),
+      );
+    });
+
+    it('should log error when sendMessage rejects', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      mockMessagingService.sendMessage.mockRejectedValueOnce(new Error('network fail'));
+      component.onReplayModeChange('sequential');
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(consoleSpy).toHaveBeenCalledWith(
+        '[HAR Mock] Replay mode güncellenemedi:',
+        expect.any(Error),
+      );
+      consoleSpy.mockRestore();
+    });
   });
 
   describe('onEnabledChange', () => {
@@ -215,6 +237,28 @@ describe('ControlsTabComponent', () => {
         { settings: { enabled: false } },
         expect.any(String),
       );
+    });
+
+    it('should call sendMessage with UPDATE_SETTINGS and enabled=true', () => {
+      component.onEnabledChange(true);
+      expect(mockMessagingService.sendMessage).toHaveBeenCalledWith(
+        'UPDATE_SETTINGS',
+        { settings: { enabled: true } },
+        expect.any(String),
+      );
+    });
+
+    it('should log error when sendMessage rejects', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      mockMessagingService.sendMessage.mockRejectedValueOnce(new Error('network fail'));
+      component.onEnabledChange(false);
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(consoleSpy).toHaveBeenCalledWith(
+        '[HAR Mock] Extension toggle güncellenemedi:',
+        expect.any(Error),
+      );
+      consoleSpy.mockRestore();
     });
   });
 });

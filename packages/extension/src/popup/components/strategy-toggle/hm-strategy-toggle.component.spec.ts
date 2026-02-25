@@ -88,8 +88,8 @@ describe('StrategyToggleComponent', () => {
   });
 
   describe('Accessibility', () => {
-    it('should have role="group" on the wrapper', () => {
-      const group = el.querySelector('[role="group"]');
+    it('should have role="radiogroup" on the wrapper', () => {
+      const group = el.querySelector('[role="radiogroup"]');
       expect(group).toBeTruthy();
     });
 

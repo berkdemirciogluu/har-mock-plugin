@@ -24,7 +24,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
       >
         <span
           class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform"
-          [class]="extensionEnabled() ? 'translate-x-4.5' : 'translate-x-0.5'"
+          [class]="extensionEnabled() ? 'translate-x-[18px]' : 'translate-x-0.5'"
         ></span>
       </button>
     </div>

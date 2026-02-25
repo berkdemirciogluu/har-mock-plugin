@@ -65,9 +65,10 @@ export class ControlsTabComponent {
 
   readonly endpointCount = signal<number | null>(null);
 
-  readonly hasHar = computed(
-    () => this.messaging.state()?.harData !== null && this.messaging.state() !== null,
-  );
+  readonly hasHar = computed(() => {
+    const state = this.messaging.state();
+    return state !== null && state.harData !== null;
+  });
   readonly replayMode = computed<ReplayMode>(
     () => this.messaging.state()?.settings?.replayMode ?? 'last-match',
   );
