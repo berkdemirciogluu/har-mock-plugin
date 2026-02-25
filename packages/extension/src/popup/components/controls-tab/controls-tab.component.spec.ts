@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { ControlsTabComponent } from './controls-tab.component';
 import { ExtensionMessagingService } from '../../services/extension-messaging.service';
+import type { StateSyncPayload } from '../../../shared/payload.types';
 
 // Mock @har-mock/core to avoid side-effect imports in JSDOM
 jest.mock('@har-mock/core', () => ({
@@ -9,22 +11,40 @@ jest.mock('@har-mock/core', () => ({
   HarParseError: class HarParseError extends Error {},
 }));
 
-const mockMessagingService = {
+const makeStateSyncPayload = (overrides: Partial<StateSyncPayload> = {}): StateSyncPayload => ({
+  harData: null,
+  activeRules: [],
+  settings: {
+    enabled: true,
+    replayMode: 'last-match',
+    timingReplay: false,
+    excludeList: [],
+  },
+  editedResponses: {},
+  matchHistory: [],
+  accordionStates: {},
+  ...overrides,
+});
+
+const createMockMessagingService = (stateValue: StateSyncPayload | null = null) => ({
   connect: jest.fn(),
   disconnect: jest.fn(),
-  sendMessage: jest.fn(),
-  state: jest.fn().mockReturnValue(null),
+  sendMessage: jest.fn().mockResolvedValue({ success: true }),
+  state: signal(stateValue),
   ngOnDestroy: jest.fn(),
-};
+});
 
 describe('ControlsTabComponent', () => {
   let component: ControlsTabComponent;
   let fixture: ComponentFixture<ControlsTabComponent>;
   let el: HTMLElement;
+  let mockMessagingService: ReturnType<typeof createMockMessagingService>;
 
   beforeEach(async () => {
     jest.clearAllMocks();
     localStorage.clear();
+
+    mockMessagingService = createMockMessagingService(null);
 
     await TestBed.configureTestingModule({
       imports: [ControlsTabComponent],
@@ -78,19 +98,113 @@ describe('ControlsTabComponent', () => {
     expect(harUpload).toBeTruthy();
   });
 
-  it('should contain placeholder text for non-HAR sections', () => {
+  it('should contain placeholder text for Rules section', () => {
     const text = el.textContent;
     expect(text).toContain('Rule yönetimi');
-    expect(text).toContain('Extension ayarları');
   });
 
   it('should start with null endpointCount signal', () => {
     expect(component.endpointCount()).toBeNull();
   });
 
-  it('should update endpointCount when onEndpointLoaded is emitted', () => {
+  it('should update endpointCount when set', () => {
     component.endpointCount.set(42);
     expect(component.endpointCount()).toBe(42);
     fixture.detectChanges();
+  });
+
+  describe('hm-strategy-toggle (progressive disclosure)', () => {
+    it('should NOT render hm-strategy-toggle when state is null', () => {
+      mockMessagingService.state.set(null);
+      fixture.detectChanges();
+      expect(el.querySelector('hm-strategy-toggle')).toBeNull();
+    });
+
+    it('should NOT render hm-strategy-toggle when harData is null in state', () => {
+      mockMessagingService.state.set(makeStateSyncPayload({ harData: null }));
+      fixture.detectChanges();
+      expect(el.querySelector('hm-strategy-toggle')).toBeNull();
+    });
+
+    it('should render hm-strategy-toggle when harData is present', () => {
+      mockMessagingService.state.set(
+        makeStateSyncPayload({
+          harData: {
+            entries: [],
+            patterns: [],
+            fileName: 'test.har',
+            loadedAt: Date.now(),
+          },
+        }),
+      );
+      fixture.detectChanges();
+      expect(el.querySelector('hm-strategy-toggle')).toBeTruthy();
+    });
+
+    it('should reflect replayMode "sequential" from state', () => {
+      mockMessagingService.state.set(
+        makeStateSyncPayload({
+          settings: { enabled: true, replayMode: 'sequential', timingReplay: false, excludeList: [] },
+        }),
+      );
+      fixture.detectChanges();
+      expect(component.replayMode()).toBe('sequential');
+    });
+
+    it('should default replayMode to "last-match" when state is null', () => {
+      mockMessagingService.state.set(null);
+      fixture.detectChanges();
+      expect(component.replayMode()).toBe('last-match');
+    });
+  });
+
+  describe('hm-settings-section', () => {
+    it('should render hm-settings-section', () => {
+      expect(el.querySelector('hm-settings-section')).toBeTruthy();
+    });
+
+    it('should reflect extensionEnabled=true from state', () => {
+      mockMessagingService.state.set(makeStateSyncPayload());
+      fixture.detectChanges();
+      expect(component.extensionEnabled()).toBe(true);
+    });
+
+    it('should reflect extensionEnabled=false from state', () => {
+      mockMessagingService.state.set(
+        makeStateSyncPayload({
+          settings: { enabled: false, replayMode: 'last-match', timingReplay: false, excludeList: [] },
+        }),
+      );
+      fixture.detectChanges();
+      expect(component.extensionEnabled()).toBe(false);
+    });
+
+    it('should default extensionEnabled to true when state is null', () => {
+      mockMessagingService.state.set(null);
+      fixture.detectChanges();
+      expect(component.extensionEnabled()).toBe(true);
+    });
+  });
+
+  describe('onReplayModeChange', () => {
+    it('should call sendMessage with UPDATE_SETTINGS and sequential mode', () => {
+      component.onReplayModeChange('sequential');
+      expect(mockMessagingService.sendMessage).toHaveBeenCalledWith(
+        'UPDATE_SETTINGS',
+        { settings: { replayMode: 'sequential' } },
+        expect.any(String),
+      );
+    });
+  });
+
+  describe('onEnabledChange', () => {
+    it('should call sendMessage with UPDATE_SETTINGS and enabled=false', () => {
+      component.onEnabledChange(false);
+      expect(mockMessagingService.sendMessage).toHaveBeenCalledWith(
+        'UPDATE_SETTINGS',
+        { settings: { enabled: false } },
+        expect.any(String),
+      );
+    });
   });
 });

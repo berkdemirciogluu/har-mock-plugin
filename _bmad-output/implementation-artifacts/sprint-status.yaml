@@ -65,7 +65,7 @@ development_status:
     2-2-background-service-worker-state-yonetimi-port-hub: done              # SCRUM-16
     2-3-har-yukleme-ui-drag-drop-file-picker: done                        # SCRUM-17
     2-4-fetch-xhr-intercept-har-response-replay: done                     # SCRUM-18
-    2-5-default-on-intercept-replay-mode-toggle-extension-toggle: backlog # SCRUM-19
+    2-5-default-on-intercept-replay-mode-toggle-extension-toggle: review # SCRUM-19
     2-6-har-timing-replay: backlog                                       # SCRUM-20
     epic-2-retrospective: optional
 

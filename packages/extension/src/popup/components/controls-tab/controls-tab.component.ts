@@ -1,12 +1,17 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { AccordionComponent } from '../accordion/accordion.component';
 import { HarUploadComponent } from '../har-upload/hm-har-upload.component';
+import { StrategyToggleComponent, type ReplayMode } from '../strategy-toggle/hm-strategy-toggle.component';
+import { SettingsSectionComponent } from '../settings-section/hm-settings-section.component';
+import { ExtensionMessagingService } from '../../services/extension-messaging.service';
+import { MessageType } from '../../../shared/messaging.types';
+import type { UpdateSettingsPayload } from '../../../shared/payload.types';
 
 @Component({
   selector: 'hm-controls-tab',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AccordionComponent, HarUploadComponent],
+  imports: [AccordionComponent, HarUploadComponent, StrategyToggleComponent, SettingsSectionComponent],
   template: `
     <div class="space-y-2 p-2">
       <hm-accordion
@@ -17,6 +22,15 @@ import { HarUploadComponent } from '../har-upload/hm-har-upload.component';
         [badgeVariant]="endpointCount() !== null ? 'success' : 'default'"
       >
         <hm-har-upload (onEndpointLoaded)="endpointCount.set($event)" />
+        @if (hasHar()) {
+          <div class="mt-2">
+            <p class="mb-1 text-xs font-medium text-slate-500">Replay Mode</p>
+            <hm-strategy-toggle
+              [replayMode]="replayMode()"
+              (modeChange)="onReplayModeChange($event)"
+            />
+          </div>
+        }
       </hm-accordion>
 
       <hm-accordion
@@ -30,11 +44,38 @@ import { HarUploadComponent } from '../har-upload/hm-har-upload.component';
       </hm-accordion>
 
       <hm-accordion title="Settings" [expanded]="false" persistKey="settings">
-        <p class="text-xs text-slate-400">Extension ayarları (Story 2.5)</p>
+        <hm-settings-section
+          [extensionEnabled]="extensionEnabled()"
+          (enabledChange)="onEnabledChange($event)"
+        />
       </hm-accordion>
     </div>
   `,
 })
 export class ControlsTabComponent {
+  private readonly messaging = inject(ExtensionMessagingService);
+
   readonly endpointCount = signal<number | null>(null);
+
+  readonly hasHar = computed(() => this.messaging.state()?.harData !== null && this.messaging.state() !== null);
+  readonly replayMode = computed<ReplayMode>(() => this.messaging.state()?.settings?.replayMode ?? 'last-match');
+  readonly extensionEnabled = computed<boolean>(() => this.messaging.state()?.settings?.enabled ?? true);
+
+  onReplayModeChange(mode: ReplayMode): void {
+    const payload: UpdateSettingsPayload = { settings: { replayMode: mode } };
+    void this.messaging
+      .sendMessage(MessageType.UPDATE_SETTINGS, payload, crypto.randomUUID())
+      .catch((err: unknown) => {
+        console.error('[HAR Mock] Replay mode güncellenemedi:', err);
+      });
+  }
+
+  onEnabledChange(enabled: boolean): void {
+    const payload: UpdateSettingsPayload = { settings: { enabled } };
+    void this.messaging
+      .sendMessage(MessageType.UPDATE_SETTINGS, payload, crypto.randomUUID())
+      .catch((err: unknown) => {
+        console.error('[HAR Mock] Extension toggle güncellenemedi:', err);
+      });
+  }
 }
