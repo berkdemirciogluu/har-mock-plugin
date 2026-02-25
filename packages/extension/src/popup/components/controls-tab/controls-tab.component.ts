@@ -52,8 +52,8 @@ import type { UpdateSettingsPayload } from '../../../shared/payload.types';
             >
               <span
                 class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform"
-                [class.translate-x-\[18px\]]="timingReplay()"
-                [class.translate-x-\[3px\]]="!timingReplay()"
+                [class.translate-x-[18px]]="timingReplay()"
+                [class.translate-x-[3px]]="!timingReplay()"
               ></span>
             </button>
           </div>

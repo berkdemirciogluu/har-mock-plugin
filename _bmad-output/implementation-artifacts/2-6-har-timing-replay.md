@@ -1,6 +1,6 @@
 # Story 2.6: HAR Timing Replay
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -239,7 +239,7 @@ import { MessageType, type UpdateSettingsPayload } from '../../../shared';
 - Tüm backend mantığı önceki story'lerde hazırdı; bu story yalnızca UI toggle katmanı ekledi.
 - `timingReplay` computed signal, `onTimingReplayChange` handler ve Tailwind toggle UI eklendi.
 - Arbitrary Tailwind class'ları (`translate-x-[18px]`, `translate-x-[3px]`) Story 2.5'teki pattern ile uygulandı.
-- 31 test geçti (7 yeni timing replay testi dahil).
+- 32 test geçti (8 yeni timing replay testi dahil).
 
 ### File List
 
@@ -251,6 +251,7 @@ import { MessageType, type UpdateSettingsPayload } from '../../../shared';
 | Tarih | Değişiklik |
 |-------|------------|
 | 2026-02-25 | Story 2.6 implementasyon tamamlandı — timing replay UI toggle eklendi, 31 test pass |
+| 2026-02-25 | Code review: `translate-x-[18px]` escape fix, toggle kapatma testi eklendi (32 test), story boş bölüm temizlendi |
 
 - [Source: _bmad-output/planning-artifacts/epics.md#Story 2.6] — AC, user story, FR15, UX6
 - [Source: _bmad-output/planning-artifacts/epics.md#UX Requirements] — UX6: "HAR timing replay on/off kontrolü Controls tab'ında HAR accordion içinde"
@@ -266,20 +267,3 @@ import { MessageType, type UpdateSettingsPayload } from '../../../shared';
 - [Source: packages/extension/src/popup/services/extension-messaging.service.ts] — `sendMessage()`, `state` signal
 - [Source: _bmad-output/implementation-artifacts/2-5-default-on-intercept-replay-mode-toggle-extension-toggle.md] — Önceki story öğrenmeleri
 
-## Dev Agent Record
-
-### Agent Model Used
-
-Claude Sonnet 4.6 (GitHub Copilot)
-
-### Debug Log References
-
-### Completion Notes List
-
-### File List
-
-### Change Log
-
-| Date | Changed By | Summary |
-|------|------------|---------|
-| 2026-02-25 | Claude Sonnet 4.6 (GitHub Copilot) | Story 2.6 oluşturuldu — ready-for-dev |
