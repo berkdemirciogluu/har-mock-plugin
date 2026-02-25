@@ -1,6 +1,6 @@
 # Story 2.2: Background Service Worker — State Yönetimi & Port Hub
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -811,12 +811,22 @@ Claude Opus 4.6 (GitHub Copilot)
 - ESLint `*.spec.ts` override eklendi: `unbound-method`, `no-unsafe-assignment`, `no-unsafe-member-access` kuralları spec dosyalarında kapatıldı
 - `no-unused-vars` kuralına `varsIgnorePattern: ^_` eklendi
 - Jira MCP 403 hatası nedeniyle Jira sync atlandı
+- Code review (2026-02-25): H1/H2 kritik buglar düzeltildi, M1-M3 medium sorunlar giderildi
+
+### Review Follow-ups (AI)
+
+- [ ] [AI-Review][MEDIUM] `updateAccordionState` için `MessageType.UPDATE_ACCORDION` ve handler eksik — StateManager metodu implement edilmiş ama message protocol'e dahil değil [state-manager.ts:178 + message-handler.ts]
+- [ ] [AI-Review][MEDIUM] `swConfig`'de `transpileOnly: true` — background/content TypeScript type hataları build'de görünmüyor; CI'a `tsc --noEmit` adımı eklenmeli [webpack.config.js:100]
+- [ ] [AI-Review][LOW] `CONNECT`/`DISCONNECT` MessageType'ları için handler yok — default case'e düşüp console.warn üretiyor; ya handler ekle ya da enum'dan çıkar [message-handler.ts:390]
+- [ ] [AI-Review][LOW] Extension `enabled: false` iken passthrough event hâlâ matchHistory'e ekleniyor ve popup'a gönderiliyor — kasıtlı mı netleştirilmeli [message-handler.ts:122]
+- [ ] [AI-Review][LOW] Exclude list `url.includes(pattern)` substring match — `api.com` pattern'ı `myapi.com`'u da dışlayabilir; regex/glob desteklenebilir [message-handler.ts:137]
 
 ### Change Log
 
 | Tarih | Değişiklik |
 |-------|------------|
 | 2025-07 | İlk implementasyon — Task 1-6 tamamlandı, story review'a gönderildi |
+| 2026-02-25 | Code review düzeltmeleri — H1: MATCH_QUERY hata payload, H2: lazy init try/catch, M1: MatchEventPayload çift cast kaldırıldı, M2: MessageResponse açıklama, M3: storage error testleri |
 
 ### File List
 
@@ -830,13 +840,15 @@ Claude Opus 4.6 (GitHub Copilot)
 - `packages/extension/tsconfig.popup.json`
 
 **Güncellenen Dosyalar:**
-- `packages/extension/src/shared/messaging.types.ts` — 10 yeni MessageType değeri
+- `packages/extension/src/shared/messaging.types.ts` — 10 yeni MessageType değeri + MessageResponse<T> açıklama
 - `packages/extension/src/shared/constants.ts` — MAX_MATCH_HISTORY = 500
 - `packages/extension/src/shared/index.ts` — yeni type re-export'ları
-- `packages/extension/src/background/message-handler.ts` — tam yeniden yazım, async switch/case
-- `packages/extension/src/background/message-handler.spec.ts` — tam yeniden yazım, mock StateManager/PortManager
+- `packages/extension/src/background/message-handler.ts` — tam yeniden yazım, async switch/case; code review düzeltmeleri
+- `packages/extension/src/background/message-handler.spec.ts` — tam yeniden yazım; lazy init hata testi eklendi
 - `packages/extension/src/background/background.ts` — StateManager init eklendi
 - `packages/extension/src/background/index.ts` — StateManager export
+- `packages/extension/src/background/state-manager.spec.ts` — storage error handling testleri eklendi (code review)
 - `packages/extension/webpack.config.js` — çift config (popup + sw)
 - `.eslintrc.json` — varsIgnorePattern + spec dosyaları override
+- `.github/copilot-instructions.md` — BMAD config güncellemesi
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — 2-2 status güncellendi

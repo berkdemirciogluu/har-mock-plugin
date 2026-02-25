@@ -13,7 +13,6 @@ import type {
   UpdateResponsePayload,
   DeleteRulePayload,
   RulePayload,
-  MatchEventPayload,
 } from '../shared/payload.types';
 import type { HarSessionData, MatchEvent } from '../shared/state.types';
 import type { StateManager } from './state-manager';
@@ -59,7 +58,18 @@ async function handleMessageAsync(
 ): Promise<void> {
   // Lazy initialization — SW idle timeout sonrası wake-up resilience
   if (!stateManager.isInitialized()) {
-    await stateManager.initialize();
+    try {
+      await stateManager.initialize();
+    } catch (error: unknown) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[HAR Mock] Lazy initialization failed:', errorMsg);
+      port.postMessage({
+        type: message.type,
+        payload: { success: false, error: errorMsg },
+        requestId: message.requestId,
+      });
+      return;
+    }
   }
 
   switch (message.type) {
@@ -124,8 +134,8 @@ async function handleMessageAsync(
           await stateManager.addMatchEvent(passEvent);
           portManager.sendToPopup({
             type: MessageType.MATCH_EVENT,
-            payload: passEvent as unknown as MatchEventPayload,
-          } as Message);
+            payload: passEvent,
+          } as Message<MatchEvent>);
           port.postMessage({
             type: MessageType.MATCH_RESULT,
             payload: { matched: false } satisfies MatchResultPayload,
@@ -139,8 +149,8 @@ async function handleMessageAsync(
           await stateManager.addMatchEvent(excludeEvent);
           portManager.sendToPopup({
             type: MessageType.MATCH_EVENT,
-            payload: excludeEvent as unknown as MatchEventPayload,
-          } as Message);
+            payload: excludeEvent,
+          } as Message<MatchEvent>);
           port.postMessage({
             type: MessageType.MATCH_RESULT,
             payload: { matched: false } satisfies MatchResultPayload,
@@ -157,8 +167,8 @@ async function handleMessageAsync(
           await stateManager.addMatchEvent(editedEvent);
           portManager.sendToPopup({
             type: MessageType.MATCH_EVENT,
-            payload: editedEvent as unknown as MatchEventPayload,
-          } as Message);
+            payload: editedEvent,
+          } as Message<MatchEvent>);
           port.postMessage({
             type: MessageType.MATCH_RESULT,
             payload: {
@@ -184,8 +194,8 @@ async function handleMessageAsync(
           await stateManager.addMatchEvent(ruleEvent);
           portManager.sendToPopup({
             type: MessageType.MATCH_EVENT,
-            payload: ruleEvent as unknown as MatchEventPayload,
-          } as Message);
+            payload: ruleEvent,
+          } as Message<MatchEvent>);
           port.postMessage({
             type: MessageType.MATCH_RESULT,
             payload: {
@@ -231,8 +241,8 @@ async function handleMessageAsync(
               await stateManager.addMatchEvent(harEvent);
               portManager.sendToPopup({
                 type: MessageType.MATCH_EVENT,
-                payload: harEvent as unknown as MatchEventPayload,
-              } as Message);
+                payload: harEvent,
+              } as Message<MatchEvent>);
               port.postMessage({
                 type: MessageType.MATCH_RESULT,
                 payload: {
@@ -251,18 +261,18 @@ async function handleMessageAsync(
         await stateManager.addMatchEvent(passthroughEvent);
         portManager.sendToPopup({
           type: MessageType.MATCH_EVENT,
-          payload: passthroughEvent as unknown as MatchEventPayload,
-        } as Message);
+          payload: passthroughEvent,
+        } as Message<MatchEvent>);
         port.postMessage({
           type: MessageType.MATCH_RESULT,
           payload: { matched: false } satisfies MatchResultPayload,
         });
       } catch (error: unknown) {
         const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        console.error('[HAR Mock] MATCH_QUERY handler failed:', errorMsg);
         port.postMessage({
           type: MessageType.MATCH_RESULT,
-          payload: { success: false, error: errorMsg },
-          requestId: message.requestId,
+          payload: { matched: false } satisfies MatchResultPayload,
         });
       }
       break;

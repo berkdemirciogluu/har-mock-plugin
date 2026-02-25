@@ -401,6 +401,48 @@ describe('StateManager', () => {
     });
   });
 
+  // --- Storage Error Handling ---
+
+  describe('Storage Error Handling', () => {
+    it('should reject and remain uninitialized when chrome.storage.local.get fails', async () => {
+      mockChrome.storage.local.get.mockRejectedValueOnce(new Error('Storage unavailable'));
+
+      await expect(manager.initialize()).rejects.toThrow('Storage unavailable');
+      expect(manager.isInitialized()).toBe(false);
+    });
+
+    it('should allow re-initialization after a failed initialize()', async () => {
+      mockChrome.storage.local.get.mockRejectedValueOnce(new Error('Storage unavailable'));
+      await expect(manager.initialize()).rejects.toThrow();
+      expect(manager.isInitialized()).toBe(false);
+
+      // Second attempt succeeds
+      await manager.initialize();
+      expect(manager.isInitialized()).toBe(true);
+    });
+
+    it('should throw when chrome.storage.local.set fails during setHarData()', async () => {
+      await manager.initialize();
+      mockChrome.storage.local.set.mockRejectedValueOnce(new Error('Quota exceeded'));
+
+      await expect(manager.setHarData(makeHarData())).rejects.toThrow('Quota exceeded');
+    });
+
+    it('should throw when chrome.storage.local.set fails during addRule()', async () => {
+      await manager.initialize();
+      mockChrome.storage.local.set.mockRejectedValueOnce(new Error('Quota exceeded'));
+
+      await expect(manager.addRule(makeRule())).rejects.toThrow('Quota exceeded');
+    });
+
+    it('should throw when chrome.storage.local.remove fails during clearHarData()', async () => {
+      await manager.initialize();
+      mockChrome.storage.local.remove.mockRejectedValueOnce(new Error('Remove failed'));
+
+      await expect(manager.clearHarData()).rejects.toThrow('Remove failed');
+    });
+  });
+
   // --- getFullState ---
 
   describe('getFullState()', () => {

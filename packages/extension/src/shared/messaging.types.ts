@@ -45,7 +45,12 @@ export interface Message<T = unknown> {
   readonly requestId?: string;
 }
 
-/** Generic message response interface */
+/**
+ * Generic message response interface — response payload shape for consumers.
+ * NOT used by message handlers directly; handlers respond using Message<T> format
+ * where payload contains { success: boolean, error?: string }.
+ * Intended for popup/content script code that needs to type-annotate received response payloads.
+ */
 export interface MessageResponse<T = unknown> {
   readonly success: boolean;
   readonly data?: T;

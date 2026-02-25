@@ -739,6 +739,26 @@ describe('handleMessage', () => {
     expect(stateManager.initialize).toHaveBeenCalled();
   });
 
+  it('should send error response and not crash when lazy initialization fails', async () => {
+    stateManager.isInitialized.mockReturnValue(false);
+    stateManager.initialize.mockRejectedValue(new Error('Storage unavailable'));
+
+    const message: Message = {
+      type: MessageType.STATE_SYNC,
+      payload: undefined,
+      requestId: 'req-lazy-fail',
+    };
+    handleMessage(message, port, stateManager, portManager);
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(port.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payload: expect.objectContaining({ success: false, error: 'Storage unavailable' }),
+      }),
+    );
+    // Verify no unhandled rejection — test completes cleanly
+  });
+
   // --- switch/case dispatch verification ---
 
   it('should use switch/case dispatch (not if/else)', () => {
