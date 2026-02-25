@@ -66,7 +66,7 @@ development_status:
     2-3-har-yukleme-ui-drag-drop-file-picker: done                        # SCRUM-17
     2-4-fetch-xhr-intercept-har-response-replay: done                     # SCRUM-18
     2-5-default-on-intercept-replay-mode-toggle-extension-toggle: done # SCRUM-19
-    2-6-har-timing-replay: backlog                                       # SCRUM-20
+    2-6-har-timing-replay: review                                        # SCRUM-20
     epic-2-retrospective: optional
 
     # Epic 3: Chrome Extension — Monitor & Response Editing
