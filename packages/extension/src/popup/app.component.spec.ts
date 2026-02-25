@@ -1,5 +1,21 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
+import { ExtensionMessagingService } from './services/extension-messaging.service';
+
+// Mock @har-mock/core to avoid side-effect imports in JSDOM
+jest.mock('@har-mock/core', () => ({
+  parseHar: jest.fn(),
+  parameterize: jest.fn(),
+  HarParseError: class HarParseError extends Error {},
+}));
+
+const mockMessagingService = {
+  connect: jest.fn(),
+  disconnect: jest.fn(),
+  sendMessage: jest.fn(),
+  state: jest.fn().mockReturnValue(null),
+  ngOnDestroy: jest.fn(),
+};
 
 describe('AppComponent', () => {
   let component: AppComponent;
@@ -7,10 +23,12 @@ describe('AppComponent', () => {
   let el: HTMLElement;
 
   beforeEach(async () => {
+    jest.clearAllMocks();
     localStorage.clear();
 
     await TestBed.configureTestingModule({
       imports: [AppComponent],
+      providers: [{ provide: ExtensionMessagingService, useValue: mockMessagingService }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(AppComponent);
@@ -75,5 +93,9 @@ describe('AppComponent', () => {
     const container = el.querySelector('div') as HTMLElement;
     expect(container.className).toContain('min-h-[500px]');
     expect(container.className).toContain('max-h-[600px]');
+  });
+
+  it('should call messaging connect() on init', () => {
+    expect(mockMessagingService.connect).toHaveBeenCalledTimes(1);
   });
 });

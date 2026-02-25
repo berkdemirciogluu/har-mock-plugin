@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { TabBarComponent } from './components/tab-bar/tab-bar.component';
 import { ControlsTabComponent } from './components/controls-tab/controls-tab.component';
 import { MonitorTabComponent } from './components/monitor-tab/monitor-tab.component';
+import { ExtensionMessagingService } from './services/extension-messaging.service';
 
 @Component({
   selector: 'hm-root',
@@ -20,6 +21,11 @@ import { MonitorTabComponent } from './components/monitor-tab/monitor-tab.compon
     </div>
   `,
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
+  private readonly messagingService = inject(ExtensionMessagingService);
   readonly activeTab = signal<'controls' | 'monitor'>('controls');
+
+  ngOnInit(): void {
+    this.messagingService.connect();
+  }
 }

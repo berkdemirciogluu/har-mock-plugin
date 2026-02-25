@@ -109,7 +109,7 @@ async function handleMessageAsync(
         stateManager.resetSequentialCounters();
         port.postMessage({
           type: MessageType.LOAD_HAR,
-          payload: { success: true, endpointCount: payload.patterns.length },
+          payload: { success: true, data: { patternCount: payload.patterns.length } },
           requestId: message.requestId,
         });
       } catch (error: unknown) {

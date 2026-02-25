@@ -1,0 +1,130 @@
+<div>
+  <!-- Loading state -->
+  @if (isLoading()) {
+    <div class="flex items-center justify-center gap-2 py-6">
+      <svg
+        class="h-5 w-5 animate-spin text-indigo-500"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+        <path
+          class="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+        />
+      </svg>
+      <span class="text-xs text-slate-500">İşleniyor...</span>
+    </div>
+  }
+
+  <!-- Success state -->
+  @if (!isLoading() && endpointCount() !== null && !errorMessage()) {
+    <div class="rounded-md border border-green-200 bg-green-50 p-2 text-xs text-green-700">
+      <div class="flex items-center gap-1.5">
+        <svg
+          class="h-4 w-4 shrink-0 text-green-500"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M5 13l4 4L19 7"
+          />
+        </svg>
+        <span class="font-medium"
+          >{{ endpointCount() }} endpoint eşleştirildi, intercept aktif</span
+        >
+      </div>
+      @if (loadedFileName()) {
+        <p class="mt-1 truncate pl-5 text-green-600">{{ loadedFileName() }}</p>
+      }
+    </div>
+  }
+
+  <!-- Error state -->
+  @if (!isLoading() && errorMessage()) {
+    <div class="rounded-md border border-red-200 bg-red-50 p-2 text-xs text-red-700">
+      <div class="flex items-start gap-1.5">
+        <svg
+          class="mt-0.5 h-4 w-4 shrink-0 text-red-500"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 9v2m0 4h.01M4.93 4.93l14.14 14.14M12 2a10 10 0 100 20A10 10 0 0012 2z"
+          />
+        </svg>
+        <span>{{ errorMessage() }}</span>
+      </div>
+      <button
+        type="button"
+        class="mt-1.5 pl-5 text-red-600 underline hover:text-red-800"
+        (click)="clearError()"
+      >
+        Tekrar Dene
+      </button>
+    </div>
+  }
+
+  <!-- Default drop zone (shown when not loading, no error blocking, can show even after success for re-upload) -->
+  @if (!isLoading()) {
+    <div
+      class="mt-1 cursor-pointer rounded-lg border-2 border-dashed p-4 text-center transition-colors"
+      [class.border-slate-300]="!isDragOver()"
+      [class.border-indigo-400]="isDragOver()"
+      [class.bg-indigo-50]="isDragOver()"
+      [class.ring-2]="isDragOver()"
+      [class.ring-indigo-400]="isDragOver()"
+      [class.ring-offset-1]="isDragOver()"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)"
+      (drop)="onDrop($event)"
+      (click)="fileInput.click()"
+      role="button"
+      aria-label="HAR dosyasını buraya sürükleyin veya seçin"
+    >
+      <svg
+        class="mx-auto mb-1 h-8 w-8 text-slate-300"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.5"
+          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+        />
+      </svg>
+      <p class="text-xs text-slate-400">HAR dosyasını buraya sürükleyin veya seçin</p>
+      <button
+        type="button"
+        class="mt-2 rounded bg-indigo-500 px-3 py-1 text-xs font-medium text-white hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+        (click)="$event.stopPropagation(); fileInput.click()"
+      >
+        Dosya Seç
+      </button>
+    </div>
+
+    <input
+      #fileInput
+      type="file"
+      accept=".har"
+      class="hidden"
+      (change)="onFileInputChange($event)"
+    />
+  }
+</div>

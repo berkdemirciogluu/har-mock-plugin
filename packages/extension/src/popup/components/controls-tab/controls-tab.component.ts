@@ -1,15 +1,22 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { AccordionComponent } from '../accordion/accordion.component';
+import { HarUploadComponent } from '../har-upload/hm-har-upload.component';
 
 @Component({
   selector: 'hm-controls-tab',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AccordionComponent],
+  imports: [AccordionComponent, HarUploadComponent],
   template: `
     <div class="space-y-2 p-2">
-      <hm-accordion title="HAR" [expanded]="true" persistKey="har" badge="0" badgeVariant="default">
-        <p class="text-xs text-slate-400">HAR dosyası yükleme alanı (Story 2.3)</p>
+      <hm-accordion
+        title="HAR"
+        [expanded]="true"
+        persistKey="har"
+        [badge]="endpointCount() !== null ? endpointCount()!.toString() : ''"
+        [badgeVariant]="endpointCount() !== null ? 'success' : 'default'"
+      >
+        <hm-har-upload (onEndpointLoaded)="endpointCount.set($event)" />
       </hm-accordion>
 
       <hm-accordion
@@ -28,4 +35,6 @@ import { AccordionComponent } from '../accordion/accordion.component';
     </div>
   `,
 })
-export class ControlsTabComponent {}
+export class ControlsTabComponent {
+  readonly endpointCount = signal<number | null>(null);
+}

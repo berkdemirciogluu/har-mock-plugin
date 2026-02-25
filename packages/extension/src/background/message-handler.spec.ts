@@ -205,7 +205,33 @@ describe('handleMessage', () => {
     expect(port.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         type: MessageType.LOAD_HAR,
-        payload: expect.objectContaining({ success: true }),
+        payload: expect.objectContaining({
+          success: true,
+          data: expect.objectContaining({ patternCount: 1 }),
+        }),
+      }),
+    );
+  });
+
+  it('should include patternCount matching patterns array length in LOAD_HAR response', async () => {
+    const harData = makeHarData();
+    const message: Message = {
+      type: MessageType.LOAD_HAR,
+      payload: {
+        entries: harData.entries,
+        patterns: harData.patterns,
+        fileName: harData.fileName,
+      },
+      requestId: 'req-pattern-count',
+    };
+    handleMessage(message, port, stateManager, portManager);
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(port.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payload: expect.objectContaining({
+          data: { patternCount: harData.patterns.length },
+        }),
       }),
     );
   });
