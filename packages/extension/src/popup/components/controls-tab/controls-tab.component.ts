@@ -38,6 +38,25 @@ import type { UpdateSettingsPayload } from '../../../shared/payload.types';
               (modeChange)="onReplayModeChange($event)"
             />
           </div>
+          <div class="mt-3 flex items-center justify-between">
+            <span class="text-xs font-medium text-slate-500">HAR Timing Replay</span>
+            <button
+              type="button"
+              role="switch"
+              [attr.aria-checked]="timingReplay()"
+              aria-label="HAR Timing Replay toggle"
+              (click)="onTimingReplayChange(!timingReplay())"
+              class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors"
+              [class.bg-indigo-600]="timingReplay()"
+              [class.bg-slate-200]="!timingReplay()"
+            >
+              <span
+                class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform"
+                [class.translate-x-\[18px\]]="timingReplay()"
+                [class.translate-x-\[3px\]]="!timingReplay()"
+              ></span>
+            </button>
+          </div>
         }
       </hm-accordion>
 
@@ -72,6 +91,9 @@ export class ControlsTabComponent {
   readonly replayMode = computed<ReplayMode>(
     () => this.messaging.state()?.settings?.replayMode ?? 'last-match',
   );
+  readonly timingReplay = computed<boolean>(
+    () => this.messaging.state()?.settings?.timingReplay ?? false,
+  );
   readonly extensionEnabled = computed<boolean>(
     () => this.messaging.state()?.settings?.enabled ?? true,
   );
@@ -82,6 +104,15 @@ export class ControlsTabComponent {
       .sendMessage(MessageType.UPDATE_SETTINGS, payload, crypto.randomUUID())
       .catch((err: unknown) => {
         console.error('[HAR Mock] Replay mode güncellenemedi:', err);
+      });
+  }
+
+  onTimingReplayChange(enabled: boolean): void {
+    const payload: UpdateSettingsPayload = { settings: { timingReplay: enabled } };
+    void this.messaging
+      .sendMessage(MessageType.UPDATE_SETTINGS, payload, crypto.randomUUID())
+      .catch((err: unknown) => {
+        console.error('[HAR Mock] Timing replay güncellenemedi:', err);
       });
   }
 

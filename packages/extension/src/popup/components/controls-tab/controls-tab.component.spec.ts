@@ -229,6 +229,92 @@ describe('ControlsTabComponent', () => {
     });
   });
 
+  describe('HAR Timing Replay toggle (progressive disclosure)', () => {
+    const harDataMock = {
+      entries: [],
+      patterns: [],
+      fileName: 'test.har',
+      loadedAt: Date.now(),
+    };
+
+    it('should NOT render timing replay toggle when state is null', () => {
+      mockMessagingService.state.set(null);
+      fixture.detectChanges();
+      expect(
+        el.querySelector('[role="switch"][aria-label="HAR Timing Replay toggle"]'),
+      ).toBeNull();
+    });
+
+    it('should NOT render timing replay toggle when harData is null', () => {
+      mockMessagingService.state.set(makeStateSyncPayload({ harData: null }));
+      fixture.detectChanges();
+      expect(
+        el.querySelector('[role="switch"][aria-label="HAR Timing Replay toggle"]'),
+      ).toBeNull();
+    });
+
+    it('should render timing replay toggle when HAR is loaded', () => {
+      mockMessagingService.state.set(makeStateSyncPayload({ harData: harDataMock }));
+      fixture.detectChanges();
+      expect(
+        el.querySelector('[role="switch"][aria-label="HAR Timing Replay toggle"]'),
+      ).toBeTruthy();
+    });
+
+    it('should default timingReplay to false when state is null', () => {
+      mockMessagingService.state.set(null);
+      fixture.detectChanges();
+      expect(component.timingReplay()).toBe(false);
+    });
+
+    it('should reflect timingReplay=true from state', () => {
+      mockMessagingService.state.set(
+        makeStateSyncPayload({
+          harData: harDataMock,
+          settings: {
+            enabled: true,
+            replayMode: 'last-match',
+            timingReplay: true,
+            excludeList: [],
+          },
+        }),
+      );
+      fixture.detectChanges();
+      expect(component.timingReplay()).toBe(true);
+      const toggle = el.querySelector(
+        '[role="switch"][aria-label="HAR Timing Replay toggle"]',
+      ) as HTMLButtonElement;
+      expect(toggle.getAttribute('aria-checked')).toBe('true');
+    });
+
+    it('should call sendMessage with timingReplay=true when toggle clicked', () => {
+      mockMessagingService.state.set(makeStateSyncPayload({ harData: harDataMock }));
+      fixture.detectChanges();
+      const toggle = el.querySelector(
+        '[role="switch"][aria-label="HAR Timing Replay toggle"]',
+      ) as HTMLButtonElement;
+      toggle.click();
+      expect(mockMessagingService.sendMessage).toHaveBeenCalledWith(
+        'UPDATE_SETTINGS',
+        { settings: { timingReplay: true } },
+        expect.any(String),
+      );
+    });
+
+    it('should log error when onTimingReplayChange sendMessage rejects', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      mockMessagingService.sendMessage.mockRejectedValueOnce(new Error('network fail'));
+      component.onTimingReplayChange(true);
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(consoleSpy).toHaveBeenCalledWith(
+        '[HAR Mock] Timing replay güncellenemedi:',
+        expect.any(Error),
+      );
+      consoleSpy.mockRestore();
+    });
+  });
+
   describe('onEnabledChange', () => {
     it('should call sendMessage with UPDATE_SETTINGS and enabled=false', () => {
       component.onEnabledChange(false);
