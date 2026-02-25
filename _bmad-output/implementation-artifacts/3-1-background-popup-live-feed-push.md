@@ -1,6 +1,6 @@
 # Story 3.1: Background → Popup Live Feed Push
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -20,36 +20,36 @@ so that Monitor tab'ı gerçek zamanlı request akışını canlı göstersin; d
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: `ExtensionMessagingService` — `MATCH_EVENT` push handling (AC: #1, #2, #3)
-  - [ ] Subtask 1.1: `connect()` metodundaki `onMessage` listener'ına `MATCH_EVENT` case ekle:
+- [x] Task 1: `ExtensionMessagingService` — `MATCH_EVENT` push handling (AC: #1, #2, #3)
+  - [x] Subtask 1.1: `connect()` metodundaki `onMessage` listener'ına `MATCH_EVENT` case ekle:
     - Gelen `MatchEventPayload`'u alarak `_state` signal'indeki `matchHistory` array'ini güncelle
     - Yeni event'i listenin **başına** ekle (en yeni en üstte): `[newEvent, ...(prev.matchHistory ?? [])]`
     - MAX_MATCH_HISTORY (500) sınırına göre trim yap: `.slice(0, MAX_MATCH_HISTORY)`
     - `_state.update()` kullanarak immutable güncelleme yap (tüm state korunmalı)
-  - [ ] Subtask 1.2: Import ekle: `MAX_MATCH_HISTORY` from `../../shared/constants`
-  - [ ] Subtask 1.3: Import ekle: `MatchEventPayload` from `../../shared/payload.types`
+  - [x] Subtask 1.2: Import ekle: `MAX_MATCH_HISTORY` from `../../shared/constants`
+  - [x] Subtask 1.3: Import ekle: `MatchEventPayload` from `../../shared/payload.types`
 
-- [ ] Task 2: `MonitorTabComponent` — Feed UI implementasyonu (AC: #2, #3)
-  - [ ] Subtask 2.1: `inject(ExtensionMessagingService)` ve `matchHistory` computed signal:
+- [x] Task 2: `MonitorTabComponent` — Feed UI implementasyonu (AC: #2, #3)
+  - [x] Subtask 2.1: `inject(ExtensionMessagingService)` ve `matchHistory` computed signal:
     ```typescript
     readonly matchHistory = computed(() => this.messaging.state()?.matchHistory ?? []);
     ```
-  - [ ] Subtask 2.2: Template — `@if (matchHistory().length === 0)` → boş durum mesajı göster
-  - [ ] Subtask 2.3: Template — `@for (event of matchHistory())` → her satır için:
+  - [x] Subtask 2.2: Template — `@if (matchHistory().length === 0)` → boş durum mesajı göster
+  - [x] Subtask 2.3: Template — `@for (event of matchHistory())` → her satır için:
     - URL (truncated, max ~45 karakter, `title` attr ile full URL tooltip)
     - HTTP method badge (küçük gri pill)
     - Eşleşme durumu badge: "Rule ✓" yeşil, "HAR ✓" mavi, "Passthrough →" gri (UX3)
     - `[class]` binding ile badge renklerini `source` değerine göre uygula
-  - [ ] Subtask 2.4: Import: `ExtensionMessagingService`, `computed`, `inject` ekle
-  - [ ] Subtask 2.5: Scroll davranışı: feed container'ı `overflow-y-auto` + popup height constraint uyumu
+  - [x] Subtask 2.4: Import: `ExtensionMessagingService`, `computed`, `inject` ekle
+  - [x] Subtask 2.5: Scroll davranışı: feed container'ı `overflow-y-auto` + popup height constraint uyumu
 
-- [ ] Task 3: Unit Testler (AC: #1, #2, #3)
-  - [ ] Subtask 3.1: `extension-messaging.service.spec.ts` — MATCH_EVENT push handling:
+- [x] Task 3: Unit Testler (AC: #1, #2, #3)
+  - [x] Subtask 3.1: `extension-messaging.service.spec.ts` — MATCH_EVENT push handling:
     - `MATCH_EVENT` mesajı alındığında `state().matchHistory[0]` yeni event olmalı
     - Yeni event listenin başına eklenmeli (prepend)
     - `STATE_SYNC` olmadan MATCH_EVENT gelirse state null ise güvenli handle
     - 500+ event olduğunda slice ile trim edilmeli
-  - [ ] Subtask 3.2: `monitor-tab.component.spec.ts` — Feed UI testleri:
+  - [x] Subtask 3.2: `monitor-tab.component.spec.ts` — Feed UI testleri:
     - `matchHistory = []` → boş durum mesajı görünmeli
     - `matchHistory = [ruleEvent]` → "Rule ✓" badge'i ve URL görünmeli
     - `matchHistory = [harEvent]` → "HAR ✓" badge'i görünmeli
@@ -284,5 +284,22 @@ Claude Sonnet 4.6 (GitHub Copilot)
 - Tüm background implementasyonu Epic 2'de tamamlandı; bu story sadece popup consume layer
 - `ExtensionMessagingService._state.update()` ile immutable MATCH_EVENT prepend
 - MonitorTabComponent feed UI: source badge renk kodlaması UX3 spec ile uyumlu
+- `if/else` → `switch/case` refactor tamamlandı (mimari kural)
+- `MAX_MATCH_HISTORY = 500` trim doğrulandı (4. test)
+- `state === null` durumunda MATCH_EVENT güvenli handle edildi
+- 279 extension testi geçiyor, 0 regresyon
+- Jest altyapı sorunu tespit edildi: testler `npm test --workspace=packages/extension` ile çalıştırılmalı, `npx jest` root'dan çalışmaz
+
+### Change Log
+
+- **2026-02-25**: Story 3.1 implementasyonu tamamlandı
+  - `ExtensionMessagingService.connect()` — `if/else` → `switch/case` refactor + `MATCH_EVENT` case eklendi
+  - `MonitorTabComponent` — `inject(ExtensionMessagingService)` + `matchHistory` computed signal + feed UI (source badge renk kodlama)
+  - 4 yeni unit test (`extension-messaging.service.spec.ts`) + 8 yeni unit test (`monitor-tab.component.spec.ts`)
+  - Tüm 279 extension testi geçiyor (0 regresyon)
 
 ### File List
+- `packages/extension/src/popup/services/extension-messaging.service.ts` (değiştirildi)
+- `packages/extension/src/popup/services/extension-messaging.service.spec.ts` (değiştirildi)
+- `packages/extension/src/popup/components/monitor-tab/monitor-tab.component.ts` (değiştirildi)
+- `packages/extension/src/popup/components/monitor-tab/monitor-tab.component.spec.ts` (değiştirildi)
