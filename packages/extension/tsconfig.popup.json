@@ -1,8 +1,15 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "rootDir": "src"
+    "rootDir": ".."
   },
-  "include": ["src/popup/**/*.ts"],
-  "exclude": ["dist", "node_modules", "**/*.spec.ts", "src/test-setup.ts"]
+  "include": ["src/popup/**/*.ts", "../core/src/**/*.ts"],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "**/*.spec.ts",
+    "../core/src/**/*.spec.ts",
+    "../core/src/**/test-utils.ts",
+    "src/test-setup.ts"
+  ]
 }

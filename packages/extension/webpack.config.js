@@ -17,7 +17,7 @@ module.exports = (env, argv) => {
     output: {
       path: path.resolve(__dirname, 'dist/extension'),
       filename: '[name].js',
-      clean: true,
+      clean: false,
     },
     resolve: {
       extensions: ['.ts', '.js'],
