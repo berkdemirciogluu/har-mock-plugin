@@ -301,7 +301,12 @@ describe('ControlsTabComponent', () => {
       mockMessagingService.state.set(
         makeStateSyncPayload({
           harData: harDataMock,
-          settings: { enabled: true, replayMode: 'last-match', timingReplay: true, excludeList: [] },
+          settings: {
+            enabled: true,
+            replayMode: 'last-match',
+            timingReplay: true,
+            excludeList: [],
+          },
         }),
       );
       fixture.detectChanges();
