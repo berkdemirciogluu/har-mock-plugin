@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { ExtensionMessagingService } from './extension-messaging.service';
 import { MessageType } from '../../shared/messaging.types';
 import type { Message } from '../../shared/messaging.types';
+import type { MatchEventPayload } from '../../shared/payload.types';
 
 describe('ExtensionMessagingService', () => {
   let messageListener: ((msg: Message) => void) | undefined;
@@ -89,6 +90,127 @@ describe('ExtensionMessagingService', () => {
       disconnectListener?.();
       // After disconnect, state resets to null
       expect(svc.state()).toBeNull();
+    });
+
+    it('should prepend MATCH_EVENT to matchHistory', () => {
+      const svc = getService();
+      svc.connect();
+
+      const fakeState = {
+        harData: null,
+        activeRules: [],
+        settings: {} as never,
+        editedResponses: {},
+        matchHistory: [],
+        accordionStates: {},
+      };
+      messageListener?.({ type: MessageType.STATE_SYNC, payload: fakeState } as Message);
+
+      const event: MatchEventPayload = {
+        id: 'evt-1',
+        url: 'https://api.example.com/users',
+        method: 'GET',
+        source: 'har',
+        statusCode: 200,
+        timestamp: 1000000,
+      };
+
+      messageListener?.({ type: MessageType.MATCH_EVENT, payload: event } as Message);
+
+      expect(svc.state()?.matchHistory[0]).toEqual(event);
+    });
+
+    it('should keep newest event at index 0 when multiple MATCH_EVENTs arrive', () => {
+      const svc = getService();
+      svc.connect();
+
+      const fakeState = {
+        harData: null,
+        activeRules: [],
+        settings: {} as never,
+        editedResponses: {},
+        matchHistory: [],
+        accordionStates: {},
+      };
+      messageListener?.({ type: MessageType.STATE_SYNC, payload: fakeState } as Message);
+
+      const event1: MatchEventPayload = {
+        id: 'evt-1',
+        url: 'https://api.example.com/first',
+        method: 'GET',
+        source: 'har',
+        statusCode: 200,
+        timestamp: 1000,
+      };
+      const event2: MatchEventPayload = {
+        id: 'evt-2',
+        url: 'https://api.example.com/second',
+        method: 'POST',
+        source: 'rule',
+        statusCode: 201,
+        timestamp: 2000,
+      };
+
+      messageListener?.({ type: MessageType.MATCH_EVENT, payload: event1 } as Message);
+      messageListener?.({ type: MessageType.MATCH_EVENT, payload: event2 } as Message);
+
+      expect(svc.state()?.matchHistory[0]).toEqual(event2);
+      expect(svc.state()?.matchHistory[1]).toEqual(event1);
+      expect(svc.state()?.matchHistory.length).toBe(2);
+    });
+
+    it('should not update state when MATCH_EVENT arrives before STATE_SYNC', () => {
+      const svc = getService();
+      svc.connect();
+
+      const event: MatchEventPayload = {
+        id: 'evt-early',
+        url: 'https://api.example.com/early',
+        method: 'GET',
+        source: 'passthrough',
+        timestamp: 500,
+      };
+
+      messageListener?.({ type: MessageType.MATCH_EVENT, payload: event } as Message);
+
+      // state must remain null since STATE_SYNC not yet received
+      expect(svc.state()).toBeNull();
+    });
+
+    it('should trim matchHistory to MAX_MATCH_HISTORY (500) entries', () => {
+      const svc = getService();
+      svc.connect();
+
+      const existingHistory = Array.from({ length: 500 }, (_, i) => ({
+        id: `old-${i}`,
+        url: `https://api.example.com/${i}`,
+        method: 'GET',
+        source: 'har' as const,
+        timestamp: i,
+      }));
+
+      const fakeState = {
+        harData: null,
+        activeRules: [],
+        settings: {} as never,
+        editedResponses: {},
+        matchHistory: existingHistory,
+        accordionStates: {},
+      };
+      messageListener?.({ type: MessageType.STATE_SYNC, payload: fakeState } as Message);
+
+      const newEvent: MatchEventPayload = {
+        id: 'evt-overflow',
+        url: 'https://api.example.com/overflow',
+        method: 'DELETE',
+        source: 'rule',
+        timestamp: 999999,
+      };
+
+      messageListener?.({ type: MessageType.MATCH_EVENT, payload: newEvent } as Message);
+
+      expect(svc.state()?.matchHistory.length).toBe(500);
+      expect(svc.state()?.matchHistory[0]).toEqual(newEvent);
     });
   });
 

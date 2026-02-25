@@ -3,10 +3,10 @@
  * Chrome runtime port üzerinden uzun ömürlü bağlantı kurar.
  */
 import { Injectable, OnDestroy, signal } from '@angular/core';
-import { PORT_NAME_POPUP } from '../../shared/constants';
+import { MAX_MATCH_HISTORY, PORT_NAME_POPUP } from '../../shared/constants';
 import type { Message, MessageResponse } from '../../shared/messaging.types';
 import { MessageType } from '../../shared/messaging.types';
-import type { StateSyncPayload } from '../../shared/payload.types';
+import type { MatchEventPayload, StateSyncPayload } from '../../shared/payload.types';
 
 @Injectable({ providedIn: 'root' })
 export class ExtensionMessagingService implements OnDestroy {
@@ -26,8 +26,21 @@ export class ExtensionMessagingService implements OnDestroy {
     });
 
     this.port.onMessage.addListener((msg: Message) => {
-      if (msg.type === MessageType.STATE_SYNC) {
-        this._state.set(msg.payload as StateSyncPayload);
+      switch (msg.type) {
+        case MessageType.STATE_SYNC:
+          this._state.set(msg.payload as StateSyncPayload);
+          break;
+        case MessageType.MATCH_EVENT: {
+          const event = msg.payload as MatchEventPayload;
+          this._state.update((prev) => {
+            if (prev === null) return prev;
+            return {
+              ...prev,
+              matchHistory: [event, ...prev.matchHistory].slice(0, MAX_MATCH_HISTORY),
+            };
+          });
+          break;
+        }
       }
     });
   }
