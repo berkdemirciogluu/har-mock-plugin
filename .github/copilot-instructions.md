@@ -121,6 +121,7 @@ Devam etmek istiyor musun? [e/h]
 - **Jira Cloud ID**: `d7814cc6-cb29-4975-be2d-9b7f21cd5343`
 - **Proje Anahtarı**: `SCRUM`
 - **Base URL**: `https://berkdemircioglu.atlassian.net`
+- **Yetkiler**: `read:jira-work`, `write:jira-work`
 
 ### Status Eşleştirmesi
 

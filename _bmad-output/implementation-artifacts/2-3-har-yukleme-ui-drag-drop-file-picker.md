@@ -1,6 +1,6 @@
 # Story 2.3: HAR Yükleme UI — Drag & Drop + File Picker
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -444,7 +444,13 @@ cak şekilde güncellendi.
 - **Task 3**: `ControlsTabComponent` güncellendi — `HarUploadComponent` import, `endpointCount` signal, accordion badge entegrasyonu.
 - **Task 4**: `message-handler.ts` LOAD_HAR response `data: { patternCount }` yapısına geçirildi; spec'e `patternCount` doğrulama testi eklendi.
 - **Task 5**: `AppComponent` `implements OnInit` + `ngOnInit()` → `messagingService.connect()` entegrasyonu; spec güncellendi.
-- **Task 6**: 165/165 test geçti; branch coverage %85.1; `yarn format:check` geçti.
+- **Task 6**: 169/169 test geçti; branch coverage %85.85; `yarn format:check` geçti.
+
+### Code Review Fix Notes
+- **H1**: `sendMessage` artık `requestId` ile eşleştirme yapıyor — aynı `type` ile gelen farklı mesajlarla karışma riski giderildi.
+- **H2**: `onFileInputChange` artık `.har` uzantısını kontrol ediyor — `accept` attribute browser bypass durumuna karşı tutarlı validasyon.
+- **M1**: `onDragLeave` child element geçişlerinde `relatedTarget` + `contains()` kontrolü yapıyor.
+- **M2**: `pendingRejects` array ile disconnect/timeout durumunda pending promise'lar anında reject ediliyor.
 
 ### File List
 
@@ -466,4 +472,5 @@ cak şekilde güncellendi.
 
 ## Change Log
 
+- 2026-02-25: Code Review fix — H1: sendMessage requestId eşleştirme (race condition), H2: onFileInputChange .har validasyonu, M1: dragLeave child element false-reset, M2: zombie promise disconnect reject. 169/169 test, %85.85 branch coverage.
 - 2026-02-25: Story 2.3 implement edildi: ExtensionMessagingService, HarUploadComponent (drag & drop + file picker), ControlsTabComponent entegrasyonu, message-handler LOAD_HAR patternCount güncellemesi, AppComponent connect() entegrasyonu. 165/165 test, %85.1 branch coverage.

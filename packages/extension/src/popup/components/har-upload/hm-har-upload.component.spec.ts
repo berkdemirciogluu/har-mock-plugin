@@ -132,6 +132,21 @@ describe('HarUploadComponent', () => {
       expect(component.isDragOver()).toBe(false);
     });
 
+    it('onDragLeave should not reset isDragOver when moving to child element', () => {
+      component.isDragOver.set(true);
+      const parentNode = document.createElement('div');
+      const childNode = document.createElement('span');
+      parentNode.appendChild(childNode);
+
+      const event = new Event('dragleave') as unknown as DragEvent;
+      Object.defineProperty(event, 'preventDefault', { value: jest.fn() });
+      Object.defineProperty(event, 'relatedTarget', { value: childNode });
+      Object.defineProperty(event, 'currentTarget', { value: parentNode });
+
+      component.onDragLeave(event);
+      expect(component.isDragOver()).toBe(true);
+    });
+
     it('onDrop should process .har file and update signals', async () => {
       const file = new File(['{}'], 'test.har', { type: 'application/json' });
       const dropEvent = createMockDropEvent(file);
@@ -194,6 +209,17 @@ describe('HarUploadComponent', () => {
 
       expect(mockParseHar).toHaveBeenCalled();
       expect(component.loadedFileName()).toBe('selected.har');
+    });
+
+    it('onFileInputChange should reject non-.har files', () => {
+      const file = new File(['{}'], 'test.json', { type: 'application/json' });
+      const input = { files: [file], value: '' } as unknown as HTMLInputElement;
+      const event = { target: input } as unknown as Event;
+
+      component.onFileInputChange(event);
+
+      expect(component.errorMessage()).toBe('Sadece .har uzantılı dosyalar desteklenir.');
+      expect(mockParseHar).not.toHaveBeenCalled();
     });
 
     it('onFileInputChange should do nothing if no file selected', () => {

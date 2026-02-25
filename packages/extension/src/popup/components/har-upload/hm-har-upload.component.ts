@@ -31,6 +31,10 @@ export class HarUploadComponent {
 
   onDragLeave(event: DragEvent): void {
     event.preventDefault();
+    const related = event.relatedTarget as Node | null;
+    if (related && (event.currentTarget as Node)?.contains(related)) {
+      return;
+    }
     this.isDragOver.set(false);
   }
 
@@ -50,6 +54,10 @@ export class HarUploadComponent {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
+    if (!file.name.endsWith('.har')) {
+      this.errorMessage.set('Sadece .har uzantılı dosyalar desteklenir.');
+      return;
+    }
     this.processFile(file);
     input.value = '';
   }

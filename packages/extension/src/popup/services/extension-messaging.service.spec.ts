@@ -124,6 +124,7 @@ describe('ExtensionMessagingService', () => {
       sendHandler?.({
         type: MessageType.LOAD_HAR,
         payload: { success: true, data: { patternCount: 5 } },
+        requestId: 'req-1',
       } as Message);
 
       const result = await promise;
@@ -148,6 +149,41 @@ describe('ExtensionMessagingService', () => {
       const promise = svc.sendMessage(MessageType.LOAD_HAR, {}, 'req-timeout');
       jest.advanceTimersByTime(5001);
 
+      await expect(promise).rejects.toThrow('zaman aşımına');
+      jest.useRealTimers();
+    });
+
+    it('should reject pending sendMessage on port disconnect', async () => {
+      const svc = getService();
+      svc.connect();
+
+      const promise = svc.sendMessage(MessageType.LOAD_HAR, {}, 'req-disconnect');
+      disconnectListener?.();
+
+      await expect(promise).rejects.toThrow('Port bağlantısı koptu.');
+    });
+
+    it('should not resolve for mismatched requestId', async () => {
+      jest.useFakeTimers();
+      const svc = getService();
+      svc.connect();
+
+      const promise = svc.sendMessage(MessageType.LOAD_HAR, { test: true }, 'req-abc');
+
+      const handlers: Array<(msg: Message) => void> = [];
+      mockPort.onMessage.addListener.mock.calls.forEach(([cb]: [(msg: Message) => void]) => {
+        handlers.push(cb);
+      });
+
+      const sendHandler = handlers[handlers.length - 1];
+      sendHandler?.({
+        type: MessageType.LOAD_HAR,
+        payload: { success: true },
+        requestId: 'req-different',
+      } as Message);
+
+      // Should not have resolved — advance to timeout
+      jest.advanceTimersByTime(5001);
       await expect(promise).rejects.toThrow('zaman aşımına');
       jest.useRealTimers();
     });
