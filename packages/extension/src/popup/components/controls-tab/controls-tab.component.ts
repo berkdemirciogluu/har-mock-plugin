@@ -1,7 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { AccordionComponent } from '../accordion/accordion.component';
 import { HarUploadComponent } from '../har-upload/hm-har-upload.component';
-import { StrategyToggleComponent, type ReplayMode } from '../strategy-toggle/hm-strategy-toggle.component';
+import {
+  StrategyToggleComponent,
+  type ReplayMode,
+} from '../strategy-toggle/hm-strategy-toggle.component';
 import { SettingsSectionComponent } from '../settings-section/hm-settings-section.component';
 import { ExtensionMessagingService } from '../../services/extension-messaging.service';
 import { MessageType } from '../../../shared/messaging.types';
@@ -11,7 +14,12 @@ import type { UpdateSettingsPayload } from '../../../shared/payload.types';
   selector: 'hm-controls-tab',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AccordionComponent, HarUploadComponent, StrategyToggleComponent, SettingsSectionComponent],
+  imports: [
+    AccordionComponent,
+    HarUploadComponent,
+    StrategyToggleComponent,
+    SettingsSectionComponent,
+  ],
   template: `
     <div class="space-y-2 p-2">
       <hm-accordion
@@ -57,9 +65,15 @@ export class ControlsTabComponent {
 
   readonly endpointCount = signal<number | null>(null);
 
-  readonly hasHar = computed(() => this.messaging.state()?.harData !== null && this.messaging.state() !== null);
-  readonly replayMode = computed<ReplayMode>(() => this.messaging.state()?.settings?.replayMode ?? 'last-match');
-  readonly extensionEnabled = computed<boolean>(() => this.messaging.state()?.settings?.enabled ?? true);
+  readonly hasHar = computed(
+    () => this.messaging.state()?.harData !== null && this.messaging.state() !== null,
+  );
+  readonly replayMode = computed<ReplayMode>(
+    () => this.messaging.state()?.settings?.replayMode ?? 'last-match',
+  );
+  readonly extensionEnabled = computed<boolean>(
+    () => this.messaging.state()?.settings?.enabled ?? true,
+  );
 
   onReplayModeChange(mode: ReplayMode): void {
     const payload: UpdateSettingsPayload = { settings: { replayMode: mode } };

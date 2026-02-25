@@ -15,7 +15,11 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
         [class]="extensionEnabled() ? 'bg-green-500' : 'bg-slate-300'"
         role="switch"
         [attr.aria-checked]="extensionEnabled()"
-        [attr.aria-label]="extensionEnabled() ? 'Extension aktif, kapatmak için tıkla' : 'Extension kapalı, açmak için tıkla'"
+        [attr.aria-label]="
+          extensionEnabled()
+            ? 'Extension aktif, kapatmak için tıkla'
+            : 'Extension kapalı, açmak için tıkla'
+        "
         (click)="toggle()"
       >
         <span

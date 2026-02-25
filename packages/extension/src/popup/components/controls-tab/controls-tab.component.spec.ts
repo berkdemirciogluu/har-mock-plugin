@@ -144,7 +144,12 @@ describe('ControlsTabComponent', () => {
     it('should reflect replayMode "sequential" from state', () => {
       mockMessagingService.state.set(
         makeStateSyncPayload({
-          settings: { enabled: true, replayMode: 'sequential', timingReplay: false, excludeList: [] },
+          settings: {
+            enabled: true,
+            replayMode: 'sequential',
+            timingReplay: false,
+            excludeList: [],
+          },
         }),
       );
       fixture.detectChanges();
@@ -172,7 +177,12 @@ describe('ControlsTabComponent', () => {
     it('should reflect extensionEnabled=false from state', () => {
       mockMessagingService.state.set(
         makeStateSyncPayload({
-          settings: { enabled: false, replayMode: 'last-match', timingReplay: false, excludeList: [] },
+          settings: {
+            enabled: false,
+            replayMode: 'last-match',
+            timingReplay: false,
+            excludeList: [],
+          },
         }),
       );
       fixture.detectChanges();
