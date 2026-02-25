@@ -1,6 +1,6 @@
 # Story 3.1: Background → Popup Live Feed Push
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -289,6 +289,7 @@ Claude Sonnet 4.6 (GitHub Copilot)
 - `state === null` durumunda MATCH_EVENT güvenli handle edildi
 - 279 extension testi geçiyor, 0 regresyon
 - Jest altyapı sorunu tespit edildi: testler `npm test --workspace=packages/extension` ile çalıştırılmalı, `npx jest` root'dan çalışmaz
+- **Code Review (AI)**: 4 MEDIUM issue düzeltildi — statusCode gösterimi, source badge tooltip, CSS class testleri, DOM sıra doğrulama
 
 ### Change Log
 
@@ -297,6 +298,12 @@ Claude Sonnet 4.6 (GitHub Copilot)
   - `MonitorTabComponent` — `inject(ExtensionMessagingService)` + `matchHistory` computed signal + feed UI (source badge renk kodlama)
   - 4 yeni unit test (`extension-messaging.service.spec.ts`) + 8 yeni unit test (`monitor-tab.component.spec.ts`)
   - Tüm 279 extension testi geçiyor (0 regresyon)
+- **2026-02-25**: Code Review — 4 MEDIUM issue düzeltildi
+  - M1: CSS badge class testleri eklendi (rule=green, har=blue, passthrough=slate)
+  - M2: Feed DOM sırası doğrulama testi eklendi (en yeni en üstte)
+  - M3: Source badge'e tooltip eklendi (`[title]` attribute)
+  - M4: `statusCode` feed satırında gösteriliyor (varsa pill olarak)
+  - 6 yeni test eklendi → toplam 285 test, 0 regresyon
 
 ### File List
 - `packages/extension/src/popup/services/extension-messaging.service.ts` (değiştirildi)

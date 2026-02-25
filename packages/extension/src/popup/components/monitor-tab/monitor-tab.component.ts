@@ -39,6 +39,12 @@ import { ExtensionMessagingService } from '../../services/extension-messaging.se
             <span class="flex-1 min-w-0 truncate text-xs text-slate-700" [title]="event.url">{{
               event.url
             }}</span>
+            <!-- Status code -->
+            @if (event.statusCode) {
+              <span class="shrink-0 text-[10px] font-mono text-slate-400">
+                {{ event.statusCode }}
+              </span>
+            }
             <!-- Source badge -->
             <span
               class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold"
@@ -48,6 +54,13 @@ import { ExtensionMessagingService } from '../../services/extension-messaging.se
               [class.text-blue-700]="event.source === 'har'"
               [class.bg-slate-100]="event.source === 'passthrough'"
               [class.text-slate-500]="event.source === 'passthrough'"
+              [title]="
+                event.source === 'rule'
+                  ? 'Rule eşleşmesi'
+                  : event.source === 'har'
+                    ? 'HAR eşleşmesi'
+                    : 'Passthrough (eşleşme yok)'
+              "
             >
               @if (event.source === 'rule') {
                 Rule ✓
