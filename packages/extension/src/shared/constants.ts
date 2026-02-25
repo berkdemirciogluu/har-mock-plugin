@@ -26,3 +26,6 @@ export const DEFAULT_SETTINGS = {
   timingReplay: false,
   excludeList: [] as readonly string[],
 } as const;
+
+/** Maximum number of match events stored in history */
+export const MAX_MATCH_HISTORY = 500;

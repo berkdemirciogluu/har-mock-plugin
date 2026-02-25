@@ -87,6 +87,29 @@ Devam etmek istiyor musun? [e/h]
 4. Kullanıcı onay verirse workflow Jira senkronizasyonu olmadan devam eder
 5. Bu kontrol sonucu session boyunca hatırlanır — her workflow'da tekrar arama yapılmaz, sadece ilk kontrolün sonucu kullanılır
 
+### Jira Araç Ön-Kontrol Kuralı (Session Başlangıcı & Workflow Öncesi)
+
+**Bu kontrol her yeni session açılışında ve her workflow başlatılmadan önce ZORUNLU olarak yapılmalıdır.**
+
+1. `tool_search_tool_regex` ile `mcp_com_atlassian` pattern'ı aranır
+2. Arama sonucunda Jira araçları (özellikle `getTransitionsForJiraIssue`, `transitionJiraIssue`, `addCommentToJiraIssue`) bulunursa → session boyunca kullanılabilir, devam et
+3. **Araçlar BULUNAMAZSA** → Kullanıcıya aşağıdaki uyarı gösterilmeli ve onay alınmalı:
+
+```
+⚠️ UYARI: Jira MCP araçları bu session'da yüklenemedi!
+Atlassian MCP server bağlantısı aktif değil veya araçlar erişilemez durumda.
+
+Bu durumda:
+- sprint-status.yaml güncellemeleri yapılacak ama Jira senkronizasyonu ATLANACAK
+- Jira issue transition'ları ve commit yorumları YAPILAMAYACAK
+- Workflow sonunda Jira'da manuel güncelleme gerekecek
+
+Devam etmek istiyor musun? [e/h]
+```
+
+4. Kullanıcı onay verirse workflow Jira senkronizasyonu olmadan devam eder
+5. Bu kontrol sonucu session boyunca hatırlanır — her workflow'da tekrar arama yapılmaz, sadece ilk kontrolün sonucu kullanılır
+
 ## Jira Sync Kuralı
 
 **Bu kural tüm agentlar ve workflowlar için geçerlidir.**

@@ -7,12 +7,12 @@ const { AngularWebpackPlugin } = require('@ngtools/webpack');
 module.exports = (env, argv) => {
   const mode = argv && argv.mode === 'development' ? 'development' : 'production';
 
-  return {
+  /** Angular Popup Config — Uses @ngtools/webpack + AngularWebpackPlugin for AOT */
+  const popupConfig = {
+    name: 'popup',
     mode,
     entry: {
       popup: './src/popup/main.ts',
-      background: './src/background/background.ts',
-      content: './src/content/content.ts',
     },
     output: {
       path: path.resolve(__dirname, 'dist/extension'),
@@ -55,7 +55,7 @@ module.exports = (env, argv) => {
     },
     plugins: [
       new AngularWebpackPlugin({
-        tsconfig: path.resolve(__dirname, 'tsconfig.json'),
+        tsconfig: path.resolve(__dirname, 'tsconfig.popup.json'),
         jitMode: false,
       }),
       new HtmlWebpackPlugin({
@@ -63,13 +63,56 @@ module.exports = (env, argv) => {
         filename: 'popup/index.html',
         chunks: ['popup'],
       }),
-      new CopyWebpackPlugin({
-        patterns: [{ from: 'public', to: '.' }],
-      }),
       new MiniCssExtractPlugin({
         filename: '[name].css',
       }),
     ],
     devtool: mode === 'development' ? 'inline-source-map' : false,
   };
+
+  /** Service Worker & Content Script Config — Uses ts-loader (no Angular AOT) */
+  const swConfig = {
+    name: 'sw',
+    mode,
+    entry: {
+      background: './src/background/background.ts',
+      content: './src/content/content.ts',
+    },
+    output: {
+      path: path.resolve(__dirname, 'dist/extension'),
+      filename: '[name].js',
+      clean: false,
+    },
+    resolve: {
+      extensions: ['.ts', '.js'],
+      alias: {
+        '@har-mock/core': path.resolve(__dirname, '../core/src'),
+      },
+    },
+    module: {
+      rules: [
+        {
+          test: /\.tsx?$/,
+          use: [
+            {
+              loader: 'ts-loader',
+              options: {
+                configFile: path.resolve(__dirname, 'tsconfig.sw.json'),
+                transpileOnly: true,
+              },
+            },
+          ],
+          exclude: /node_modules/,
+        },
+      ],
+    },
+    plugins: [
+      new CopyWebpackPlugin({
+        patterns: [{ from: 'public', to: '.' }],
+      }),
+    ],
+    devtool: mode === 'development' ? 'inline-source-map' : false,
+  };
+
+  return [popupConfig, swConfig];
 };

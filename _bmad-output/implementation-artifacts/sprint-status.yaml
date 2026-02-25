@@ -62,7 +62,7 @@ development_status:
     # Epic 2: Chrome Extension — HAR Replay Temeli
     epic-2: in-progress                                                   # SCRUM-6
     2-1-extension-monorepo-kurulumu-background-sw-content-script-popup-shell: done  # SCRUM-15
-    2-2-background-service-worker-state-yonetimi-port-hub: backlog       # SCRUM-16
+    2-2-background-service-worker-state-yonetimi-port-hub: review           # SCRUM-16
     2-3-har-yukleme-ui-drag-drop-file-picker: backlog                    # SCRUM-17
     2-4-fetch-xhr-intercept-har-response-replay: backlog                 # SCRUM-18
     2-5-default-on-intercept-replay-mode-toggle-extension-toggle: backlog # SCRUM-19
