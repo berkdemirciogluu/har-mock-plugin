@@ -139,6 +139,7 @@ async function handleMessageAsync(
           port.postMessage({
             type: MessageType.MATCH_RESULT,
             payload: { matched: false } satisfies MatchResultPayload,
+            requestId: message.requestId,
           });
           break;
         }
@@ -154,6 +155,7 @@ async function handleMessageAsync(
           port.postMessage({
             type: MessageType.MATCH_RESULT,
             payload: { matched: false } satisfies MatchResultPayload,
+            requestId: message.requestId,
           });
           break;
         }
@@ -181,6 +183,7 @@ async function handleMessageAsync(
               },
               source: 'har',
             } satisfies MatchResultPayload,
+            requestId: message.requestId,
           });
           break;
         }
@@ -203,6 +206,7 @@ async function handleMessageAsync(
               response: ruleResponse,
               source: 'rule',
             } satisfies MatchResultPayload,
+            requestId: message.requestId,
           });
           break;
         }
@@ -250,6 +254,7 @@ async function handleMessageAsync(
                   response,
                   source: 'har',
                 } satisfies MatchResultPayload,
+                requestId: message.requestId,
               });
               break;
             }
@@ -266,6 +271,7 @@ async function handleMessageAsync(
         port.postMessage({
           type: MessageType.MATCH_RESULT,
           payload: { matched: false } satisfies MatchResultPayload,
+          requestId: message.requestId,
         });
       } catch (error: unknown) {
         const errorMsg = error instanceof Error ? error.message : 'Unknown error';
@@ -273,6 +279,7 @@ async function handleMessageAsync(
         port.postMessage({
           type: MessageType.MATCH_RESULT,
           payload: { matched: false } satisfies MatchResultPayload,
+          requestId: message.requestId,
         });
       }
       break;

@@ -77,6 +77,7 @@ module.exports = (env, argv) => {
     entry: {
       background: './src/background/background.ts',
       content: './src/content/content.ts',
+      interceptor: './src/content/interceptor.ts',
     },
     output: {
       path: path.resolve(__dirname, 'dist/extension'),

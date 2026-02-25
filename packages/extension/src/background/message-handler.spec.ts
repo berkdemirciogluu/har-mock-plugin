@@ -795,4 +795,170 @@ describe('handleMessage', () => {
     expect(() => handleMessage(pingMessage, port, stateManager, portManager)).not.toThrow();
     expect(() => handleMessage(syncMessage, port, stateManager, portManager)).not.toThrow();
   });
+
+  // --- MATCH_QUERY — requestId echoing ---
+
+  it('should echo requestId in MATCH_RESULT when extension is disabled (passthrough)', async () => {
+    stateManager.getSettings.mockReturnValue({
+      enabled: false,
+      replayMode: 'last-match',
+      timingReplay: false,
+      excludeList: [],
+    });
+    const message: Message = {
+      type: MessageType.MATCH_QUERY,
+      payload: { url: 'https://api.test.com', method: 'GET', tabId: 1 },
+      requestId: 'echo-req-disabled',
+    };
+    handleMessage(message, port, stateManager, portManager);
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(port.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: MessageType.MATCH_RESULT,
+        requestId: 'echo-req-disabled',
+      }),
+    );
+  });
+
+  it('should echo requestId in MATCH_RESULT when URL matches exclude list', async () => {
+    stateManager.getSettings.mockReturnValue({
+      enabled: true,
+      replayMode: 'last-match',
+      timingReplay: false,
+      excludeList: ['excluded.com'],
+    });
+    const message: Message = {
+      type: MessageType.MATCH_QUERY,
+      payload: { url: 'https://excluded.com/api', method: 'GET', tabId: 1 },
+      requestId: 'echo-req-exclude',
+    };
+    handleMessage(message, port, stateManager, portManager);
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(port.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: MessageType.MATCH_RESULT,
+        requestId: 'echo-req-exclude',
+      }),
+    );
+  });
+
+  it('should echo requestId in MATCH_RESULT for edited response match', async () => {
+    const edited = makeEditedResponse();
+    stateManager.getEditedResponses.mockReturnValue({
+      'GET:https://api.test.com/data': edited,
+    });
+    const message: Message = {
+      type: MessageType.MATCH_QUERY,
+      payload: { url: 'https://api.test.com/data', method: 'GET', tabId: 1 },
+      requestId: 'echo-req-edited',
+    };
+    handleMessage(message, port, stateManager, portManager);
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(port.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: MessageType.MATCH_RESULT,
+        requestId: 'echo-req-edited',
+      }),
+    );
+  });
+
+  it('should echo requestId in MATCH_RESULT for rule match', async () => {
+    mockEvaluate.mockReturnValue({ statusCode: 200, body: '{}', headers: [], delay: 0 });
+    const message: Message = {
+      type: MessageType.MATCH_QUERY,
+      payload: { url: 'https://api.test.com/data', method: 'GET', tabId: 1 },
+      requestId: 'echo-req-rule',
+    };
+    handleMessage(message, port, stateManager, portManager);
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(port.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: MessageType.MATCH_RESULT,
+        requestId: 'echo-req-rule',
+      }),
+    );
+  });
+
+  it('should echo requestId in MATCH_RESULT for HAR match', async () => {
+    const harData = makeHarData();
+    stateManager.getHarData.mockReturnValue(harData);
+    mockMatchUrl.mockReturnValue({
+      pattern: {
+        original: 'https://api.test.com/data',
+        template: 'https://api.test.com/data',
+        segments: [],
+        method: 'GET',
+      },
+    });
+    const message: Message = {
+      type: MessageType.MATCH_QUERY,
+      payload: { url: 'https://api.test.com/data', method: 'GET', tabId: 1 },
+      requestId: 'echo-req-har',
+    };
+    handleMessage(message, port, stateManager, portManager);
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(port.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: MessageType.MATCH_RESULT,
+        requestId: 'echo-req-har',
+      }),
+    );
+  });
+
+  it('should echo requestId in MATCH_RESULT for passthrough (no match)', async () => {
+    const message: Message = {
+      type: MessageType.MATCH_QUERY,
+      payload: { url: 'https://unmatched.com/data', method: 'GET', tabId: 1 },
+      requestId: 'echo-req-passthrough',
+    };
+    handleMessage(message, port, stateManager, portManager);
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(port.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: MessageType.MATCH_RESULT,
+        requestId: 'echo-req-passthrough',
+      }),
+    );
+  });
+
+  it('should echo requestId in MATCH_RESULT for error case', async () => {
+    stateManager.getSettings.mockImplementation(() => {
+      throw new Error('Settings unavailable');
+    });
+    const message: Message = {
+      type: MessageType.MATCH_QUERY,
+      payload: { url: 'https://api.test.com/data', method: 'GET', tabId: 1 },
+      requestId: 'echo-req-error',
+    };
+    handleMessage(message, port, stateManager, portManager);
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(port.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: MessageType.MATCH_RESULT,
+        requestId: 'echo-req-error',
+      }),
+    );
+  });
+
+  it('should echo undefined requestId when not provided in MATCH_QUERY', async () => {
+    const message: Message = {
+      type: MessageType.MATCH_QUERY,
+      payload: { url: 'https://unmatched.com', method: 'GET', tabId: 1 },
+      // requestId intentionally omitted
+    };
+    handleMessage(message, port, stateManager, portManager);
+    await new Promise((r) => setTimeout(r, 10));
+
+    const callArg = (port.postMessage as jest.Mock).mock.calls[0]?.[0] as Record<string, unknown>;
+    expect(callArg['type']).toBe(MessageType.MATCH_RESULT);
+    // requestId should be undefined (or absent) when not sent
+    expect(callArg['requestId']).toBeUndefined();
+  });
 });
