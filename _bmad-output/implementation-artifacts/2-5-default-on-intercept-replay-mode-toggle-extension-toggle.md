@@ -1,6 +1,6 @@
 # Story 2.5: Default-On Intercept, Replay Mode Toggle & Extension Toggle
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -299,3 +299,4 @@ Claude Sonnet 4.6 (GitHub Copilot)
 |------|------------|---------|
 | 2026-02-25 | Claude Sonnet 4.6 (GitHub Copilot) | Story 2.5 oluşturuldu — ready-for-dev |
 | 2026-02-25 | Claude Sonnet 4.6 (GitHub Copilot) | Story 2.5 implementasyonu tamamlandı — review |
+| 2026-02-25 | Claude Sonnet 4.6 (GitHub Copilot) | Code review fix: translate-x-4.5 → translate-x-[18px], hasHar refactor, radiogroup ARIA, catch branch testleri — done |
