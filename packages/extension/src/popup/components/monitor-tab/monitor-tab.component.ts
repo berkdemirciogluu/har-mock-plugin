@@ -15,12 +15,13 @@ import { MatchEvent } from '../../../shared/state.types';
 import { MessageType } from '../../../shared/messaging.types';
 import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
 import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
+import { HmResponseViewerComponent } from '../response-viewer/hm-response-viewer.component';
 
 @Component({
   selector: 'hm-monitor-tab',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RelativeTimePipe, LocaleDatePipe],
+  imports: [RelativeTimePipe, LocaleDatePipe, HmResponseViewerComponent],
   host: { class: 'flex flex-col flex-1 min-h-0' },
   template: `
     @if (matchHistory().length === 0) {
@@ -119,6 +120,12 @@ import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
           </div>
         }
       </div>
+      <!-- Response Viewer -->
+      @if (selectedEvent()) {
+        <div class="border-t border-slate-100 shrink-0">
+          <hm-response-viewer [event]="selectedEvent()" />
+        </div>
+      }
     }
   `,
 })
@@ -128,6 +135,9 @@ export class MonitorTabComponent {
 
   readonly matchHistory = computed(() => this.messaging.state()?.matchHistory ?? []);
   readonly selectedEventId = signal<string | null>(null);
+  readonly selectedEvent = computed(
+    () => this.matchHistory().find((e) => e.id === this.selectedEventId()) ?? null,
+  );
   readonly eventSelected = output<MatchEvent>();
 
   private readonly feedContainer = viewChild<ElementRef<HTMLElement>>('feedContainer');

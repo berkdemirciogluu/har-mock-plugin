@@ -1,8 +1,25 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { signal } from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 import { MonitorTabComponent } from './monitor-tab.component';
 import { ExtensionMessagingService } from '../../services/extension-messaging.service';
 import { MessageType } from '../../../shared/messaging.types';
+import type { MatchEvent } from '../../../shared/state.types';
+
+// ─── HmResponseViewerComponent Stub ────────────────────────────────────────
+// HmResponseViewerComponent → HmJsonEditorComponent → CodeMirror (JSDOM uyumsuz)
+// Monitor-tab testleri response viewer işlevselliğini test etmez → stub yeterli
+jest.mock('../response-viewer/hm-response-viewer.component', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { Component } = require('@angular/core') as typeof import('@angular/core');
+  return {
+    HmResponseViewerComponent: Component({
+      selector: 'hm-response-viewer',
+      standalone: true,
+      template: '<div data-testid="response-viewer-stub"></div>',
+      inputs: ['event'],
+    })(class {}),
+  };
+});
 
 const makeMatchEvent = (
   override: Partial<{
@@ -406,5 +423,75 @@ describe('MonitorTabComponent', () => {
       expect(timestampSpan?.title).toBeTruthy();
       expect(timestampSpan.title).toContain('2026');
     });
+  });
+});
+
+// ─── Subtask 5.7: selectedEvent computed ───────────────────────────────────
+describe('MonitorTabComponent — selectedEvent computed (Subtask 5.7)', () => {
+  let fixture: ComponentFixture<MonitorTabComponent>;
+  let component: MonitorTabComponent;
+
+  const makeEvt = (id: string, url: string): MatchEvent => ({
+    id,
+    url,
+    method: 'GET',
+    source: 'har',
+    statusCode: 200,
+    timestamp: Date.now(),
+  });
+
+  const makeStateWith = (events: MatchEvent[]) => ({
+    harData: null as null,
+    activeRules: [] as never[],
+    settings: {} as never,
+    editedResponses: {} as Record<string, never>,
+    matchHistory: events,
+    accordionStates: {} as Record<string, never>,
+  });
+
+  let stateSignal57: ReturnType<typeof signal<ReturnType<typeof makeStateWith> | null>>;
+
+  beforeEach(async () => {
+    stateSignal57 = signal<ReturnType<typeof makeStateWith> | null>(null);
+
+    const messagingStub = {
+      state: stateSignal57.asReadonly(),
+      sendMessage: jest.fn().mockResolvedValue({ success: true }),
+    };
+
+    await TestBed.configureTestingModule({
+      imports: [MonitorTabComponent],
+      providers: [{ provide: ExtensionMessagingService, useValue: messagingStub }],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(MonitorTabComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should return null when no event is selected', () => {
+    stateSignal57.set(makeStateWith([makeEvt('e1', 'https://a.com')]));
+    fixture.detectChanges();
+    expect(component.selectedEvent()).toBeNull();
+  });
+
+  it('should return correct MatchEvent when selectedEventId matches', () => {
+    const evt1 = makeEvt('e1', 'https://api.com/a');
+    const evt2 = makeEvt('e2', 'https://api.com/b');
+    stateSignal57.set(makeStateWith([evt1, evt2]));
+    fixture.detectChanges();
+    component.selectEvent(evt2);
+    expect(component.selectedEvent()).toEqual(evt2);
+  });
+
+  it('should update selectedEvent when a different event is selected', () => {
+    const evt1 = makeEvt('e1', 'https://api.com/a');
+    const evt2 = makeEvt('e2', 'https://api.com/b');
+    stateSignal57.set(makeStateWith([evt1, evt2]));
+    fixture.detectChanges();
+    component.selectEvent(evt1);
+    expect(component.selectedEvent()?.id).toBe('e1');
+    component.selectEvent(evt2);
+    expect(component.selectedEvent()?.id).toBe('e2');
   });
 });

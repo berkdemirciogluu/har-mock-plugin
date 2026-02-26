@@ -1,0 +1,116 @@
+@if (event() !== null) {
+  @if (event()!.source === 'passthrough') {
+    <!-- Passthrough: no HAR match -->
+    <div
+      class="flex flex-col items-center justify-center gap-2 px-4 py-6 text-center text-sm text-slate-400"
+      data-testid="passthrough-message"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-8 w-8 text-slate-300"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.5"
+          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+      <span>Bu request HAR'da eşleşmedi, düzenlenecek response yok</span>
+    </div>
+  } @else {
+    <!-- HAR or Rule match: show viewer -->
+    <div class="flex flex-col gap-2 p-3" data-testid="response-viewer">
+      <!-- Header: method + url + status -->
+      <div class="flex items-center gap-2 min-w-0">
+        <span
+          class="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-mono font-bold bg-slate-100 text-slate-600"
+          data-testid="method-badge"
+        >
+          {{ event()!.method }}
+        </span>
+        <span
+          class="flex-1 min-w-0 truncate text-xs text-slate-600 font-mono"
+          [title]="event()!.url"
+          data-testid="url-display"
+        >
+          {{ event()!.url }}
+        </span>
+        @if (event()!.statusCode) {
+          <span
+            class="shrink-0 text-[10px] font-mono font-semibold text-slate-400"
+            data-testid="status-code"
+          >
+            {{ event()!.statusCode }}
+          </span>
+        }
+      </div>
+
+      <!-- JSON Editor -->
+      <div class="border border-slate-200 rounded overflow-hidden" data-testid="editor-container">
+        <hm-json-editor
+          [value]="resolvedBody()"
+          [isReadOnly]="false"
+          (valueChange)="onBodyEdit($event)"
+        />
+      </div>
+
+      <!-- Save button row -->
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          class="px-3 py-1.5 text-xs font-medium rounded transition-colors"
+          [class.bg-indigo-600]="isDirty() && !isSaving()"
+          [class.text-white]="isDirty() && !isSaving()"
+          [class.hover:bg-indigo-700]="isDirty() && !isSaving()"
+          [class.bg-slate-100]="!isDirty() || isSaving()"
+          [class.text-slate-400]="!isDirty() || isSaving()"
+          [class.cursor-not-allowed]="!isDirty() || isSaving()"
+          [disabled]="!isDirty() || isSaving()"
+          (click)="saveResponse()"
+          data-testid="save-button"
+        >
+          @if (isSaving()) {
+            Kaydediliyor…
+          } @else {
+            Kaydet
+          }
+        </button>
+
+        <!-- Success indicator -->
+        @if (showSuccess()) {
+          <span
+            class="text-xs text-green-600 font-medium flex items-center gap-1"
+            data-testid="success-indicator"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            Kaydedildi
+          </span>
+        }
+
+        <!-- Error message -->
+        @if (errorMessage()) {
+          <span class="text-xs text-red-500" data-testid="error-message">
+            {{ errorMessage() }}
+          </span>
+        }
+      </div>
+    </div>
+  }
+}
