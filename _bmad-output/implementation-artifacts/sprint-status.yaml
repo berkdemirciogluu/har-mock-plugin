@@ -72,7 +72,7 @@ development_status:
     # Epic 3: Chrome Extension — Monitor & Response Editing
     epic-3: in-progress                                                  # SCRUM-7
     3-1-background-popup-live-feed-push: done                             # SCRUM-21
-    3-2-monitor-tab-request-feed-ui: review                              # SCRUM-22
+    3-2-monitor-tab-request-feed-ui: done                                # SCRUM-22
     3-3-codemirror-6-json-editor-component: backlog                      # SCRUM-23
     3-4-response-viewer-inline-edit-persist: backlog                     # SCRUM-24
     3-5-exclude-list-yonetimi: backlog                                   # SCRUM-25

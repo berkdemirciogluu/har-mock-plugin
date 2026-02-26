@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
   computed,
   effect,
@@ -12,12 +13,14 @@ import {
 import { ExtensionMessagingService } from '../../services/extension-messaging.service';
 import { MatchEvent } from '../../../shared/state.types';
 import { MessageType } from '../../../shared/messaging.types';
-import { formatRelativeTime } from '../../utils/format-relative-time';
+import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
+import { LocaleDatePipe } from '../../pipes/locale-date.pipe';
 
 @Component({
   selector: 'hm-monitor-tab',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [RelativeTimePipe, LocaleDatePipe],
   host: { class: 'flex flex-col flex-1 min-h-0' },
   template: `
     @if (matchHistory().length === 0) {
@@ -58,9 +61,9 @@ import { formatRelativeTime } from '../../utils/format-relative-time';
       <div class="flex-1 overflow-y-auto divide-y divide-slate-100" #feedContainer>
         @for (event of matchHistory(); track event.id) {
           <div
-            class="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-slate-50 transition-colors"
+            class="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-slate-50 transition-colors border-l-2"
             [class.bg-indigo-50]="selectedEventId() === event.id"
-            [class.border-l-2]="selectedEventId() === event.id"
+            [class.border-transparent]="selectedEventId() !== event.id"
             [class.border-indigo-500]="selectedEventId() === event.id"
             (click)="selectEvent(event)"
             data-feed-row
@@ -84,9 +87,9 @@ import { formatRelativeTime } from '../../utils/format-relative-time';
             <!-- Relative timestamp -->
             <span
               class="shrink-0 text-[10px] text-slate-300 font-mono"
-              [title]="toDateString(event.timestamp)"
+              [title]="event.timestamp | localeDate"
             >
-              {{ formatRelativeTime(event.timestamp) }}
+              {{ event.timestamp | relativeTime }}
             </span>
             <!-- Source badge -->
             <span
@@ -121,17 +124,25 @@ import { formatRelativeTime } from '../../utils/format-relative-time';
 })
 export class MonitorTabComponent {
   private readonly messaging = inject(ExtensionMessagingService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly matchHistory = computed(() => this.messaging.state()?.matchHistory ?? []);
   readonly selectedEventId = signal<string | null>(null);
   readonly eventSelected = output<MatchEvent>();
 
-  private readonly feedContainer = viewChild<ElementRef>('feedContainer');
+  private readonly feedContainer = viewChild<ElementRef<HTMLElement>>('feedContainer');
+  private pendingRafId: number | null = null;
 
   constructor() {
+    this.destroyRef.onDestroy(() => {
+      if (this.pendingRafId !== null) {
+        cancelAnimationFrame(this.pendingRafId);
+      }
+    });
+
     effect(() => {
       const history = this.matchHistory(); // signal tracked
-      const container = this.feedContainer()?.nativeElement as HTMLElement | undefined;
+      const container = this.feedContainer()?.nativeElement;
       if (!container || history.length === 0) return;
 
       // Kullanıcı en üstte ise (scrollTop < threshold) auto-scroll'u koru
@@ -139,11 +150,12 @@ export class MonitorTabComponent {
       if (!isAtTop) {
         // DOM update sonrası scroll pozisyonunu kompanse et
         const prevScrollTop = container.scrollTop;
-        requestAnimationFrame(() => {
-          const firstRow = container.querySelector('[data-feed-row]') as HTMLElement | null;
-          if (firstRow) {
-            container.scrollTop = prevScrollTop + firstRow.offsetHeight;
-          }
+        if (this.pendingRafId !== null) {
+          cancelAnimationFrame(this.pendingRafId);
+        }
+        this.pendingRafId = requestAnimationFrame(() => {
+          this.pendingRafId = null;
+          this.compensateScroll(container, prevScrollTop);
         });
       }
     });
@@ -155,14 +167,16 @@ export class MonitorTabComponent {
   }
 
   clearHistory(): void {
-    void this.messaging.sendMessage(MessageType.CLEAR_HISTORY, {}, crypto.randomUUID());
+    this.messaging
+      .sendMessage(MessageType.CLEAR_HISTORY, {}, crypto.randomUUID())
+      .catch((err: unknown) => console.error('clearHistory failed:', err));
   }
 
-  formatRelativeTime(timestamp: number): string {
-    return formatRelativeTime(timestamp);
-  }
-
-  toDateString(timestamp: number): string {
-    return new Date(timestamp).toLocaleString();
+  /** @internal Scroll compensation — extracted for testability */
+  compensateScroll(container: HTMLElement, prevScrollTop: number): void {
+    const firstRow = container.querySelector<HTMLElement>('[data-feed-row]');
+    if (firstRow) {
+      container.scrollTop = prevScrollTop + firstRow.offsetHeight;
+    }
   }
 }

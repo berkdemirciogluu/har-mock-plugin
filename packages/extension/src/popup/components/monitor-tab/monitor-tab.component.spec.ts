@@ -244,6 +244,24 @@ describe('MonitorTabComponent', () => {
       const rows = el.querySelectorAll('[data-feed-row]');
       expect(rows.length).toBe(2);
     });
+
+    it('should compensate scrollTop by first row offsetHeight', () => {
+      const events = [makeMatchEvent({ id: 'e1' }), makeMatchEvent({ id: 'e2' })];
+      stateSignal.set(makeState(events));
+      fixture.detectChanges();
+
+      const container = el.querySelector('.overflow-y-auto') as HTMLElement;
+      const firstRow = container.querySelector('[data-feed-row]') as HTMLElement;
+      Object.defineProperty(firstRow, 'offsetHeight', { value: 40, configurable: true });
+      Object.defineProperty(container, 'scrollTop', {
+        value: 0,
+        writable: true,
+        configurable: true,
+      });
+
+      component.compensateScroll(container, 50);
+      expect(container.scrollTop).toBe(90); // 50 + 40
+    });
   });
 
   describe('row click selection', () => {
@@ -277,12 +295,17 @@ describe('MonitorTabComponent', () => {
       fixture.detectChanges();
 
       const row = el.querySelector('[data-feed-row]') as HTMLElement;
+      // Before selection: border-transparent should be present
+      expect(row.classList).toContain('border-transparent');
+      expect(row.classList).not.toContain('border-indigo-500');
+
       row.click();
       fixture.detectChanges();
 
       expect(row.classList).toContain('bg-indigo-50');
       expect(row.classList).toContain('border-l-2');
       expect(row.classList).toContain('border-indigo-500');
+      expect(row.classList).not.toContain('border-transparent');
     });
 
     it('should have cursor-pointer class on row items', () => {
@@ -290,6 +313,17 @@ describe('MonitorTabComponent', () => {
       fixture.detectChanges();
       const row = el.querySelector('[data-feed-row]') as HTMLElement;
       expect(row.classList).toContain('cursor-pointer');
+    });
+
+    it('should have border-transparent on unselected rows', () => {
+      const events = [makeMatchEvent({ id: 'a' }), makeMatchEvent({ id: 'b' })];
+      stateSignal.set(makeState(events));
+      fixture.detectChanges();
+      const rows = el.querySelectorAll('[data-feed-row]');
+      rows.forEach((row) => {
+        expect(row.classList).toContain('border-l-2');
+        expect(row.classList).toContain('border-transparent');
+      });
     });
   });
 
@@ -352,30 +386,25 @@ describe('MonitorTabComponent', () => {
       const event = makeMatchEvent({ timestamp: now });
       stateSignal.set(makeState([event]));
       fixture.detectChanges();
-      // "şimdi" appears for very recent events
+      // "şimdi" appears for very recent events via relativeTime pipe
       expect(el.textContent).toContain('şimdi');
     });
 
-    it('formatRelativeTime should return correct string for seconds', () => {
-      const timestamp = Date.now() - 30_000;
-      expect(component.formatRelativeTime(timestamp)).toBe('30s');
+    it('should render relative time via pipe for older events', () => {
+      const event = makeMatchEvent({ timestamp: Date.now() - 120_000 });
+      stateSignal.set(makeState([event]));
+      fixture.detectChanges();
+      expect(el.textContent).toContain('2m');
     });
 
-    it('formatRelativeTime should return correct string for minutes', () => {
-      const timestamp = Date.now() - 5 * 60_000;
-      expect(component.formatRelativeTime(timestamp)).toBe('5m');
-    });
-
-    it('formatRelativeTime should return correct string for hours', () => {
-      const timestamp = Date.now() - 2 * 3_600_000;
-      expect(component.formatRelativeTime(timestamp)).toBe('2h');
-    });
-
-    it('toDateString should return a non-empty string for any timestamp', () => {
+    it('should render locale date string in title attribute via pipe', () => {
       const timestamp = Date.now();
-      const result = component.toDateString(timestamp);
-      expect(typeof result).toBe('string');
-      expect(result.length).toBeGreaterThan(0);
+      const event = makeMatchEvent({ timestamp });
+      stateSignal.set(makeState([event]));
+      fixture.detectChanges();
+      const timestampSpan = el.querySelector('.text-slate-300.font-mono') as HTMLElement;
+      expect(timestampSpan?.title).toBeTruthy();
+      expect(timestampSpan.title).toContain('2026');
     });
   });
 });

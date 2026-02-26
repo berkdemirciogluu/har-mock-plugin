@@ -455,6 +455,7 @@ import { HarParser } from '../../core/src/har-parser/har-parser';
 - Tüm component'ler **standalone** (`standalone: true`) — `NgModule` yasak
 - `ChangeDetectionStrategy.OnPush` — tüm component'lerde zorunlu
 - Template: ayrı `.html` dosyası — inline template yasak
+- **Template'te fonksiyon çağrısı YASAK** — her change detection cycle'ında yeniden çalışır, performans sorunu yaratır. Veri dönüştürme için **pure `Pipe`** kullanılmalıdır (Angular pure pipe memoize eder). Signal getter çağrıları (`mySignal()`) bu kuralın dışındadır — Angular signal tracking mekanizması ile optimize edilirler
 - Input/Output: Angular signal-based `input()` / `output()` — decorator `@Input()` / `@Output()` yasak
 - DI: `inject()` fonksiyonu — constructor injection yasak
 - Selector prefix: `hm-` (har-mock)
