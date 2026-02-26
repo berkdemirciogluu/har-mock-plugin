@@ -108,9 +108,9 @@ describe('AppComponent', () => {
   it('should have tab content wrapper with flex-1 and min-h-0', () => {
     // Use native DOM API to find first direct div child (avoids :scope selector JSDOM issues)
     const outerDiv = el.querySelector('div') as HTMLElement;
-    const wrapper = Array.from(outerDiv.children).find(
-      (child) => child.tagName === 'DIV',
-    ) as HTMLElement | undefined;
+    const wrapper = Array.from(outerDiv.children).find((child) => child.tagName === 'DIV') as
+      | HTMLElement
+      | undefined;
     expect(wrapper).toBeTruthy();
     expect(wrapper!.className).toContain('flex-1');
     expect(wrapper!.className).toContain('min-h-0');
