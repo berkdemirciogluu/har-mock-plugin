@@ -153,6 +153,60 @@ describe('HmExcludeListComponent', () => {
     });
   });
 
+  // Validation clearing
+  describe('validation error clearing', () => {
+    it('should clear validation error after successful add following a previous error', () => {
+      fixture.componentRef.setInput('excludeList', ['/api/auth']);
+      fixture.detectChanges();
+
+      // Trigger duplicate error
+      component.newPattern.set('/api/auth');
+      component.addPattern();
+      fixture.detectChanges();
+      expect(el.textContent).toContain('Bu pattern zaten listede');
+
+      // Now add a valid, different pattern
+      component.newPattern.set('/api/health');
+      component.addPattern();
+      fixture.detectChanges();
+      expect(el.textContent).not.toContain('Bu pattern zaten listede');
+      expect(el.textContent).not.toContain('URL pattern gerekli');
+    });
+
+    it('should clear validation error when user starts typing', () => {
+      // Trigger empty error
+      component.newPattern.set('');
+      component.addPattern();
+      fixture.detectChanges();
+      expect(el.textContent).toContain('URL pattern gerekli');
+
+      // Simulate typing via onNewPatternInput
+      const inputEvent = new Event('input');
+      Object.defineProperty(inputEvent, 'target', { value: { value: '/api' } });
+      component.onNewPatternInput(inputEvent);
+      fixture.detectChanges();
+
+      expect(el.textContent).not.toContain('URL pattern gerekli');
+      expect(component.newPattern()).toBe('/api');
+    });
+
+    it('should clear validation error when removePattern is called', () => {
+      fixture.componentRef.setInput('excludeList', ['/api/auth', '/api/health']);
+      fixture.detectChanges();
+
+      // Trigger duplicate error
+      component.newPattern.set('/api/auth');
+      component.addPattern();
+      fixture.detectChanges();
+      expect(el.textContent).toContain('Bu pattern zaten listede');
+
+      // Remove a pattern — error should clear
+      component.removePattern(0);
+      fixture.detectChanges();
+      expect(el.textContent).not.toContain('Bu pattern zaten listede');
+    });
+  });
+
   // Subtask 4.5: Pattern kaldırma
   describe('removePattern', () => {
     it('should emit excludeListChange without removed pattern', () => {
@@ -248,6 +302,14 @@ describe('HmExcludeListComponent', () => {
       const addBtn = el.querySelector('button[aria-label*="Ekle"]') as HTMLButtonElement;
       addBtn.click();
       expect(addSpy).toHaveBeenCalled();
+    });
+
+    it('should call onNewPatternInput when typing in input field', () => {
+      const spy = jest.spyOn(component, 'onNewPatternInput');
+      const input = el.querySelector('input') as HTMLInputElement;
+      input.value = '/api/test';
+      input.dispatchEvent(new Event('input'));
+      expect(spy).toHaveBeenCalled();
     });
   });
 });

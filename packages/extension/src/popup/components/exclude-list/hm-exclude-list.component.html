@@ -7,7 +7,7 @@
       placeholder="URL pattern (örn: /api/auth)"
       aria-label="Yeni exclude pattern gir"
       [value]="newPattern()"
-      (input)="newPattern.set($any($event.target).value)"
+      (input)="onNewPatternInput($event)"
       (keydown.enter)="addPattern()"
     />
     <button

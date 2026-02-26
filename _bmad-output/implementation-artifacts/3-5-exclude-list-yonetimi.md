@@ -201,15 +201,15 @@ const mockState: StateSyncPayload = {
 
 ### Mimari Kontrol Noktaları
 
-- [ ] `standalone: true` ✓
-- [ ] `ChangeDetectionStrategy.OnPush` ✓
-- [ ] `inject()` DI (gerekiyorsa) — constructor injection YOK ✓
-- [ ] `input()` / `output()` signal API — `@Input()` / `@Output()` YOK ✓
-- [ ] `any` tipi YASAK ✓
-- [ ] Selector: `hm-exclude-list` (hm- prefix) ✓
-- [ ] Template: `templateUrl` ayrı HTML dosyası ✓
-- [ ] `UPDATE_SETTINGS` payload formatı: `{ settings: { excludeList: [...] } }` — message-handler ile uyumlu ✓
-- [ ] Background SW değişikliği GEREKMİYOR ✓
+- [x] `standalone: true` ✓
+- [x] `ChangeDetectionStrategy.OnPush` ✓
+- [x] `inject()` DI (gerekiyorsa) — constructor injection YOK ✓
+- [x] `input()` / `output()` signal API — `@Input()` / `@Output()` YOK ✓
+- [x] `any` tipi YASAK ✓
+- [x] Selector: `hm-exclude-list` (hm- prefix) ✓
+- [x] Template: `templateUrl` ayrı HTML dosyası ✓
+- [x] `UPDATE_SETTINGS` payload formatı: `{ settings: { excludeList: [...] } }` — message-handler ile uyumlu ✓
+- [x] Background SW değişikliği GEREKMİYOR ✓
 
 ### Project Structure Notes
 

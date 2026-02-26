@@ -22,6 +22,11 @@ export class HmExcludeListComponent {
     return '';
   });
 
+  onNewPatternInput(event: Event): void {
+    this.newPattern.set((event.target as HTMLInputElement).value);
+    this.validationError.set(null);
+  }
+
   addPattern(): void {
     const pattern = this.newPattern().trim();
 
@@ -41,6 +46,7 @@ export class HmExcludeListComponent {
   }
 
   removePattern(index: number): void {
+    this.validationError.set(null);
     const updated = this.excludeList().filter((_, i) => i !== index);
     this.excludeListChange.emit(updated);
   }
