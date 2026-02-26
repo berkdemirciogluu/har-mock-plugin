@@ -335,6 +335,74 @@ describe('ControlsTabComponent', () => {
     });
   });
 
+  // Subtask 4.7: excludeList computed signal reads from state correctly
+  describe('excludeList computed signal', () => {
+    it('should default to empty array when state is null', () => {
+      mockMessagingService.state.set(null);
+      fixture.detectChanges();
+      expect(component.excludeList()).toEqual([]);
+    });
+
+    it('should read excludeList from state', () => {
+      mockMessagingService.state.set(
+        makeStateSyncPayload({
+          settings: {
+            enabled: true,
+            replayMode: 'last-match',
+            timingReplay: false,
+            excludeList: ['/api/auth', '/api/health'],
+          },
+        }),
+      );
+      fixture.detectChanges();
+      expect(component.excludeList()).toEqual(['/api/auth', '/api/health']);
+    });
+
+    it('should read empty excludeList from state', () => {
+      mockMessagingService.state.set(makeStateSyncPayload());
+      fixture.detectChanges();
+      expect(component.excludeList()).toEqual([]);
+    });
+
+    it('should render hm-exclude-list in Settings accordion', () => {
+      expect(el.querySelector('hm-exclude-list')).toBeTruthy();
+    });
+  });
+
+  // Subtask 4.8: onExcludeListChange sends UPDATE_SETTINGS
+  describe('onExcludeListChange', () => {
+    it('should call sendMessage with UPDATE_SETTINGS and excludeList payload', () => {
+      component.onExcludeListChange(['/api/auth', '/api/health']);
+      expect(mockMessagingService.sendMessage).toHaveBeenCalledWith(
+        'UPDATE_SETTINGS',
+        { settings: { excludeList: ['/api/auth', '/api/health'] } },
+        expect.any(String),
+      );
+    });
+
+    it('should call sendMessage with empty excludeList', () => {
+      component.onExcludeListChange([]);
+      expect(mockMessagingService.sendMessage).toHaveBeenCalledWith(
+        'UPDATE_SETTINGS',
+        { settings: { excludeList: [] } },
+        expect.any(String),
+      );
+    });
+
+    it('should log error when sendMessage rejects', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      mockMessagingService.sendMessage.mockRejectedValueOnce(new Error('network fail'));
+      component.onExcludeListChange(['/api/auth']);
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(consoleSpy).toHaveBeenCalledWith(
+        '[HAR Mock] Exclude list güncellenemedi:',
+        expect.any(Error),
+      );
+      consoleSpy.mockRestore();
+    });
+  });
+
   describe('onEnabledChange', () => {
     it('should call sendMessage with UPDATE_SETTINGS and enabled=false', () => {
       component.onEnabledChange(false);

@@ -6,6 +6,7 @@ import {
   type ReplayMode,
 } from '../strategy-toggle/hm-strategy-toggle.component';
 import { SettingsSectionComponent } from '../settings-section/hm-settings-section.component';
+import { HmExcludeListComponent } from '../exclude-list/hm-exclude-list.component';
 import { ExtensionMessagingService } from '../../services/extension-messaging.service';
 import { MessageType } from '../../../shared/messaging.types';
 import type { UpdateSettingsPayload } from '../../../shared/payload.types';
@@ -19,6 +20,7 @@ import type { UpdateSettingsPayload } from '../../../shared/payload.types';
     HarUploadComponent,
     StrategyToggleComponent,
     SettingsSectionComponent,
+    HmExcludeListComponent,
   ],
   template: `
     <div class="space-y-2 p-2">
@@ -75,6 +77,13 @@ import type { UpdateSettingsPayload } from '../../../shared/payload.types';
           [extensionEnabled]="extensionEnabled()"
           (enabledChange)="onEnabledChange($event)"
         />
+        <div class="mt-3">
+          <p class="mb-1 text-xs font-medium text-slate-500">Exclude List</p>
+          <hm-exclude-list
+            [excludeList]="excludeList()"
+            (excludeListChange)="onExcludeListChange($event)"
+          />
+        </div>
       </hm-accordion>
     </div>
   `,
@@ -96,6 +105,9 @@ export class ControlsTabComponent {
   );
   readonly extensionEnabled = computed<boolean>(
     () => this.messaging.state()?.settings?.enabled ?? true,
+  );
+  readonly excludeList = computed<readonly string[]>(
+    () => this.messaging.state()?.settings?.excludeList ?? [],
   );
 
   onReplayModeChange(mode: ReplayMode): void {
@@ -122,6 +134,15 @@ export class ControlsTabComponent {
       .sendMessage(MessageType.UPDATE_SETTINGS, payload, crypto.randomUUID())
       .catch((err: unknown) => {
         console.error('[HAR Mock] Extension toggle güncellenemedi:', err);
+      });
+  }
+
+  onExcludeListChange(list: readonly string[]): void {
+    const payload: UpdateSettingsPayload = { settings: { excludeList: list } };
+    void this.messaging
+      .sendMessage(MessageType.UPDATE_SETTINGS, payload, crypto.randomUUID())
+      .catch((err: unknown) => {
+        console.error('[HAR Mock] Exclude list güncellenemedi:', err);
       });
   }
 }
