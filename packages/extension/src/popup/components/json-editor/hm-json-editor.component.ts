@@ -3,6 +3,7 @@ import {
   Component,
   DestroyRef,
   ElementRef,
+  NgZone,
   afterNextRender,
   effect,
   inject,
@@ -26,7 +27,7 @@ import { defaultKeymap } from '@codemirror/commands';
 export class HmJsonEditorComponent {
   // Signal-based inputs (AC: #5)
   readonly value = input<string>('');
-  readonly readonly = input<boolean>(false);
+  readonly isReadOnly = input<boolean>(false);
 
   // Signal-based output (AC: #5)
   readonly valueChange = output<string>();
@@ -36,6 +37,9 @@ export class HmJsonEditorComponent {
 
   // DestroyRef for cleanup (AC: #7)
   private readonly destroyRef = inject(DestroyRef);
+
+  // NgZone for triggering change detection from CodeMirror's event loop (M3)
+  private readonly ngZone = inject(NgZone);
 
   // Runtime-configurable Compartments for readonly/editable state updates
   private readonly editableCompartment = new Compartment();
@@ -77,7 +81,7 @@ export class HmJsonEditorComponent {
 
     // Effect: update readonly/editable compartments when `readonly` input changes (AC: #2, Task 4)
     effect(() => {
-      const isReadOnly = this.readonly();
+      const isReadOnly = this.isReadOnly();
       if (!this.editorView) return;
 
       this.editorView.dispatch({
@@ -94,7 +98,7 @@ export class HmJsonEditorComponent {
 
   /** Builds the CodeMirror EditorState with all required extensions. */
   private createEditorState(): EditorState {
-    const isReadOnly = this.readonly();
+    const isReadOnly = this.isReadOnly();
 
     return EditorState.create({
       doc: this.value(),
@@ -117,7 +121,7 @@ export class HmJsonEditorComponent {
           const content = update.state.doc.toString();
           try {
             JSON.parse(content);
-            this.valueChange.emit(content);
+            this.ngZone.run(() => this.valueChange.emit(content));
           } catch {
             // Invalid JSON — do not emit (AC: #3)
           }

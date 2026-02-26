@@ -73,7 +73,7 @@ development_status:
     epic-3: in-progress                                                  # SCRUM-7
     3-1-background-popup-live-feed-push: done                             # SCRUM-21
     3-2-monitor-tab-request-feed-ui: done                                # SCRUM-22
-    3-3-codemirror-6-json-editor-component: review                       # SCRUM-23
+    3-3-codemirror-6-json-editor-component: done                        # SCRUM-23
     3-4-response-viewer-inline-edit-persist: backlog                     # SCRUM-24
     3-5-exclude-list-yonetimi: backlog                                   # SCRUM-25
     epic-3-retrospective: optional

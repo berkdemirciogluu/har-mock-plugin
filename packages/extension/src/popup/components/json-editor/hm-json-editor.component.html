@@ -2,6 +2,7 @@
   #editorContainer
   class="hm-json-editor-host"
   role="textbox"
-  [attr.aria-readonly]="readonly()"
-  [attr.aria-multiline]="true"
+  aria-label="JSON editor"
+  [attr.aria-readonly]="isReadOnly()"
+  aria-multiline="true"
 ></div>

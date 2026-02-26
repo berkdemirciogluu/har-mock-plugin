@@ -19,21 +19,20 @@ jest.mock('@codemirror/view', () => {
     destroy: jest.fn(),
   }));
 
-  (mockEditorViewConstructor as unknown as Record<string, unknown>)['editable'] = {
-    of: jest.fn().mockReturnValue({ _tag: 'ext' }),
-  };
-  (mockEditorViewConstructor as unknown as Record<string, unknown>)['theme'] = jest
-    .fn()
-    .mockReturnValue({ _tag: 'ext' });
-  (mockEditorViewConstructor as unknown as Record<string, unknown>)['updateListener'] = {
-    of: jest.fn().mockImplementation((listener: unknown) => {
-      // Expose the listener so tests can simulate document changes
-      (mockEditorViewConstructor as unknown as Record<string, unknown>)[
-        '_capturedUpdateListener'
-      ] = listener;
-      return { _tag: 'ext' };
-    }),
-  };
+  // Object.assign avoids `as unknown as` double assertions that Babel cannot parse in hoisted jest.mock factories
+  Object.assign(mockEditorViewConstructor, {
+    editable: {
+      of: jest.fn().mockReturnValue({ _tag: 'ext' }),
+    },
+    theme: jest.fn().mockReturnValue({ _tag: 'ext' }),
+    updateListener: {
+      of: jest.fn().mockImplementation((listener) => {
+        // Expose the listener so tests can simulate document changes
+        Object.assign(mockEditorViewConstructor, { _capturedUpdateListener: listener });
+        return { _tag: 'ext' };
+      }),
+    },
+  });
 
   return {
     EditorView: mockEditorViewConstructor,
@@ -106,7 +105,7 @@ function getEditorViewMockInstance(): MockEditorViewInstance | undefined {
   imports: [HmJsonEditorComponent],
   template: `<hm-json-editor
     [value]="value"
-    [readonly]="readOnly"
+    [isReadOnly]="readOnly"
     (valueChange)="onValueChange($event)"
   />`,
 })
@@ -175,10 +174,8 @@ describe('HmJsonEditorComponent', () => {
     it('should dispatch compartment reconfiguration when readonly changes post-init (AC: #2, Task 4)', () => {
       // Get the created EditorView instance (created during afterNextRender)
       const editorViewInstance = getEditorViewMockInstance();
-      if (!editorViewInstance) {
-        // afterNextRender may not have fired in this test environment — skip
-        return;
-      }
+      expect(editorViewInstance).toBeDefined(); // H2: enforce EditorView was initialized — no silent skips
+      if (!editorViewInstance) return;
 
       // Clear call history but keep the mock functions callable
       editorViewInstance.dispatch.mockClear();
@@ -195,7 +192,8 @@ describe('HmJsonEditorComponent', () => {
   describe('value input programmatic update (Subtask 6.3, AC: #6)', () => {
     it('should call EditorView.dispatch when value input changes externally', () => {
       const editorViewInstance = getEditorViewMockInstance();
-      if (!editorViewInstance) return; // afterNextRender not fired — skip
+      expect(editorViewInstance).toBeDefined();
+      if (!editorViewInstance) return;
 
       // Simulate current editor content is '{}'
       editorViewInstance.state.doc.toString.mockReturnValue('{}');
@@ -215,6 +213,7 @@ describe('HmJsonEditorComponent', () => {
 
     it('should NOT dispatch when value input equals current editor content', () => {
       const editorViewInstance = getEditorViewMockInstance();
+      expect(editorViewInstance).toBeDefined();
       if (!editorViewInstance) return;
 
       editorViewInstance.state.doc.toString.mockReturnValue('{}');
@@ -230,18 +229,19 @@ describe('HmJsonEditorComponent', () => {
   // ── Subtask 6.4 ─────────────────────────────────────────────────────────────
   describe('valueChange output — JSON validation (Subtask 6.4, AC: #3)', () => {
     const getCapturedListener = () =>
-      (MockEditorView as unknown as Record<string, unknown>)[
-        '_capturedUpdateListener'
-      ] as ((u: Record<string, unknown>) => void) | undefined;
+      (MockEditorView as unknown as Record<string, unknown>)['_capturedUpdateListener'] as
+        | ((u: Record<string, unknown>) => void)
+        | undefined;
 
     it('should emit valueChange for valid JSON via updateListener', () => {
       const editorViewInstance = getEditorViewMockInstance();
+      expect(editorViewInstance).toBeDefined();
       if (!editorViewInstance) return;
 
       // Retrieve the captured updateListener
       const updateListener = getCapturedListener();
-
-      if (!updateListener) return; // listener not captured
+      expect(updateListener).toBeDefined();
+      if (!updateListener) return;
 
       const validJson = '{"foo": 1}';
 
@@ -258,10 +258,11 @@ describe('HmJsonEditorComponent', () => {
 
     it('should NOT emit valueChange for invalid JSON via updateListener', () => {
       const editorViewInstance = getEditorViewMockInstance();
+      expect(editorViewInstance).toBeDefined();
       if (!editorViewInstance) return;
 
       const updateListener = getCapturedListener();
-
+      expect(updateListener).toBeDefined();
       if (!updateListener) return;
 
       host.lastEmitted = null; // reset
@@ -278,7 +279,7 @@ describe('HmJsonEditorComponent', () => {
 
     it('should NOT emit valueChange when doc has not changed', () => {
       const updateListener = getCapturedListener();
-
+      expect(updateListener).toBeDefined();
       if (!updateListener) return;
 
       host.lastEmitted = null;
@@ -293,6 +294,7 @@ describe('HmJsonEditorComponent', () => {
   describe('cleanup on destroy (Subtask 6.5, AC: #7)', () => {
     it('should call editorView.destroy() when component is destroyed', () => {
       const editorViewInstance = getEditorViewMockInstance();
+      expect(editorViewInstance).toBeDefined();
       if (!editorViewInstance) return;
 
       hostFixture.destroy(); // triggers DestroyRef.onDestroy callback
