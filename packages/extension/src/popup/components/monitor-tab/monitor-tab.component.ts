@@ -1,10 +1,24 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  computed,
+  effect,
+  inject,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { ExtensionMessagingService } from '../../services/extension-messaging.service';
+import { MatchEvent } from '../../../shared/state.types';
+import { MessageType } from '../../../shared/messaging.types';
+import { formatRelativeTime } from '../../utils/format-relative-time';
 
 @Component({
   selector: 'hm-monitor-tab',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'flex flex-col flex-1 min-h-0' },
   template: `
     @if (matchHistory().length === 0) {
       <div class="flex flex-col items-center justify-center p-8 text-center">
@@ -26,9 +40,31 @@ import { ExtensionMessagingService } from '../../services/extension-messaging.se
         <p class="text-xs text-slate-400 mt-1">Sayfayı yenileyip bir istek başlatın.</p>
       </div>
     } @else {
-      <div class="overflow-y-auto divide-y divide-slate-100">
+      <!-- Feed Header: count + clear button -->
+      <div
+        class="flex items-center justify-between px-3 py-1.5 border-b border-slate-100 bg-slate-50/50 shrink-0"
+      >
+        <span class="text-[10px] text-slate-500 font-medium">
+          {{ matchHistory().length }} request yakalandı
+        </span>
+        <button
+          class="text-[10px] text-red-400 hover:text-red-600 cursor-pointer"
+          (click)="clearHistory()"
+        >
+          Temizle
+        </button>
+      </div>
+      <!-- Feed List -->
+      <div class="flex-1 overflow-y-auto divide-y divide-slate-100" #feedContainer>
         @for (event of matchHistory(); track event.id) {
-          <div class="flex items-center gap-2 px-3 py-2 hover:bg-slate-50 transition-colors">
+          <div
+            class="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-slate-50 transition-colors"
+            [class.bg-indigo-50]="selectedEventId() === event.id"
+            [class.border-l-2]="selectedEventId() === event.id"
+            [class.border-indigo-500]="selectedEventId() === event.id"
+            (click)="selectEvent(event)"
+            data-feed-row
+          >
             <!-- Method badge -->
             <span
               class="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-mono font-bold bg-slate-100 text-slate-600"
@@ -45,6 +81,13 @@ import { ExtensionMessagingService } from '../../services/extension-messaging.se
                 {{ event.statusCode }}
               </span>
             }
+            <!-- Relative timestamp -->
+            <span
+              class="shrink-0 text-[10px] text-slate-300 font-mono"
+              [title]="toDateString(event.timestamp)"
+            >
+              {{ formatRelativeTime(event.timestamp) }}
+            </span>
             <!-- Source badge -->
             <span
               class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold"
@@ -80,4 +123,46 @@ export class MonitorTabComponent {
   private readonly messaging = inject(ExtensionMessagingService);
 
   readonly matchHistory = computed(() => this.messaging.state()?.matchHistory ?? []);
+  readonly selectedEventId = signal<string | null>(null);
+  readonly eventSelected = output<MatchEvent>();
+
+  private readonly feedContainer = viewChild<ElementRef>('feedContainer');
+
+  constructor() {
+    effect(() => {
+      const history = this.matchHistory(); // signal tracked
+      const container = this.feedContainer()?.nativeElement as HTMLElement | undefined;
+      if (!container || history.length === 0) return;
+
+      // Kullanıcı en üstte ise (scrollTop < threshold) auto-scroll'u koru
+      const isAtTop = container.scrollTop < 10;
+      if (!isAtTop) {
+        // DOM update sonrası scroll pozisyonunu kompanse et
+        const prevScrollTop = container.scrollTop;
+        requestAnimationFrame(() => {
+          const firstRow = container.querySelector('[data-feed-row]') as HTMLElement | null;
+          if (firstRow) {
+            container.scrollTop = prevScrollTop + firstRow.offsetHeight;
+          }
+        });
+      }
+    });
+  }
+
+  selectEvent(event: MatchEvent): void {
+    this.selectedEventId.set(event.id);
+    this.eventSelected.emit(event);
+  }
+
+  clearHistory(): void {
+    void this.messaging.sendMessage(MessageType.CLEAR_HISTORY, {}, crypto.randomUUID());
+  }
+
+  formatRelativeTime(timestamp: number): string {
+    return formatRelativeTime(timestamp);
+  }
+
+  toDateString(timestamp: number): string {
+    return new Date(timestamp).toLocaleString();
+  }
 }

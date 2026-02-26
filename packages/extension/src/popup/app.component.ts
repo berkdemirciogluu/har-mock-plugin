@@ -10,14 +10,16 @@ import { ExtensionMessagingService } from './services/extension-messaging.servic
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [TabBarComponent, ControlsTabComponent, MonitorTabComponent],
   template: `
-    <div class="w-[400px] min-h-[500px] max-h-[600px] overflow-y-auto bg-white">
+    <div class="w-[400px] min-h-[500px] max-h-[600px] flex flex-col bg-white">
       <hm-tab-bar [activeTab]="activeTab()" (tabChange)="activeTab.set($event)" />
-      @if (activeTab() === 'controls') {
-        <hm-controls-tab />
-      }
-      @if (activeTab() === 'monitor') {
-        <hm-monitor-tab />
-      }
+      <div class="flex-1 min-h-0 overflow-hidden">
+        @if (activeTab() === 'controls') {
+          <hm-controls-tab />
+        }
+        @if (activeTab() === 'monitor') {
+          <hm-monitor-tab />
+        }
+      </div>
     </div>
   `,
 })
