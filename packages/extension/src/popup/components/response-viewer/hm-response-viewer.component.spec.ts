@@ -11,6 +11,7 @@ import { ExtensionMessagingService } from '../../services/extension-messaging.se
 import { MessageType } from '../../../shared/messaging.types';
 import type { MatchEvent } from '../../../shared/state.types';
 import type { StateSyncPayload } from '../../../shared/payload.types';
+import type { HarEntry } from '@har-mock/core';
 
 // ─── HmJsonEditorComponent Stub ────────────────────────────────────────────
 // CodeMirror ESM modülleri JSDOM uyumlu değil — stub kullan
@@ -53,18 +54,21 @@ const makePassthroughEvent = (): MatchEvent => ({
   timestamp: Date.now(),
 });
 
+const makeHarEntry = (override: Partial<HarEntry> = {}): HarEntry => ({
+  url: 'https://api.example.com/user',
+  method: 'GET',
+  status: 200,
+  statusText: 'OK',
+  responseBody: '{"id":1,"isAdmin":false}',
+  responseHeaders: [],
+  requestHeaders: [],
+  timings: { blocked: -1, dns: -1, connect: -1, send: 0, wait: 0, receive: 0, ssl: -1 },
+  ...override,
+});
+
 const makeState = (overrides: Partial<StateSyncPayload> = {}): StateSyncPayload => ({
   harData: {
-    entries: [
-      {
-        url: 'https://api.example.com/user',
-        method: 'GET',
-        status: 200,
-        responseBody: '{"id":1,"isAdmin":false}',
-        responseHeaders: [],
-        timings: { wait: 0, receive: 0 },
-      } as never, // HarEntry has timing etc — cast for test
-    ],
+    entries: [makeHarEntry()],
     patterns: [],
     fileName: 'test.har',
     loadedAt: Date.now(),
@@ -218,6 +222,21 @@ describe('HmResponseViewerComponent', () => {
       expect(btn).toBeTruthy();
       expect(btn!.disabled).toBe(true);
     });
+
+    it('should clear errorMessage when onBodyEdit is called (L4)', () => {
+      component.errorMessage.set('Previous error');
+      component.onBodyEdit('{"isAdmin":true}');
+      expect(component.errorMessage()).toBeNull();
+    });
+
+    it('should not mark dirty when onBodyEdit value matches resolvedBody (M1)', () => {
+      stateSignal.set(makeState());
+      fixture.componentRef.setInput('event', makeHarEvent());
+      fixture.detectChanges();
+      // Call onBodyEdit with the same value as resolvedBody — should NOT be dirty
+      component.onBodyEdit(component.resolvedBody());
+      expect(component.isDirty()).toBe(false);
+    });
   });
 
   describe('Subtask 5.5: saveResponse — UPDATE_RESPONSE doğru key ve payload ile gönderilmeli', () => {
@@ -305,6 +324,73 @@ describe('HmResponseViewerComponent', () => {
       expect(errorEl).toBeTruthy();
       expect(errorEl!.textContent).toContain('Network error');
       expect(component.isSaving()).toBe(false);
+    }));
+
+    it('should have aria-label on save button (L2)', () => {
+      stateSignal.set(makeState());
+      fixture.componentRef.setInput('event', makeHarEvent());
+      fixture.detectChanges();
+      const btn = el.querySelector<HTMLButtonElement>('[data-testid="save-button"]');
+      expect(btn).toBeTruthy();
+      expect(btn!.getAttribute('aria-label')).toBeTruthy();
+    });
+  });
+
+  describe('H1: Event switch resets transient state', () => {
+    beforeEach(async () => {
+      await setupTestBed();
+      stateSignal.set(makeState());
+    });
+
+    it('should reset isDirty when event changes', () => {
+      fixture.componentRef.setInput('event', makeHarEvent());
+      fixture.detectChanges();
+      component.onBodyEdit('{"isAdmin":true}');
+      expect(component.isDirty()).toBe(true);
+
+      // Switch to different event
+      fixture.componentRef.setInput(
+        'event',
+        makeHarEvent({ id: 'evt-2', url: 'https://api.example.com/other' }),
+      );
+      fixture.detectChanges();
+      expect(component.isDirty()).toBe(false);
+    });
+
+    it('should reset showSuccess when event changes', fakeAsync(() => {
+      fixture.componentRef.setInput('event', makeHarEvent());
+      fixture.detectChanges();
+      component.onBodyEdit('{"x":1}');
+      component.saveResponse();
+      tick();
+      expect(component.showSuccess()).toBe(true);
+
+      // Switch event
+      fixture.componentRef.setInput(
+        'event',
+        makeHarEvent({ id: 'evt-2', url: 'https://api.example.com/other' }),
+      );
+      fixture.detectChanges();
+      expect(component.showSuccess()).toBe(false);
+      tick(2000); // drain success timer
+    }));
+
+    it('should reset errorMessage when event changes', fakeAsync(() => {
+      fixture.componentRef.setInput('event', makeHarEvent());
+      fixture.detectChanges();
+      sendMessageMock.mockRejectedValueOnce(new Error('fail'));
+      component.onBodyEdit('{"x":1}');
+      component.saveResponse();
+      tick();
+      expect(component.errorMessage()).toBe('fail');
+
+      // Switch event
+      fixture.componentRef.setInput(
+        'event',
+        makeHarEvent({ id: 'evt-2', url: 'https://api.example.com/other' }),
+      );
+      fixture.detectChanges();
+      expect(component.errorMessage()).toBeNull();
     }));
   });
 });

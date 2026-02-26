@@ -72,6 +72,7 @@
           [disabled]="!isDirty() || isSaving()"
           (click)="saveResponse()"
           data-testid="save-button"
+          [attr.aria-label]="isSaving() ? 'Kaydediliyor' : 'Response değişikliğini kaydet'"
         >
           @if (isSaving()) {
             Kaydediliyor…

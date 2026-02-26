@@ -1,6 +1,6 @@
 # Story 3.4: Response Viewer & Inline Edit & Persist
 
-Status: review
+Status: done
 
 ## Story
 
@@ -350,3 +350,4 @@ Claude Sonnet 4.6 (GitHub Copilot)
 ### Change Log
 
 - (2026-02-27) Story 3-4 implementasyonu tamamlandı: `hm-response-viewer` component oluşturuldu; `MonitorTabComponent`'e `selectedEvent` computed signal ve response viewer entegrasyonu eklendi; 18 yeni unit test + 3 monitor-tab testi eklendi; tüm 356 extension testi geçti
+- (2026-02-27) **Code Review düzeltmeleri:** [H1] Event switch'te transient state sıfırlama effect'i eklendi (isDirty/editedBody/showSuccess/errorMessage reset); [M1] `onBodyEdit()` programmatic update'lerde isDirty false positive engellendi (`resolvedBody` karşılaştırması); [M2] Test'teki `as never` cast kaldırılıp `makeHarEntry()` helper ile typed hale getirildi; [L1] `editedBody` field'ına `readonly` eklendi; [L2] Save butonuna `aria-label` eklendi; [L3] `resolvedBody`/`resolvedHeaders` DRY ihlali giderildi (`eventLookup` shared computed); [L4] `errorMessage` temizlenme testi eklendi; [L5] `setTimeout` `DestroyRef` ile cleanup'a bağlandı; 6 yeni test eklendi; 362/362 extension testi geçti
