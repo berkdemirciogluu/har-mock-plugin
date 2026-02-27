@@ -91,4 +91,5 @@ development_status:
     5-2-asset-based-har-yukleme-httpclient-interceptor: done              # SCRUM-30
     5-3-double-lock-production-safety: done                            # SCRUM-31
     5-4-guard-bypass-mekanizmasi: done                                    # SCRUM-32
+    5-5-preserve-guards-secici-guard-bypass: in-progress                  # SCRUM-33
     epic-5-retrospective: optional

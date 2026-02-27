@@ -30,6 +30,7 @@ export function provideHarMock(config?: HarMockConfig): EnvironmentProviders {
     mode: config?.mode ?? 'last-match',
     enabled: config?.enabled ?? true,
     bypassGuards: config?.bypassGuards ?? false,
+    preserveGuards: config?.preserveGuards ?? [],
     rules: config?.rules ?? [],
   };
 

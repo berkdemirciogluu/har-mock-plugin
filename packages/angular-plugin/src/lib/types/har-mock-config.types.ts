@@ -1,5 +1,5 @@
 import type { MockRule } from '@har-mock/core';
-import { InjectionToken } from '@angular/core';
+import { InjectionToken, type Type } from '@angular/core';
 
 /** HAR mock response selection mode */
 export type MockMode = 'last-match' | 'sequential';
@@ -37,6 +37,15 @@ export interface HarMockConfig {
    * @default false
    */
   bypassGuards?: boolean;
+
+  /**
+   * Guards to preserve when bypassGuards is true.
+   * Guards in this list will NOT be removed from route configs.
+   * Supports both class-based (e.g. BssPermissionGuard) and functional guards (e.g. bssPermissionGuard).
+   * Note: functional guards must be passed by the exact same reference used in the route config.
+   * @default []
+   */
+  preserveGuards?: Array<Function | Type<unknown>>;
 
   /**
    * Active mock rule list.
