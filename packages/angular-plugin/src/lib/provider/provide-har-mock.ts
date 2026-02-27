@@ -3,6 +3,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import type { HarMockConfig } from '../types/har-mock-config.types';
 import { HAR_MOCK_CONFIG } from '../types/har-mock-config.types';
 import { HarLoaderService, harMockInterceptor } from '../interceptor/har-mock.interceptor';
+import { harMockGuardBypassFactory } from '../initializer';
 
 /**
  * Angular HAR Mock plugin'i app.config.ts'e ekler.
@@ -49,6 +50,10 @@ export function provideHarMock(config?: HarMockConfig): EnvironmentProviders {
       },
       multi: true,
     },
-    // Note: Router guard bypass (APP_INITIALIZER ile route block) — Story 5.4'te eklenecek
+    {
+      provide: APP_INITIALIZER,
+      useFactory: harMockGuardBypassFactory,
+      multi: true,
+    },
   ]);
 }

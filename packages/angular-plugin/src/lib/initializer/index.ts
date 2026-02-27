@@ -1,2 +1,1 @@
-// Story 5.x'te doldurulacak
-export {};
+export { harMockGuardBypassFactory } from './har-mock.initializer';
