@@ -35,6 +35,8 @@ export enum MessageType {
   UPDATE_SETTINGS = 'UPDATE_SETTINGS',
   /** popup → background: match history temizle */
   CLEAR_HISTORY = 'CLEAR_HISTORY',
+  /** popup → background: yüklü HAR dosyasını sil */
+  CLEAR_HAR = 'CLEAR_HAR',
 }
 
 /** Generic message interface for port communication */

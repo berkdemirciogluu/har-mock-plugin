@@ -12,7 +12,8 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
       <button
         type="button"
         class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
-        [class]="extensionEnabled() ? 'bg-green-500' : 'bg-slate-300'"
+        [class.bg-green-500]="extensionEnabled()"
+        [class.bg-slate-300]="!extensionEnabled()"
         role="switch"
         [attr.aria-checked]="extensionEnabled()"
         [attr.aria-label]="
@@ -24,7 +25,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
       >
         <span
           class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform"
-          [class]="extensionEnabled() ? 'translate-x-[18px]' : 'translate-x-0.5'"
+          [style.transform]="extensionEnabled() ? 'translateX(18px)' : 'translateX(2px)'"
         ></span>
       </button>
     </div>

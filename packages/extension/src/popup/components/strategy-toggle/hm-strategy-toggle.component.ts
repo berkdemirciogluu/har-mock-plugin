@@ -15,11 +15,10 @@ export type ReplayMode = 'sequential' | 'last-match';
       <button
         type="button"
         class="flex-1 px-3 py-1.5 text-xs font-medium transition-colors"
-        [class]="
-          replayMode() === 'sequential'
-            ? 'bg-indigo-600 text-white'
-            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-        "
+        [class.bg-indigo-600]="replayMode() === 'sequential'"
+        [class.text-white]="replayMode() === 'sequential'"
+        [class.bg-slate-100]="replayMode() !== 'sequential'"
+        [class.text-slate-600]="replayMode() !== 'sequential'"
         [attr.aria-checked]="replayMode() === 'sequential'"
         role="radio"
         (click)="select('sequential')"
@@ -29,11 +28,10 @@ export type ReplayMode = 'sequential' | 'last-match';
       <button
         type="button"
         class="flex-1 px-3 py-1.5 text-xs font-medium transition-colors border-l border-slate-200"
-        [class]="
-          replayMode() === 'last-match'
-            ? 'bg-indigo-600 text-white'
-            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-        "
+        [class.bg-indigo-600]="replayMode() === 'last-match'"
+        [class.text-white]="replayMode() === 'last-match'"
+        [class.bg-slate-100]="replayMode() !== 'last-match'"
+        [class.text-slate-600]="replayMode() !== 'last-match'"
         [attr.aria-checked]="replayMode() === 'last-match'"
         role="radio"
         (click)="select('last-match')"

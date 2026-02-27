@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  output,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { parseHar, parameterize, HarParseError } from '@har-mock/core';
 import { ExtensionMessagingService } from '../../services/extension-messaging.service';
@@ -18,9 +25,14 @@ export class HarUploadComponent {
 
   readonly isDragOver = signal(false);
   readonly isLoading = signal(false);
-  readonly loadedFileName = signal<string | null>(null);
-  readonly endpointCount = signal<number | null>(null);
   readonly errorMessage = signal<string | null>(null);
+
+  /** Background state'den türetilen değerler — tab switch'te kaybolmaz */
+  readonly loadedFileName = computed(() => this.messaging.state()?.harData?.fileName ?? null);
+  readonly endpointCount = computed(() => {
+    const harData = this.messaging.state()?.harData;
+    return harData ? harData.patterns.length : null;
+  });
 
   readonly onEndpointLoaded = output<number>();
 
@@ -66,6 +78,14 @@ export class HarUploadComponent {
     this.errorMessage.set(null);
   }
 
+  clearHar(): void {
+    void this.messaging
+      .sendMessage(MessageType.CLEAR_HAR, undefined, crypto.randomUUID())
+      .catch((err: unknown) => {
+        console.error('[HAR Mock] HAR silinemedi:', err);
+      });
+  }
+
   private processFile(file: File): void {
     this.isLoading.set(true);
     this.errorMessage.set(null);
@@ -84,9 +104,8 @@ export class HarUploadComponent {
       })
       .then((response: MessageResponse) => {
         if (response.success) {
-          this.loadedFileName.set(file.name);
+          // endpointCount ve loadedFileName artık STATE_SYNC üzerinden geliyor
           const count = (response.data as { patternCount: number } | undefined)?.patternCount ?? 0;
-          this.endpointCount.set(count);
           this.onEndpointLoaded.emit(count);
         } else {
           this.errorMessage.set(response.error?.message ?? 'Bilinmeyen hata');

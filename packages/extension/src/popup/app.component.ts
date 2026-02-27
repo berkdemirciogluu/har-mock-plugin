@@ -12,7 +12,7 @@ import { ExtensionMessagingService } from './services/extension-messaging.servic
   template: `
     <div class="w-[400px] min-h-[500px] max-h-[600px] flex flex-col bg-white">
       <hm-tab-bar [activeTab]="activeTab()" (tabChange)="activeTab.set($event)" />
-      <div class="flex-1 min-h-0 overflow-hidden">
+      <div class="flex-1 min-h-0 overflow-hidden flex flex-col">
         @if (activeTab() === 'controls') {
           <hm-controls-tab />
         }

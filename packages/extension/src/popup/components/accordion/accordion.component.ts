@@ -52,7 +52,7 @@ import {
         [attr.id]="bodyId()"
         [attr.aria-labelledby]="headerId()"
         class="overflow-hidden transition-all duration-200 ease-in-out"
-        [style.max-height]="isExpanded() ? '500px' : '0px'"
+        [style.max-height]="isExpanded() ? '2000px' : '0px'"
       >
         <div class="px-3 py-2 text-sm text-slate-600">
           <ng-content></ng-content>

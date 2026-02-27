@@ -17,6 +17,7 @@ import type {
 import type { HarSessionData, MatchEvent } from '../shared/state.types';
 import type { StateManager } from './state-manager';
 import type { PortManager } from './port-manager';
+import { startKeepAlive, stopKeepAlive } from './keep-alive';
 
 /** Match event ID oluşturucu — crypto.randomUUID() yerine basit pattern */
 function generateEventId(): string {
@@ -112,10 +113,40 @@ async function handleMessageAsync(
           payload: { success: true, data: { patternCount: payload.patterns.length } },
           requestId: message.requestId,
         });
+        // Reaktif UI: güncel state'i popup'a push et
+        portManager.getPopupPort()?.postMessage({
+          type: MessageType.STATE_SYNC,
+          payload: stateManager.getFullState(),
+        });
       } catch (error: unknown) {
         const errorMsg = error instanceof Error ? error.message : 'Unknown error';
         port.postMessage({
           type: MessageType.LOAD_HAR,
+          payload: { success: false, error: errorMsg },
+          requestId: message.requestId,
+        });
+      }
+      break;
+    }
+
+    case MessageType.CLEAR_HAR: {
+      try {
+        await stateManager.clearHarData();
+        stateManager.resetSequentialCounters();
+        port.postMessage({
+          type: MessageType.CLEAR_HAR,
+          payload: { success: true },
+          requestId: message.requestId,
+        });
+        // Reaktif UI: güncel state'i popup'a push et
+        portManager.getPopupPort()?.postMessage({
+          type: MessageType.STATE_SYNC,
+          payload: stateManager.getFullState(),
+        });
+      } catch (error: unknown) {
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        port.postMessage({
+          type: MessageType.CLEAR_HAR,
           payload: { success: false, error: errorMsg },
           requestId: message.requestId,
         });
@@ -295,10 +326,25 @@ async function handleMessageAsync(
       try {
         const { settings } = message.payload as UpdateSettingsPayload;
         await stateManager.updateSettings(settings);
+
+        // Keep-alive: extension enabled/disabled durumuna göre
+        if (settings.enabled !== undefined) {
+          if (settings.enabled) {
+            await startKeepAlive();
+          } else {
+            await stopKeepAlive();
+          }
+        }
+
         port.postMessage({
           type: MessageType.UPDATE_SETTINGS,
           payload: { success: true },
           requestId: message.requestId,
+        });
+        // Reaktif UI: güncel state'i popup'a push et
+        portManager.getPopupPort()?.postMessage({
+          type: MessageType.STATE_SYNC,
+          payload: stateManager.getFullState(),
         });
       } catch (error: unknown) {
         const errorMsg = error instanceof Error ? error.message : 'Unknown error';

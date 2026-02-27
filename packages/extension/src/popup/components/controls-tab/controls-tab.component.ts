@@ -31,6 +31,7 @@ import type { MockRule } from '@har-mock/core';
     HmRuleFormComponent,
     HmRuleListComponent,
   ],
+  host: { class: 'flex flex-col flex-1 min-h-0 overflow-y-auto' },
   template: `
     <div class="space-y-2 p-2">
       <hm-accordion
@@ -40,7 +41,7 @@ import type { MockRule } from '@har-mock/core';
         [badge]="endpointCount() !== null ? endpointCount()!.toString() : ''"
         [badgeVariant]="endpointCount() !== null ? 'success' : 'default'"
       >
-        <hm-har-upload (onEndpointLoaded)="endpointCount.set($event)" />
+        <hm-har-upload />
         @if (hasHar()) {
           <div class="mt-2">
             <p class="mb-1 text-xs font-medium text-slate-500">Replay Mode</p>
@@ -63,8 +64,7 @@ import type { MockRule } from '@har-mock/core';
             >
               <span
                 class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform"
-                [class.translate-x-[18px]]="timingReplay()"
-                [class.translate-x-[3px]]="!timingReplay()"
+                [style.transform]="timingReplay() ? 'translateX(18px)' : 'translateX(3px)'"
               ></span>
             </button>
           </div>
@@ -87,6 +87,7 @@ import type { MockRule } from '@har-mock/core';
           [editRule]="editingRule()"
           (ruleCreated)="onRuleCreated($event)"
           (ruleUpdated)="onRuleUpdated($event)"
+          (editCancelled)="editingRule.set(null)"
         />
       </hm-accordion>
 
@@ -109,7 +110,11 @@ import type { MockRule } from '@har-mock/core';
 export class ControlsTabComponent {
   private readonly messaging = inject(ExtensionMessagingService);
 
-  readonly endpointCount = signal<number | null>(null);
+  /** Background state'den türetilen endpoint count — tab switch'te kaybolmaz */
+  readonly endpointCount = computed(() => {
+    const harData = this.messaging.state()?.harData;
+    return harData ? harData.patterns.length : null;
+  });
 
   // Subtask 4.2 — edit modunda hangi rule'ın düzenlendiğini takip eder
   readonly editingRule = signal<MockRule | null>(null);
@@ -201,6 +206,10 @@ export class ControlsTabComponent {
 
   // Subtask 4.5 — rule silindi: DELETE_RULE mesajı gönder
   onRuleDeleted(ruleId: string): void {
+    // Silinen rule edit modundaysa, editingRule'u temizle
+    if (this.editingRule()?.id === ruleId) {
+      this.editingRule.set(null);
+    }
     const payload: DeleteRulePayload = { ruleId };
     void this.messaging
       .sendMessage(MessageType.DELETE_RULE, payload, crypto.randomUUID())

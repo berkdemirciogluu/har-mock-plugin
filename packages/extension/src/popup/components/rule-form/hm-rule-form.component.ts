@@ -26,6 +26,7 @@ export class HmRuleFormComponent {
   // Signal-based outputs (Subtask 1.2, 3.2)
   readonly ruleCreated = output<MockRule>();
   readonly ruleUpdated = output<MockRule>();
+  readonly editCancelled = output<void>();
 
   // Subtask 3.4 — edit mode computed flag
   readonly isEditMode = computed<boolean>(() => this.editRule() !== null);
@@ -107,6 +108,10 @@ export class HmRuleFormComponent {
 
   // resetForm metodu (Subtask 1.6)
   resetForm(): void {
+    // Edit modunda iptal edilirse parent'ı bilgilendir (editingRule temizlensin)
+    if (this.isEditMode()) {
+      this.editCancelled.emit();
+    }
     this.urlPattern.set('');
     this.method.set('GET');
     this.statusCode.set(200);

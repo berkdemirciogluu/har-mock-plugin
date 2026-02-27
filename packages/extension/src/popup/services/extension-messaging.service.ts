@@ -13,16 +13,36 @@ export class ExtensionMessagingService implements OnDestroy {
   private port: chrome.runtime.Port | null = null;
   private readonly _state = signal<StateSyncPayload | null>(null);
   private readonly pendingRejects: Array<(reason: Error) => void> = [];
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private intentionalDisconnect = false;
   readonly state = this._state.asReadonly();
 
   connect(): void {
     if (this.port) return;
-    this.port = chrome.runtime.connect({ name: PORT_NAME_POPUP });
+    this.intentionalDisconnect = false;
+    this.clearReconnectTimer();
+
+    try {
+      this.port = chrome.runtime.connect({ name: PORT_NAME_POPUP });
+    } catch {
+      // Extension context geçersiz — reconnect dene
+      this.scheduleReconnect();
+      return;
+    }
 
     this.port.onDisconnect.addListener(() => {
       this.port = null;
-      this._state.set(null);
       this.rejectAllPending();
+      // State'i SİLME — UI verileri korunsun
+      // Extension aktifse auto-reconnect yap; değilse sadece on-demand (sendMessage'da)
+      if (!this.intentionalDisconnect) {
+        const isEnabled = this._state()?.settings?.enabled ?? false;
+        if (isEnabled) {
+          this.scheduleReconnect();
+        }
+        // enabled=false ise reconnect yapma — gereksiz SW wake-up döngüsü olur
+        // Kullanıcı toggle ON yaptığında sendMessage zaten connect() çağırır
+      }
     });
 
     this.port.onMessage.addListener((msg: Message) => {
@@ -43,18 +63,47 @@ export class ExtensionMessagingService implements OnDestroy {
         }
       }
     });
+
+    // Popup açıldığında background'dan güncel state'i iste
+    this.port.postMessage({
+      type: MessageType.STATE_SYNC,
+      payload: undefined,
+      requestId: crypto.randomUUID(),
+    } as Message);
   }
 
   disconnect(): void {
+    this.intentionalDisconnect = true;
+    this.clearReconnectTimer();
     this.port?.disconnect();
     this.port = null;
     this.rejectAllPending();
   }
 
+  private scheduleReconnect(): void {
+    this.clearReconnectTimer();
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
+      this.connect();
+    }, 500);
+  }
+
+  private clearReconnectTimer(): void {
+    if (this.reconnectTimer !== null) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+  }
+
   sendMessage<T>(type: MessageType, payload: T, requestId: string): Promise<MessageResponse> {
+    // Port yoksa önce yeniden bağlan — SW idle sonrası port kopmuş olabilir
+    if (!this.port) {
+      this.connect();
+    }
+
     return new Promise<MessageResponse>((resolve, reject) => {
       if (!this.port) {
-        reject(new Error('Port bağlantısı yok. connect() çağırın.'));
+        reject(new Error('Port bağlantısı kurulamadı.'));
         return;
       }
 
