@@ -1,4 +1,4 @@
-import { makeEnvironmentProviders, EnvironmentProviders, APP_INITIALIZER, inject } from '@angular/core';
+import { makeEnvironmentProviders, EnvironmentProviders, APP_INITIALIZER, inject, isDevMode } from '@angular/core';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import type { HarMockConfig } from '../types/har-mock-config.types';
 import { HAR_MOCK_CONFIG } from '../types/har-mock-config.types';
@@ -32,7 +32,12 @@ export function provideHarMock(config?: HarMockConfig): EnvironmentProviders {
       provide: APP_INITIALIZER,
       useFactory: () => {
         const loader = inject(HarLoaderService);
-        return () => loader.load();
+        const config = inject(HAR_MOCK_CONFIG);
+        return () => {
+          // Double-lock: production'da veya devre dışıysa HAR fetch edilmez (NFR1, NFR2)
+          if (!isDevMode() || !config.enabled) return;
+          return loader.load();
+        };
       },
       multi: true,
     },
