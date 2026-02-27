@@ -9,7 +9,7 @@ type PreserveList = Array<Function | Type<unknown>>;
 function filterGuards(guards: unknown[] | undefined, preserve: PreserveList): unknown[] {
   if (!guards?.length) return [];
   if (!preserve.length) return [];
-  return guards.filter(g => preserve.includes(g as Function | Type<unknown>));
+  return guards.filter(g => (preserve as unknown[]).includes(g));
 }
 
 function clearGuardsRecursively(routes: Route[], preserve: PreserveList): void {

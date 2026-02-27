@@ -51,6 +51,7 @@ describe('provideHarMock', () => {
     expect(config.mode).toBe('last-match');
     expect(config.enabled).toBe(true);
     expect(config.bypassGuards).toBe(false);
+    expect(config.preserveGuards).toEqual([]);
     expect(config.rules).toEqual([]);
   });
 
@@ -65,6 +66,7 @@ describe('provideHarMock', () => {
       delay: 0,
       enabled: true,
     };
+    const mockGuard = jest.fn(() => true);
     TestBed.configureTestingModule({
       teardown: { destroyAfterEach: true },
       providers: [
@@ -73,6 +75,7 @@ describe('provideHarMock', () => {
           mode: 'sequential',
           enabled: true,
           bypassGuards: true,
+          preserveGuards: [mockGuard],
           rules: [rule],
         }),
         provideHttpClientTesting(),
@@ -83,8 +86,32 @@ describe('provideHarMock', () => {
     expect(config.mode).toBe('sequential');
     expect(config.enabled).toBe(true);
     expect(config.bypassGuards).toBe(true);
+    expect(config.preserveGuards).toEqual([mockGuard]);
     expect(config.rules).toHaveLength(1);
     expect(config.rules[0]).toEqual(rule);
+  });
+
+  it('preserveGuards verilmediğinde default [] olmalı', () => {
+    TestBed.configureTestingModule({
+      teardown: { destroyAfterEach: true },
+      providers: [provideHarMock({ bypassGuards: true }), provideHttpClientTesting()],
+    });
+    const config = TestBed.inject(HAR_MOCK_CONFIG);
+    expect(config.preserveGuards).toEqual([]);
+  });
+
+  it('preserveGuards custom değeri doğru geçirilmeli', () => {
+    const guardA = jest.fn(() => true);
+    const guardB = jest.fn(() => true);
+    TestBed.configureTestingModule({
+      teardown: { destroyAfterEach: true },
+      providers: [
+        provideHarMock({ bypassGuards: true, preserveGuards: [guardA, guardB] }),
+        provideHttpClientTesting(),
+      ],
+    });
+    const config = TestBed.inject(HAR_MOCK_CONFIG);
+    expect(config.preserveGuards).toEqual([guardA, guardB]);
   });
 
   it('should merge partial config with defaults (AC2+AC3)', () => {
