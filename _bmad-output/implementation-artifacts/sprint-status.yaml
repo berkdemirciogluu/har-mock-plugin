@@ -86,8 +86,8 @@ development_status:
     epic-4-retrospective: optional
 
     # Epic 5: Angular Plugin
-    epic-5: backlog                                                      # SCRUM-9
-    5-1-angular-plugin-paket-kurulumu-provideharMock-api: backlog         # SCRUM-29
+    epic-5: in-progress                                                  # SCRUM-9
+    5-1-angular-plugin-paket-kurulumu-provideharMock-api: review  # SCRUM-29
     5-2-asset-based-har-yukleme-httpclient-interceptor: backlog          # SCRUM-30
     5-3-double-lock-production-safety: backlog                           # SCRUM-31
     5-4-guard-bypass-mekanizmasi: backlog                                # SCRUM-32

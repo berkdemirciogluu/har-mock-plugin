@@ -1,2 +1,1 @@
-// Story 5.x'te doldurulacak
-export {};
+export { provideHarMock } from './provide-har-mock';
