@@ -1,9 +1,10 @@
-import { inject, isDevMode } from '@angular/core';
+import { inject, isDevMode, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouteConfigLoadEnd, type Route } from '@angular/router';
 import { filter } from 'rxjs';
 import { HAR_MOCK_CONFIG } from '../types/har-mock-config.types';
 
-export function clearGuardsRecursively(routes: Route[]): void {
+function clearGuardsRecursively(routes: Route[]): void {
   for (const route of routes) {
     route.canActivate = [];
     route.canDeactivate = [];
@@ -17,6 +18,7 @@ export function clearGuardsRecursively(routes: Route[]): void {
 export function harMockGuardBypassFactory(): () => void {
   const config = inject(HAR_MOCK_CONFIG);
   const router = inject(Router);
+  const destroyRef = inject(DestroyRef);
 
   return () => {
     // Triple-lock: production'da, devre dışıysa veya bypassGuards=false ise hiçbir şey yapma (ARCH10)
@@ -27,8 +29,9 @@ export function harMockGuardBypassFactory(): () => void {
       clearGuardsRecursively(router.config);
 
       // Lazy-loaded route'lar için: RouteConfigLoadEnd event'inde yeniden temizle (AC3)
+      // takeUntilDestroyed ile uygulama destroy edildiğinde subscription temizlenir
       router.events
-        .pipe(filter(e => e instanceof RouteConfigLoadEnd))
+        .pipe(filter(e => e instanceof RouteConfigLoadEnd), takeUntilDestroyed(destroyRef))
         .subscribe(() => clearGuardsRecursively(router.config));
     } catch (e) {
       // Hata loglanır ama uygulama başlatılır; guard'lar bypass edilmemiş haliyle devam eder (AC5)

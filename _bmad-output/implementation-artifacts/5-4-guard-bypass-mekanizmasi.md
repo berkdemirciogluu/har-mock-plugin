@@ -1,6 +1,6 @@
 # Story 5.4: Guard Bypass Mekanizması
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -226,6 +226,8 @@ import { filter } from 'rxjs';
 
 **Önemli:** `route.loadChildren` property'sine dokunulmaz — lazy loading function korunur. Sadece guard property'leri boşaltılır.
 
+**Bilinen Sınırlama — `canActivateChild`:** Angular Router'ın `canActivateChild` guard tipi bu implementasyonda bypass edilmemektedir. FR34 yalnızca `CanActivate`, `CanDeactivate`, `CanMatch`'i kapsamakta olup `canActivateChild` bilinçli olarak kapsam dışı bırakılmıştır. `canActivateChild` kullanan uygulamalar bu guard'ı manuel olarak devre dışı bırakmalı veya ileride `clearGuardsRecursively`'ye `route.canActivateChild = []` satırı eklenebilir.
+
 ### Kapsam Sınırları — Bu Story'de DOKUNULMAYACAK
 
 | Dosya | Neden |
@@ -305,7 +307,10 @@ claude-sonnet-4-6
 - `packages/angular-plugin/src/lib/initializer/index.ts` (güncellendi)
 - `packages/angular-plugin/src/lib/provider/provide-har-mock.ts` (güncellendi)
 - `packages/angular-plugin/package.json` (güncellendi — @angular/router eklendi)
+- `yarn.lock` (güncellendi — @angular/router bağımlılık çözümü)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (güncellendi — story durumu)
 
 ## Change Log
 
+- 2026-02-28: Story 5.4 code review — 6 issue düzeltmesi (1 High, 3 Medium, 2 Low): lazy route spec'e eksik canDeactivate/canMatch assertion eklendi; clearGuardsRecursively export kaldırıldı (internal); yarn.lock ve sprint-status.yaml File List'e eklendi; takeUntilDestroyed ile subscription cleanup sağlandı; canActivateChild sınırlaması Dev Notes'a belgelendi; 3-seviye deep nesting test case eklendi — 32/32 test, %100 coverage
 - 2026-02-28: Story 5.4 implementasyonu tamamlandı — `harMockGuardBypassFactory` ile `APP_INITIALIZER` tabanlı guard bypass mekanizması eklendi; `@angular/router` bağımlılığı pakete dahil edildi; 7 yeni test yazıldı, 0 regresyon

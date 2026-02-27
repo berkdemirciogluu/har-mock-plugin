@@ -99,6 +99,49 @@ describe('harMockGuardBypassFactory', () => {
     expect(usersRoute.canMatch).toEqual([]);
   });
 
+  // L2: 3-seviye derin nested route — recursive traversal edge case
+  it('AC3 (3-level deep): üç seviye iç içe children\'daki guard\'lar → tüm seviyelerde temizlenmeli', () => {
+    const mockGuard = jest.fn(() => true);
+    const routes: Route[] = [
+      {
+        path: 'app',
+        canActivate: [mockGuard],
+        children: [
+          {
+            path: 'admin',
+            canActivate: [mockGuard],
+            children: [
+              {
+                path: 'settings',
+                canActivate: [mockGuard],
+                canMatch: [mockGuard],
+              },
+            ],
+          },
+        ],
+      },
+    ];
+
+    TestBed.configureTestingModule({
+      teardown: { destroyAfterEach: true },
+      providers: [
+        { provide: HAR_MOCK_CONFIG, useValue: { ...DEFAULT_CONFIG } },
+        { provide: Router, useValue: { config: routes, events: EMPTY } },
+      ],
+    });
+
+    const factory = TestBed.runInInjectionContext(harMockGuardBypassFactory);
+    factory();
+
+    const appRoute = routes[0]!;
+    const adminRoute = appRoute.children![0]!;
+    const settingsRoute = adminRoute.children![0]!;
+    expect(appRoute.canActivate).toEqual([]);
+    expect(adminRoute.canActivate).toEqual([]);
+    expect(settingsRoute.canActivate).toEqual([]);
+    expect(settingsRoute.canMatch).toEqual([]);
+  });
+
   // Subtask 2.4: Test AC4a
   it('AC4a: bypassGuards=false → router.config değişmemeli', () => {
     const authGuard = jest.fn(() => true);
@@ -191,7 +234,7 @@ describe('harMockGuardBypassFactory', () => {
   it('AC3 (lazy): RouteConfigLoadEnd event → yeni lazy-loaded route\'ların guard\'larını temizlemeli', () => {
     const subject = new Subject<any>();
     const mockGuard = jest.fn(() => true);
-    const lazyRoute: Route = { path: 'lazy', canActivate: [mockGuard] };
+    const lazyRoute: Route = { path: 'lazy', canActivate: [mockGuard], canDeactivate: [mockGuard], canMatch: [mockGuard] };
     let currentRoutes: Route[] = []; // başlangıçta boş (lazy yüklenmeden önce)
 
     const mockRouter = {
@@ -219,7 +262,9 @@ describe('harMockGuardBypassFactory', () => {
     // RouteConfigLoadEnd event'ini emit et
     subject.next(new RouteConfigLoadEnd({} as Route));
 
-    // Lazy route'un guard'ları temizlenmiş olmalı
+    // Lazy route'un tüm guard array'leri temizlenmiş olmalı
     expect(lazyRoute.canActivate).toEqual([]);
+    expect(lazyRoute.canDeactivate).toEqual([]);
+    expect(lazyRoute.canMatch).toEqual([]);
   });
 });
