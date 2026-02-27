@@ -98,9 +98,9 @@ describe('ControlsTabComponent', () => {
     expect(harUpload).toBeTruthy();
   });
 
-  it('should contain placeholder text for Rules section', () => {
-    const text = el.textContent;
-    expect(text).toContain('Rule yönetimi');
+  it('should render hm-rule-form inside Rules accordion', () => {
+    const ruleForm = el.querySelector('hm-rule-form');
+    expect(ruleForm).toBeTruthy();
   });
 
   it('should start with null endpointCount signal', () => {
@@ -435,4 +435,109 @@ describe('ControlsTabComponent', () => {
       consoleSpy.mockRestore();
     });
   });
+
+  // Subtask 4.10: activeRules computed signal state'ten doğru okuma
+  describe('activeRules computed signal', () => {
+    it('should default to empty array when state is null', () => {
+      mockMessagingService.state.set(null);
+      fixture.detectChanges();
+      expect(component.activeRules()).toEqual([]);
+    });
+
+    it('should read activeRules from state', () => {
+      const mockRule = {
+        id: 'test-rule-1',
+        urlPattern: '/api/test/*',
+        method: 'GET',
+        statusCode: 200,
+        responseBody: '{"ok":true}',
+        responseHeaders: [],
+        delay: 0,
+        enabled: true,
+      };
+      mockMessagingService.state.set(makeStateSyncPayload({ activeRules: [mockRule] }));
+      fixture.detectChanges();
+      expect(component.activeRules()).toEqual([mockRule]);
+    });
+
+    it('should return empty array when activeRules is empty in state', () => {
+      mockMessagingService.state.set(makeStateSyncPayload({ activeRules: [] }));
+      fixture.detectChanges();
+      expect(component.activeRules()).toEqual([]);
+    });
+  });
+
+  // Subtask 4.11: onRuleCreated ADD_RULE mesajı doğru payload ile gönderilmeli
+  describe('onRuleCreated', () => {
+    const mockRule = {
+      id: 'test-rule-1',
+      urlPattern: '/api/test',
+      method: 'POST',
+      statusCode: 201,
+      responseBody: '{"created":true}',
+      responseHeaders: [] as const,
+      delay: 0,
+      enabled: true,
+    };
+
+    it('should call sendMessage with ADD_RULE and correct payload', () => {
+      component.onRuleCreated(mockRule);
+      expect(mockMessagingService.sendMessage).toHaveBeenCalledWith(
+        'ADD_RULE',
+        { rule: mockRule },
+        expect.any(String),
+      );
+    });
+
+    it('should log error when sendMessage rejects', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      mockMessagingService.sendMessage.mockRejectedValueOnce(new Error('network fail'));
+      component.onRuleCreated(mockRule);
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(consoleSpy).toHaveBeenCalledWith(
+        '[HAR Mock] Rule eklenemedi:',
+        expect.any(Error),
+      );
+      consoleSpy.mockRestore();
+    });
+  });
+
+  // Subtask 4.12: Rules accordion badge activeRules length göstermeli
+  describe('Rules accordion badge', () => {
+    it('should show badge as "0" when no active rules', () => {
+      mockMessagingService.state.set(makeStateSyncPayload({ activeRules: [] }));
+      fixture.detectChanges();
+      expect(component.activeRules().length.toString()).toBe('0');
+    });
+
+    it('should show badge count matching activeRules length', () => {
+      const rules = [
+        {
+          id: 'r1',
+          urlPattern: '/api/a',
+          method: 'GET',
+          statusCode: 200,
+          responseBody: '{}',
+          responseHeaders: [] as const,
+          delay: 0,
+          enabled: true,
+        },
+        {
+          id: 'r2',
+          urlPattern: '/api/b',
+          method: 'POST',
+          statusCode: 201,
+          responseBody: '{}',
+          responseHeaders: [] as const,
+          delay: 0,
+          enabled: true,
+        },
+      ];
+      mockMessagingService.state.set(makeStateSyncPayload({ activeRules: rules }));
+      fixture.detectChanges();
+      expect(component.activeRules().length.toString()).toBe('2');
+    });
+  });
 });
+

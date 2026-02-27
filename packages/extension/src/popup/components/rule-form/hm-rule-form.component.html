@@ -1,0 +1,144 @@
+<!-- Yeni Rule Ekle butonu — showForm false iken göster (Subtask 2.1) -->
+@if (!showForm()) {
+  <button
+    type="button"
+    data-testid="add-rule-button"
+    aria-label="Yeni rule ekle"
+    class="flex w-full items-center justify-center gap-1 rounded border border-dashed border-slate-300 px-3 py-2 text-xs text-slate-500 transition-colors hover:border-indigo-300 hover:text-indigo-600"
+    (click)="showForm.set(true)"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      class="h-3.5 w-3.5"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path
+        fill-rule="evenodd"
+        d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+        clip-rule="evenodd"
+      />
+    </svg>
+    Yeni Rule Ekle
+  </button>
+}
+
+<!-- Form bölümü — showForm true iken göster (Subtask 2.2) -->
+@if (showForm()) {
+  <div data-testid="rule-form" class="space-y-2 rounded border border-slate-200 bg-slate-50 p-3">
+    <!-- URL Pattern -->
+    <div>
+      <label for="hm-rule-url-pattern" class="mb-1 block text-xs font-medium text-slate-600">
+        URL Pattern <span class="text-red-500" aria-hidden="true">*</span>
+      </label>
+      <input
+        id="hm-rule-url-pattern"
+        type="text"
+        aria-label="URL Pattern"
+        [attr.aria-invalid]="urlPatternError() ? 'true' : null"
+        [attr.aria-describedby]="urlPatternError() ? 'hm-rule-url-error' : null"
+        placeholder="/api/endpoint veya /api/*"
+        class="w-full rounded border px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400"
+        [class.border-red-400]="urlPatternError()"
+        [class.border-slate-300]="!urlPatternError()"
+        [value]="urlPattern()"
+        (input)="onUrlPatternInput($event.target!['value'])"
+      />
+      @if (urlPatternError()) {
+        <p id="hm-rule-url-error" class="mt-0.5 text-xs text-red-500" role="alert">
+          {{ urlPatternError() }}
+        </p>
+      }
+    </div>
+
+    <!-- HTTP Method + Status Code — yan yana -->
+    <div class="flex gap-2">
+      <!-- HTTP Method -->
+      <div class="flex-1">
+        <label for="hm-rule-method" class="mb-1 block text-xs font-medium text-slate-600">
+          Method
+        </label>
+        <select
+          id="hm-rule-method"
+          aria-label="HTTP Method"
+          class="w-full rounded border border-slate-300 bg-white px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400"
+          [value]="method()"
+          (change)="onMethodChange($event)"
+        >
+          @for (m of httpMethods; track m) {
+            <option [value]="m" [selected]="method() === m">{{ m }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Status Code -->
+      <div class="flex-1">
+        <label for="hm-rule-status-code" class="mb-1 block text-xs font-medium text-slate-600">
+          Status Code
+        </label>
+        <input
+          id="hm-rule-status-code"
+          type="number"
+          aria-label="Status Code"
+          min="100"
+          max="599"
+          class="w-full rounded border border-slate-300 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400"
+          [value]="statusCode()"
+          (input)="onStatusCodeChange($event)"
+        />
+      </div>
+    </div>
+
+    <!-- Response Body (Subtask 1.8) -->
+    <div>
+      <label class="mb-1 block text-xs font-medium text-slate-600">Response Body (JSON)</label>
+      <div class="rounded border border-slate-300 text-xs">
+        <hm-json-editor
+          [value]="responseBody()"
+          [isReadOnly]="false"
+          (valueChange)="onResponseBodyChange($event)"
+        />
+      </div>
+    </div>
+
+    <!-- Delay (opsiyonel) -->
+    <div>
+      <label for="hm-rule-delay" class="mb-1 block text-xs font-medium text-slate-600">
+        Delay (ms) — opsiyonel
+      </label>
+      <input
+        id="hm-rule-delay"
+        type="number"
+        aria-label="Delay milisaniye"
+        min="0"
+        placeholder="0"
+        class="w-full rounded border border-slate-300 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400"
+        [value]="delay()"
+        (input)="onDelayChange($event)"
+      />
+    </div>
+
+    <!-- Kaydet / İptal butonları (Subtask 2.3) -->
+    <div class="flex justify-end gap-2 pt-1">
+      <button
+        type="button"
+        data-testid="cancel-button"
+        aria-label="Formu iptal et"
+        class="rounded border border-slate-300 px-3 py-1.5 text-xs text-slate-600 transition-colors hover:bg-slate-100"
+        (click)="resetForm()"
+      >
+        İptal
+      </button>
+      <button
+        type="button"
+        data-testid="save-button"
+        aria-label="Rule kaydet"
+        class="rounded bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+        (click)="onSave()"
+      >
+        Kaydet
+      </button>
+    </div>
+  </div>
+}

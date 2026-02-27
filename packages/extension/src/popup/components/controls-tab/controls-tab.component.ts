@@ -7,9 +7,11 @@ import {
 } from '../strategy-toggle/hm-strategy-toggle.component';
 import { SettingsSectionComponent } from '../settings-section/hm-settings-section.component';
 import { HmExcludeListComponent } from '../exclude-list/hm-exclude-list.component';
+import { HmRuleFormComponent } from '../rule-form/hm-rule-form.component';
 import { ExtensionMessagingService } from '../../services/extension-messaging.service';
 import { MessageType } from '../../../shared/messaging.types';
-import type { UpdateSettingsPayload } from '../../../shared/payload.types';
+import type { UpdateSettingsPayload, RulePayload } from '../../../shared/payload.types';
+import type { MockRule } from '@har-mock/core';
 
 @Component({
   selector: 'hm-controls-tab',
@@ -21,6 +23,7 @@ import type { UpdateSettingsPayload } from '../../../shared/payload.types';
     StrategyToggleComponent,
     SettingsSectionComponent,
     HmExcludeListComponent,
+    HmRuleFormComponent,
   ],
   template: `
     <div class="space-y-2 p-2">
@@ -66,10 +69,10 @@ import type { UpdateSettingsPayload } from '../../../shared/payload.types';
         title="Rules"
         [expanded]="false"
         persistKey="rules"
-        badge="0"
-        badgeVariant="default"
+        [badge]="activeRules().length.toString()"
+        [badgeVariant]="activeRules().length > 0 ? 'info' : 'default'"
       >
-        <p class="text-xs text-slate-400">Rule yönetimi (Story 4.1)</p>
+        <hm-rule-form (ruleCreated)="onRuleCreated($event)" />
       </hm-accordion>
 
       <hm-accordion title="Settings" [expanded]="false" persistKey="settings">
@@ -97,6 +100,7 @@ export class ControlsTabComponent {
     const state = this.messaging.state();
     return state !== null && state.harData !== null;
   });
+  readonly activeRules = computed(() => this.messaging.state()?.activeRules ?? []);
   readonly replayMode = computed<ReplayMode>(
     () => this.messaging.state()?.settings?.replayMode ?? 'last-match',
   );
@@ -143,6 +147,15 @@ export class ControlsTabComponent {
       .sendMessage(MessageType.UPDATE_SETTINGS, payload, crypto.randomUUID())
       .catch((err: unknown) => {
         console.error('[HAR Mock] Exclude list güncellenemedi:', err);
+      });
+  }
+
+  onRuleCreated(rule: MockRule): void {
+    const payload: RulePayload = { rule };
+    void this.messaging
+      .sendMessage(MessageType.ADD_RULE, payload, crypto.randomUUID())
+      .catch((err: unknown) => {
+        console.error('[HAR Mock] Rule eklenemedi:', err);
       });
   }
 }
