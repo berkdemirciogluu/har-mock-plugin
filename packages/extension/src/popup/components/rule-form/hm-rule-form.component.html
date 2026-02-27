@@ -1,5 +1,5 @@
-<!-- Yeni Rule Ekle butonu — showForm false iken göster (Subtask 2.1) -->
-@if (!showForm()) {
+<!-- Yeni Rule Ekle butonu — showForm false ve edit mode değilken göster (Subtask 2.1) -->
+@if (!showForm() && !isEditMode()) {
   <button
     type="button"
     data-testid="add-rule-button"
@@ -32,6 +32,14 @@
     novalidate
     (submit)="onSubmit($event)"
   >
+    <!-- Form başlığı — edit vs create mode (Subtask 3.7) -->
+    <p class="text-xs font-semibold text-slate-700" data-testid="form-title">
+      @if (isEditMode()) {
+        Rule Düzenle
+      } @else {
+        Yeni Rule Ekle
+      }
+    </p>
     <!-- URL Pattern -->
     <div>
       <label for="hm-rule-url-pattern" class="mb-1 block text-xs font-medium text-slate-600">
@@ -159,7 +167,11 @@
         aria-label="Rule kaydet"
         class="rounded bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
       >
-        Kaydet
+        @if (isEditMode()) {
+          Güncelle
+        } @else {
+          Kaydet
+        }
       </button>
     </div>
   </form>

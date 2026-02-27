@@ -538,4 +538,68 @@ describe('ControlsTabComponent', () => {
       expect(component.activeRulesBadgeVariant()).toBe('info');
     });
   });
+
+  // Story 4-2 testleri: hm-rule-list entegrasyonu, edit/delete handler'ları
+  describe('Story 4-2: rule list integration', () => {
+    const mockRule = {
+      id: 'r1',
+      urlPattern: '/api/users',
+      method: 'GET',
+      statusCode: 200,
+      responseBody: '{}',
+      responseHeaders: [] as const,
+      delay: 0,
+      enabled: true,
+    };
+
+    // Subtask 5.11 — onEditRuleRequested çağrıldığında editingRule signal güncellemeli
+    it('should update editingRule signal when onEditRuleRequested is called', () => {
+      expect(component.editingRule()).toBeNull();
+      component.onEditRuleRequested(mockRule);
+      expect(component.editingRule()).toEqual(mockRule);
+    });
+
+    it('should start with editingRule = null', () => {
+      expect(component.editingRule()).toBeNull();
+    });
+
+    // Subtask 5.12 — onRuleUpdated çağrıldığında UPDATE_RULE mesajı doğru payload ile gönderilmeli ve editingRule null olmalı
+    it('should send UPDATE_RULE message and set editingRule to null when onRuleUpdated is called', async () => {
+      component.editingRule.set(mockRule);
+      component.onRuleUpdated(mockRule);
+
+      expect(component.editingRule()).toBeNull();
+      await Promise.resolve(); // microtask flush
+      expect(mockMessagingService.sendMessage).toHaveBeenCalledWith(
+        'UPDATE_RULE',
+        { rule: mockRule },
+        expect.any(String),
+      );
+    });
+
+    // Subtask 5.13 — onRuleDeleted çağrıldığında DELETE_RULE mesajı doğru ruleId ile gönderilmeli
+    it('should send DELETE_RULE message with correct ruleId when onRuleDeleted is called', async () => {
+      component.onRuleDeleted('r1');
+      await Promise.resolve(); // microtask flush
+      expect(mockMessagingService.sendMessage).toHaveBeenCalledWith(
+        'DELETE_RULE',
+        { ruleId: 'r1' },
+        expect.any(String),
+      );
+    });
+
+    // Subtask 5.14 — activeRules 0 iken badge "0" gösterilmeli; variant "default" olmalı (regresyon)
+    it('should show badge "0" and variant "default" when activeRules is empty (AC #4)', () => {
+      mockMessagingService.state.set(makeStateSyncPayload({ activeRules: [] }));
+      fixture.detectChanges();
+      expect(component.activeRulesBadge()).toBe('0');
+      expect(component.activeRulesBadgeVariant()).toBe('default');
+    });
+
+    // hm-rule-list render edilmeli
+    it('should render hm-rule-list component inside Rules accordion', () => {
+      const ruleList = el.querySelector('hm-rule-list');
+      expect(ruleList).toBeTruthy();
+    });
+  });
 });

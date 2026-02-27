@@ -8,9 +8,14 @@ import {
 import { SettingsSectionComponent } from '../settings-section/hm-settings-section.component';
 import { HmExcludeListComponent } from '../exclude-list/hm-exclude-list.component';
 import { HmRuleFormComponent } from '../rule-form/hm-rule-form.component';
+import { HmRuleListComponent } from '../rule-list/hm-rule-list.component';
 import { ExtensionMessagingService } from '../../services/extension-messaging.service';
 import { MessageType } from '../../../shared/messaging.types';
-import type { UpdateSettingsPayload, RulePayload } from '../../../shared/payload.types';
+import type {
+  UpdateSettingsPayload,
+  RulePayload,
+  DeleteRulePayload,
+} from '../../../shared/payload.types';
 import type { MockRule } from '@har-mock/core';
 
 @Component({
@@ -24,6 +29,7 @@ import type { MockRule } from '@har-mock/core';
     SettingsSectionComponent,
     HmExcludeListComponent,
     HmRuleFormComponent,
+    HmRuleListComponent,
   ],
   template: `
     <div class="space-y-2 p-2">
@@ -72,7 +78,16 @@ import type { MockRule } from '@har-mock/core';
         [badge]="activeRulesBadge()"
         [badgeVariant]="activeRulesBadgeVariant()"
       >
-        <hm-rule-form (ruleCreated)="onRuleCreated($event)" />
+        <hm-rule-list
+          [rules]="activeRules()"
+          (editRuleRequested)="onEditRuleRequested($event)"
+          (deleteRuleRequested)="onRuleDeleted($event)"
+        />
+        <hm-rule-form
+          [editRule]="editingRule()"
+          (ruleCreated)="onRuleCreated($event)"
+          (ruleUpdated)="onRuleUpdated($event)"
+        />
       </hm-accordion>
 
       <hm-accordion title="Settings" [expanded]="false" persistKey="settings">
@@ -95,6 +110,9 @@ export class ControlsTabComponent {
   private readonly messaging = inject(ExtensionMessagingService);
 
   readonly endpointCount = signal<number | null>(null);
+
+  // Subtask 4.2 — edit modunda hangi rule'ın düzenlendiğini takip eder
+  readonly editingRule = signal<MockRule | null>(null);
 
   readonly hasHar = computed(() => {
     const state = this.messaging.state();
@@ -160,6 +178,32 @@ export class ControlsTabComponent {
       .sendMessage(MessageType.ADD_RULE, payload, crypto.randomUUID())
       .catch((err: unknown) => {
         console.error('[HAR Mock] Rule eklenemedi:', err);
+      });
+  }
+
+  // Subtask 4.3 — edit isteniyor: editingRule'u ayarla (form otomatik prefill olur)
+  onEditRuleRequested(rule: MockRule): void {
+    this.editingRule.set(rule);
+  }
+
+  // Subtask 4.4 — rule güncellendi: UPDATE_RULE mesajı gönder, edit modundan çık
+  onRuleUpdated(rule: MockRule): void {
+    this.editingRule.set(null);
+    const payload: RulePayload = { rule };
+    void this.messaging
+      .sendMessage(MessageType.UPDATE_RULE, payload, crypto.randomUUID())
+      .catch((err: unknown) => {
+        console.error('[HAR Mock] Rule güncellenemedi:', err);
+      });
+  }
+
+  // Subtask 4.5 — rule silindi: DELETE_RULE mesajı gönder
+  onRuleDeleted(ruleId: string): void {
+    const payload: DeleteRulePayload = { ruleId };
+    void this.messaging
+      .sendMessage(MessageType.DELETE_RULE, payload, crypto.randomUUID())
+      .catch((err: unknown) => {
+        console.error('[HAR Mock] Rule silinemedi:', err);
       });
   }
 }

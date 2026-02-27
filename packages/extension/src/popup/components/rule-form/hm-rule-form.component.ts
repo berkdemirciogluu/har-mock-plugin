@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 import type { MockRule } from '@har-mock/core';
 import { HmJsonEditorComponent } from '../json-editor/hm-json-editor.component';
 
@@ -12,8 +20,15 @@ const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'
   imports: [HmJsonEditorComponent],
 })
 export class HmRuleFormComponent {
-  // Signal-based output (Subtask 1.2)
+  // Signal-based input — null = create mode, MockRule = edit mode (Subtask 3.1)
+  readonly editRule = input<MockRule | null>(null);
+
+  // Signal-based outputs (Subtask 1.2, 3.2)
   readonly ruleCreated = output<MockRule>();
+  readonly ruleUpdated = output<MockRule>();
+
+  // Subtask 3.4 — edit mode computed flag
+  readonly isEditMode = computed<boolean>(() => this.editRule() !== null);
 
   // Exposed constants for template
   readonly httpMethods = HTTP_METHODS;
@@ -31,7 +46,26 @@ export class HmRuleFormComponent {
   readonly statusCodeError = signal<string>('');
   readonly jsonValid = signal<boolean>(true);
 
-  // onSave metodu (Subtask 1.5)
+  // Subtask 3.3 — editRule değişince form alanlarını prefill et
+  private readonly _editRuleEffect = effect(
+    () => {
+      const rule = this.editRule();
+      if (rule) {
+        this.urlPattern.set(rule.urlPattern);
+        this.method.set(rule.method);
+        this.statusCode.set(rule.statusCode);
+        this.responseBody.set(rule.responseBody);
+        this.delay.set(rule.delay);
+        this.showForm.set(true);
+        this.urlPatternError.set('');
+        this.statusCodeError.set('');
+        this.jsonValid.set(true);
+      }
+    },
+    { allowSignalWrites: true },
+  );
+
+  // onSave metodu — create ve edit mode'u destekler (Subtask 3.5)
   onSave(): void {
     // URL pattern boş kontrolü
     if (!this.urlPattern().trim()) {
@@ -51,18 +85,23 @@ export class HmRuleFormComponent {
       return;
     }
 
+    const existing = this.editRule();
     const rule: MockRule = {
-      id: crypto.randomUUID(),
+      id: existing?.id ?? crypto.randomUUID(),
       urlPattern: this.urlPattern().trim(),
       method: this.method(),
       statusCode: this.statusCode(),
       responseBody: this.responseBody(),
-      responseHeaders: [],
+      responseHeaders: existing?.responseHeaders ?? [],
       delay: this.delay(),
-      enabled: true,
+      enabled: existing?.enabled ?? true,
     };
 
-    this.ruleCreated.emit(rule);
+    if (existing) {
+      this.ruleUpdated.emit(rule);
+    } else {
+      this.ruleCreated.emit(rule);
+    }
     this.resetForm();
   }
 

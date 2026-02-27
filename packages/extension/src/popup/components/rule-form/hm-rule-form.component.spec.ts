@@ -341,4 +341,97 @@ describe('HmRuleFormComponent', () => {
       expect(saveSpy).toHaveBeenCalled();
     });
   });
+
+  // Subtask 5.6 — editRule null iken create mode (regresyon)
+  describe('edit mode', () => {
+    const ruleToEdit: MockRule = {
+      id: 'existing-id',
+      urlPattern: '/api/test',
+      method: 'POST',
+      statusCode: 404,
+      responseBody: '{"msg":"not found"}',
+      responseHeaders: [],
+      delay: 100,
+      enabled: true,
+    };
+
+    // Subtask 5.6 — create mode default behaviour
+    it('should be in create mode by default (editRule = null)', () => {
+      expect(component.isEditMode()).toBe(false);
+    });
+
+    // Subtask 5.7 — editRule ile verilince form alanları prefill olmalı
+    it('should prefill form when editRule input is provided', () => {
+      fixture.componentRef.setInput('editRule', ruleToEdit);
+      fixture.detectChanges();
+
+      expect(component.urlPattern()).toBe('/api/test');
+      expect(component.method()).toBe('POST');
+      expect(component.statusCode()).toBe(404);
+      expect(component.responseBody()).toBe('{"msg":"not found"}');
+      expect(component.delay()).toBe(100);
+      expect(component.showForm()).toBe(true);
+      expect(component.isEditMode()).toBe(true);
+    });
+
+    // Subtask 5.8 — edit mode'da Kaydet → ruleUpdated emit edilmeli, ruleCreated emit edilmemeli, id korunmalı
+    it('should emit ruleUpdated (not ruleCreated) with original id when saving in edit mode', () => {
+      fixture.componentRef.setInput('editRule', ruleToEdit);
+      fixture.detectChanges();
+
+      const updatedRules: MockRule[] = [];
+      const createdRules: MockRule[] = [];
+      component.ruleUpdated.subscribe((r: MockRule) => updatedRules.push(r));
+      component.ruleCreated.subscribe((r: MockRule) => createdRules.push(r));
+
+      component.onSave();
+
+      expect(updatedRules.length).toBe(1);
+      expect(createdRules.length).toBe(0);
+      expect(updatedRules[0]?.id).toBe('existing-id');
+      expect(updatedRules[0]?.urlPattern).toBe('/api/test');
+    });
+
+    // Subtask 5.9 — create mode'da Kaydet → ruleCreated emit edilmeli (regresyon)
+    it('should emit ruleCreated in create mode (regression)', () => {
+      const createdRules: MockRule[] = [];
+      const updatedRules: MockRule[] = [];
+      component.ruleCreated.subscribe((r: MockRule) => createdRules.push(r));
+      component.ruleUpdated.subscribe((r: MockRule) => updatedRules.push(r));
+
+      component.showForm.set(true);
+      component.urlPattern.set('/api/new');
+      fixture.detectChanges();
+
+      component.onSave();
+
+      expect(createdRules.length).toBe(1);
+      expect(updatedRules.length).toBe(0);
+      expect(createdRules[0]?.id).toBeTruthy();
+      expect(createdRules[0]?.id).not.toBe('existing-id');
+    });
+
+    // Subtask 5.10 — edit mode'da form başlığı "Rule Düzenle", buton "Güncelle" olmalı
+    it('should show "Rule Düzenle" title and "Güncelle" button in edit mode', () => {
+      fixture.componentRef.setInput('editRule', ruleToEdit);
+      fixture.detectChanges();
+
+      const formTitle = el.querySelector('[data-testid="form-title"]');
+      expect(formTitle?.textContent?.trim()).toContain('Rule Düzenle');
+
+      const saveButton = el.querySelector('[data-testid="save-button"]');
+      expect(saveButton?.textContent?.trim()).toContain('Güncelle');
+    });
+
+    it('should show "Yeni Rule Ekle" title and "Kaydet" button in create mode', () => {
+      component.showForm.set(true);
+      fixture.detectChanges();
+
+      const formTitle = el.querySelector('[data-testid="form-title"]');
+      expect(formTitle?.textContent?.trim()).toContain('Yeni Rule Ekle');
+
+      const saveButton = el.querySelector('[data-testid="save-button"]');
+      expect(saveButton?.textContent?.trim()).toContain('Kaydet');
+    });
+  });
 });
