@@ -1,6 +1,6 @@
 # Story 4.3: Rule-First Priority Chain — HAR'sız Çalışma & Integration
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -375,7 +375,9 @@ claude-sonnet-4-6
 ### File List
 
 packages/extension/src/background/message-handler.spec.ts
+packages/extension/src/background/message-handler.ts
 
 ### Change Log
 
 - 2026-02-27: Story 4.3 implementasyonu tamamlandı — `message-handler.spec.ts`'e 5 yeni integration testi eklendi (AC1/FR19, AC2 Rule-First priority chain, AC5 delay, AC2+AC4 MATCH_EVENT). `beforeEach` mock temizleme düzeltmesi (mockClear). Tüm 718 test geçiyor, 0 regresyon.
+- 2026-02-27: Code review düzeltmeleri uygulandı (2 Medium, 3 Low): M1 yanıltıcı comment düzeltildi; M2 MATCH_QUERY error handler'a MATCH_EVENT push eklendi + test assertion güncellendi; L1 makeRule() factory comment; L2 AC2 testinde gereksiz mockMatchUrl setup kaldırıldı; L3 AC5 testine guard assertion eklendi. 718/718 test geçiyor.

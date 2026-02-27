@@ -124,8 +124,8 @@ async function handleMessageAsync(
     }
 
     case MessageType.MATCH_QUERY: {
+      const { url, method } = message.payload as MatchQueryPayload;
       try {
-        const { url, method } = message.payload as MatchQueryPayload;
         const settings = stateManager.getSettings();
 
         // Extension kapalıysa passthrough
@@ -276,6 +276,12 @@ async function handleMessageAsync(
       } catch (error: unknown) {
         const errorMsg = error instanceof Error ? error.message : 'Unknown error';
         console.error('[HAR Mock] MATCH_QUERY handler failed:', errorMsg);
+        const errorEvent = createMatchEvent(url, method, 'passthrough');
+        void stateManager.addMatchEvent(errorEvent);
+        portManager.sendToPopup({
+          type: MessageType.MATCH_EVENT,
+          payload: errorEvent,
+        } as Message<MatchEvent>);
         port.postMessage({
           type: MessageType.MATCH_RESULT,
           payload: { matched: false } satisfies MatchResultPayload,

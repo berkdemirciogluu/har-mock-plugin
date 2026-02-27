@@ -95,6 +95,9 @@ function createMockPortManager(): jest.Mocked<PortManager> {
   } as unknown as jest.Mocked<PortManager>;
 }
 
+// Minimal rule stub — statusCode/responseBody are placeholder defaults and are NOT used in
+// assertions; evaluate() is always mocked in tests. This factory's only purpose is to provide
+// a non-empty active rules array via stateManager.getActiveRules.mockReturnValue([makeRule()]).
 const makeRule = (): MockRule => ({
   id: 'rule-1',
   urlPattern: '/api/*',
@@ -508,17 +511,9 @@ describe('handleMessage', () => {
       headers: [],
       delay: 0,
     });
-    // HAR also matches — but should NOT be used
+    // HAR data is present but should NOT be consulted — rule short-circuits the HAR path
     const harData = makeHarData();
     stateManager.getHarData.mockReturnValue(harData);
-    mockMatchUrl.mockReturnValue({
-      pattern: {
-        original: 'https://api.test.com/data',
-        template: 'https://api.test.com/data',
-        segments: [],
-        method: 'GET',
-      },
-    });
 
     const message: Message = {
       type: MessageType.MATCH_QUERY,
@@ -575,7 +570,7 @@ describe('handleMessage', () => {
         }),
       }),
     );
-    // matchUrl should NOT be called — HAR is null, we short-circuited on rule
+    // matchUrl should NOT be called — harData is null so the HAR block is never entered
     expect(mockMatchUrl).not.toHaveBeenCalled();
   });
 
@@ -598,6 +593,7 @@ describe('handleMessage', () => {
     handleMessage(message, port, stateManager, portManager);
     await new Promise((r) => setTimeout(r, 10));
 
+    expect(port.postMessage).toHaveBeenCalled();
     const callArg = (port.postMessage as jest.Mock).mock.calls[0]?.[0] as {
       type: string;
       payload: { matched: boolean; source: string; response: { delay: number } };
@@ -1106,6 +1102,16 @@ describe('handleMessage', () => {
         type: MessageType.MATCH_RESULT,
         requestId: 'echo-req-error',
       }),
+    );
+    // Error case must also push a passthrough MATCH_EVENT so monitor tab stays consistent
+    expect(portManager.sendToPopup).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: MessageType.MATCH_EVENT,
+        payload: expect.objectContaining({ source: 'passthrough' }),
+      }),
+    );
+    expect(stateManager.addMatchEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ source: 'passthrough' }),
     );
   });
 
