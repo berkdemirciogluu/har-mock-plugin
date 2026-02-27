@@ -1,6 +1,6 @@
 # Story 5.1: Angular Plugin Paket Kurulumu & `provideHarMock()` API
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -352,13 +352,19 @@ claude-sonnet-4-6
 - ✅ `MockMode` type alias oluşturuldu: `'last-match' | 'sequential'`
 - ✅ `HAR_MOCK_CONFIG` InjectionToken `InjectionToken<Required<HarMockConfig>>` olarak oluşturuldu
 - ✅ `provideHarMock()` factory function zero-config defaults ile implement edildi
-- ✅ `public-api.ts` barrel `HarMockConfig`, `MockMode`, `HAR_MOCK_CONFIG`, `provideHarMock` export ediyor
-- ✅ 4 unit test: `provide-har-mock.spec.ts` — TestBed ile Angular DI injection doğrulandı
+- ✅ `public-api.ts` barrel `HarMockConfig`, `MockMode`, `HAR_MOCK_CONFIG`, `provideHarMock`, `MockRule` (re-export) export ediyor
+- ✅ 6 unit test: `provide-har-mock.spec.ts` — TestBed ile Angular DI injection doğrulandı (boolean edge case dahil)
 - ✅ ng-packagr build başarılı: `dist/fesm2022/har-mock-plugin.mjs` ve `dist/index.d.ts` üretildi
 - ✅ `@har-mock/core` 221 test — 0 regresyon
 - ✅ `@har-mock/extension` 497 test — 0 regresyon
-- ✅ Angular plugin 4 test — 100% code coverage
+- ✅ Angular plugin 6 test — 100% code coverage
 - ✅ Angular TestBed setup: `jest.config.js` + `tsconfig.spec.json` + `src/test-setup.ts` eklendi (sonraki story'lere de hazır)
+- ✅ [Code Review Fix] Phantom devDependencies eklendi (zone.js, @angular/platform-browser, @angular/platform-browser-dynamic)
+- ✅ [Code Review Fix] destroyAfterEach: true olarak düzeltildi
+- ✅ [Code Review Fix] tsconfig.spec.json include scope daraltıldı
+- ✅ [Code Review Fix] MockRule tipi public-api.ts'den re-export edildi
+- ✅ [Code Review Fix] Boolean edge case testleri eklendi (enabled=false, bypassGuards=true)
+- ✅ [Code Review Fix] JSDoc yorumları İngilizce'ye çevrildi
 
 ### File List
 
@@ -371,8 +377,10 @@ claude-sonnet-4-6
 - `packages/angular-plugin/src/test-setup.ts` (oluşturuldu)
 - `packages/angular-plugin/jest.config.js` (güncellendi — Angular ESM + zone.js desteği)
 - `packages/angular-plugin/tsconfig.spec.json` (oluşturuldu — rootDir relaxed for tests)
+- `packages/angular-plugin/package.json` (güncellendi — eksik devDependencies eklendi)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (güncellendi — in-progress → review)
 
 ### Change Log
 
 - 2026-02-27: Story 5.1 implement edildi — HarMockConfig types, provideHarMock factory, public-api barrel, unit testler, ng-packagr build doğrulaması tamamlandı. Angular TestBed setup (zone.js + tsconfig.spec.json) eklendi.
+- 2026-02-27: Code review — 6 issue düzeltildi: phantom devDependencies eklendi, destroyAfterEach:true, tsconfig.spec include daraltıldı, MockRule re-export, boolean edge case testleri, JSDoc İngilizce'ye çevrildi.

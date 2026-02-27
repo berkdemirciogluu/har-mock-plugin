@@ -5,5 +5,5 @@
     "outDir": "./dist/spec",
     "types": ["jest", "node"]
   },
-  "include": ["src/**/*.ts", "../core/src/**/*.ts"]
+  "include": ["src/**/*.ts"]
 }

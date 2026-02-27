@@ -58,9 +58,35 @@ describe('provideHarMock', () => {
     });
     const config = TestBed.inject(HAR_MOCK_CONFIG);
     expect(config.harUrl).toBe('/custom.har');
-    expect(config.mode).toBe('last-match');    // default
-    expect(config.enabled).toBe(true);         // default
-    expect(config.bypassGuards).toBe(false);   // default
-    expect(config.rules).toEqual([]);          // default
+    expect(config.mode).toBe('last-match'); // default
+    expect(config.enabled).toBe(true); // default
+    expect(config.bypassGuards).toBe(false); // default
+    expect(config.rules).toEqual([]); // default
+  });
+
+  it('should preserve enabled=false without falling back to default (boolean edge case)', () => {
+    TestBed.configureTestingModule({
+      providers: [provideHarMock({ enabled: false })],
+    });
+    const config = TestBed.inject(HAR_MOCK_CONFIG);
+    expect(config.enabled).toBe(false);
+    // other fields should still be defaults
+    expect(config.harUrl).toBe('/assets/har-mock.har');
+    expect(config.mode).toBe('last-match');
+    expect(config.bypassGuards).toBe(false);
+    expect(config.rules).toEqual([]);
+  });
+
+  it('should preserve bypassGuards=true without affecting other defaults', () => {
+    TestBed.configureTestingModule({
+      providers: [provideHarMock({ bypassGuards: true })],
+    });
+    const config = TestBed.inject(HAR_MOCK_CONFIG);
+    expect(config.bypassGuards).toBe(true);
+    // other fields should still be defaults
+    expect(config.harUrl).toBe('/assets/har-mock.har');
+    expect(config.mode).toBe('last-match');
+    expect(config.enabled).toBe(true);
+    expect(config.rules).toEqual([]);
   });
 });

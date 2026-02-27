@@ -1,50 +1,50 @@
 import type { MockRule } from '@har-mock/core';
 import { InjectionToken } from '@angular/core';
 
-/** HAR mock response seçim modu */
+/** HAR mock response selection mode */
 export type MockMode = 'last-match' | 'sequential';
 
 /**
- * provideHarMock() factory function konfigürasyonu.
- * Tüm alanlar opsiyonel; belirtilmeyenler zero-config default değerlerini alır.
+ * Configuration for the provideHarMock() factory function.
+ * All fields are optional; unspecified fields use zero-config defaults.
  */
 export interface HarMockConfig {
   /**
-   * HAR dosyasının URL'i.
-   * Angular assets klasöründen yüklenir.
+   * URL of the HAR file.
+   * Loaded from the Angular assets folder.
    * @default '/assets/har-mock.har'
    */
   harUrl?: string;
 
   /**
-   * HAR response seçim modu.
-   * - 'last-match': URL pattern'ına en son eklenen eşleşen entry kullanılır
-   * - 'sequential': Her istek için sırayla bir sonraki entry kullanılır
+   * HAR response selection mode.
+   * - 'last-match': Uses the last matching entry for the URL pattern
+   * - 'sequential': Uses the next entry in sequence for each request
    * @default 'last-match'
    */
   mode?: MockMode;
 
   /**
-   * Plugin'i etkinleştirir/devre dışı bırakır.
-   * Double-lock: isDevMode() false ise bu değerden bağımsız plugin pasif kalır.
+   * Enables/disables the plugin.
+   * Double-lock: If isDevMode() is false, the plugin stays inactive regardless of this value.
    * @default true
    */
   enabled?: boolean;
 
   /**
-   * Dev mode'da Angular route guard'larını devre dışı bırakır.
-   * APP_INITIALIZER aracılığıyla Router.config mutation yapılır.
+   * Disables Angular route guards in dev mode.
+   * Uses APP_INITIALIZER to mutate Router.config.
    * @default false
    */
   bypassGuards?: boolean;
 
   /**
-   * Aktif mock rule listesi.
-   * Priority chain: Rules → HAR → Passthrough
+   * Active mock rule list.
+   * Priority chain: Rules > HAR > Passthrough
    * @default []
    */
   rules?: MockRule[];
 }
 
-/** Angular DI token — resolved (Required<HarMockConfig>) konfigürasyonu inject eder */
+/** Angular DI token — injects the resolved (Required<HarMockConfig>) configuration */
 export const HAR_MOCK_CONFIG = new InjectionToken<Required<HarMockConfig>>('HAR_MOCK_CONFIG');

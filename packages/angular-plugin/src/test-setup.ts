@@ -7,5 +7,5 @@ import {
 } from '@angular/platform-browser-dynamic/testing';
 
 getTestBed().initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting(), {
-  teardown: { destroyAfterEach: false },
+  teardown: { destroyAfterEach: true },
 });
