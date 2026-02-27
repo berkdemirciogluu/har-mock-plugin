@@ -149,7 +149,9 @@ describe('handleMessage', () => {
     stateManager = createMockStateManager();
     portManager = createMockPortManager();
     jest.spyOn(console, 'warn').mockImplementation();
+    mockEvaluate.mockClear();
     mockEvaluate.mockReturnValue(null);
+    mockMatchUrl.mockClear();
     mockMatchUrl.mockReturnValue(null);
   });
 
@@ -491,6 +493,166 @@ describe('handleMessage', () => {
 
     expect(port.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({ type: MessageType.MATCH_RESULT, payload: { matched: false } }),
+    );
+  });
+
+  // --- MATCH_QUERY — priority chain: rule wins over HAR (AC2) ---
+
+  it('should return rule response (not HAR) when BOTH rule AND HAR match — RULE FIRST priority', async () => {
+    // Setup: both rule AND HAR match
+    const rule = makeRule();
+    stateManager.getActiveRules.mockReturnValue([rule]);
+    mockEvaluate.mockReturnValue({
+      statusCode: 429,
+      body: '{"error":"rate_limited"}',
+      headers: [],
+      delay: 0,
+    });
+    // HAR also matches — but should NOT be used
+    const harData = makeHarData();
+    stateManager.getHarData.mockReturnValue(harData);
+    mockMatchUrl.mockReturnValue({
+      pattern: {
+        original: 'https://api.test.com/data',
+        template: 'https://api.test.com/data',
+        segments: [],
+        method: 'GET',
+      },
+    });
+
+    const message: Message = {
+      type: MessageType.MATCH_QUERY,
+      payload: { url: 'https://api.test.com/data', method: 'GET', tabId: 1 },
+    };
+    handleMessage(message, port, stateManager, portManager);
+    await new Promise((r) => setTimeout(r, 10));
+
+    // Rule should win
+    expect(port.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: MessageType.MATCH_RESULT,
+        payload: expect.objectContaining({
+          matched: true,
+          source: 'rule',
+          response: expect.objectContaining({ statusCode: 429 }),
+        }),
+      }),
+    );
+    // HAR matchUrl should NOT have been called — short-circuit
+    expect(mockMatchUrl).not.toHaveBeenCalled();
+  });
+
+  // --- MATCH_QUERY — rule matches without HAR loaded (FR19, AC1) ---
+
+  it('should return rule response when rule matches and no HAR is loaded (FR19)', async () => {
+    stateManager.getHarData.mockReturnValue(null); // No HAR loaded
+    const rule = makeRule();
+    stateManager.getActiveRules.mockReturnValue([rule]);
+    mockEvaluate.mockReturnValue({
+      statusCode: 429,
+      body: '{"error":"rate_limited"}',
+      headers: [{ name: 'Content-Type', value: 'application/json' }],
+      delay: 500,
+    });
+
+    const message: Message = {
+      type: MessageType.MATCH_QUERY,
+      payload: { url: 'https://api.test.com/data', method: 'GET', tabId: 1 },
+    };
+    handleMessage(message, port, stateManager, portManager);
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(port.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: MessageType.MATCH_RESULT,
+        payload: expect.objectContaining({
+          matched: true,
+          source: 'rule',
+          response: expect.objectContaining({
+            statusCode: 429,
+            body: '{"error":"rate_limited"}',
+          }),
+        }),
+      }),
+    );
+    // matchUrl should NOT be called — HAR is null, we short-circuited on rule
+    expect(mockMatchUrl).not.toHaveBeenCalled();
+  });
+
+  // --- MATCH_QUERY — rule delay in MATCH_RESULT payload (AC5) ---
+
+  it('should include rule delay in MATCH_RESULT response payload (AC5)', async () => {
+    stateManager.getHarData.mockReturnValue(null);
+    mockEvaluate.mockReturnValue({
+      statusCode: 429,
+      body: '{"error":"rate_limited"}',
+      headers: [],
+      delay: 500, // 500ms delay
+    });
+    stateManager.getActiveRules.mockReturnValue([makeRule()]);
+
+    const message: Message = {
+      type: MessageType.MATCH_QUERY,
+      payload: { url: 'https://api.test.com/data', method: 'GET', tabId: 1 },
+    };
+    handleMessage(message, port, stateManager, portManager);
+    await new Promise((r) => setTimeout(r, 10));
+
+    const callArg = (port.postMessage as jest.Mock).mock.calls[0]?.[0] as {
+      type: string;
+      payload: { matched: boolean; source: string; response: { delay: number } };
+    };
+    expect(callArg?.payload?.response?.delay).toBe(500);
+    expect(callArg?.payload?.source).toBe('rule');
+  });
+
+  // --- MATCH_QUERY — rule match → MATCH_EVENT with source: 'rule' (AC2, Task 2) ---
+
+  it('should push MATCH_EVENT with source: rule to popup when rule matches', async () => {
+    mockEvaluate.mockReturnValue({
+      statusCode: 429,
+      body: '{}',
+      headers: [],
+      delay: 0,
+    });
+    stateManager.getActiveRules.mockReturnValue([makeRule()]);
+
+    const message: Message = {
+      type: MessageType.MATCH_QUERY,
+      payload: { url: 'https://api.test.com/data', method: 'GET', tabId: 1 },
+    };
+    handleMessage(message, port, stateManager, portManager);
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(portManager.sendToPopup).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: MessageType.MATCH_EVENT,
+        payload: expect.objectContaining({ source: 'rule' }),
+      }),
+    );
+    expect(stateManager.addMatchEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ source: 'rule' }),
+    );
+  });
+
+  // --- MATCH_QUERY — passthrough → MATCH_EVENT with source: 'passthrough' (AC4, Task 2) ---
+
+  it('should push MATCH_EVENT with source: passthrough when no rule or HAR matches', async () => {
+    const message: Message = {
+      type: MessageType.MATCH_QUERY,
+      payload: { url: 'https://unmatched.com/data', method: 'GET', tabId: 1 },
+    };
+    handleMessage(message, port, stateManager, portManager);
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(portManager.sendToPopup).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: MessageType.MATCH_EVENT,
+        payload: expect.objectContaining({ source: 'passthrough' }),
+      }),
+    );
+    expect(stateManager.addMatchEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ source: 'passthrough' }),
     );
   });
 
