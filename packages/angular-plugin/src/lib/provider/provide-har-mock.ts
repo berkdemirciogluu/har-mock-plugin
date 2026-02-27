@@ -1,6 +1,8 @@
-import { makeEnvironmentProviders, EnvironmentProviders } from '@angular/core';
+import { makeEnvironmentProviders, EnvironmentProviders, APP_INITIALIZER, inject } from '@angular/core';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import type { HarMockConfig } from '../types/har-mock-config.types';
 import { HAR_MOCK_CONFIG } from '../types/har-mock-config.types';
+import { HarLoaderService, harMockInterceptor } from '../interceptor/har-mock.interceptor';
 
 /**
  * Angular HAR Mock plugin'i app.config.ts'e ekler.
@@ -9,7 +11,6 @@ import { HAR_MOCK_CONFIG } from '../types/har-mock-config.types';
  * // app.config.ts
  * export const appConfig: ApplicationConfig = {
  *   providers: [
- *     provideHttpClient(withInterceptors([...])),
  *     provideHarMock({ harUrl: '/assets/api.har' }),
  *   ]
  * };
@@ -25,7 +26,16 @@ export function provideHarMock(config?: HarMockConfig): EnvironmentProviders {
 
   return makeEnvironmentProviders([
     { provide: HAR_MOCK_CONFIG, useValue: resolved },
-    // Note: HttpInterceptorFn — Story 5.2'de eklenecek
-    // Note: APP_INITIALIZER (guard bypass) — Story 5.4'te eklenecek
+    HarLoaderService,
+    provideHttpClient(withInterceptors([harMockInterceptor])),
+    {
+      provide: APP_INITIALIZER,
+      useFactory: () => {
+        const loader = inject(HarLoaderService);
+        return () => loader.load();
+      },
+      multi: true,
+    },
+    // Note: Router guard bypass (APP_INITIALIZER ile route block) — Story 5.4'te eklenecek
   ]);
 }

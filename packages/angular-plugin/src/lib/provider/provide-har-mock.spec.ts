@@ -1,10 +1,29 @@
 import { TestBed } from '@angular/core/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHarMock } from './provide-har-mock';
 import { HAR_MOCK_CONFIG } from '../types/har-mock-config.types';
 import type { MockRule } from '@har-mock/core';
 
+// provideHarMock() APP_INITIALIZER aracılığıyla HarLoaderService.load() tetikleyebilir.
+// @har-mock/core ve HTTP backend mock'lanarak async HAR loading sızıntısı önlenir.
+jest.mock('@har-mock/core', () => ({
+  parseHar: jest.fn(() => ({ entries: [] })),
+  parameterize: jest.fn(() => []),
+  resolve: jest.fn(),
+  HarParseError: class extends Error {},
+}));
+
 describe('provideHarMock', () => {
-  afterEach(() => TestBed.resetTestingModule());
+  afterEach(() => {
+    // Bekleyen HAR yükleme isteklerini flush et — "Cannot log after tests are done" önler
+    try {
+      const ctrl = TestBed.inject(HttpTestingController);
+      ctrl.match(() => true).forEach((req) => req.flush('{}'));
+    } catch {
+      // HttpTestingController yoksa (sadece provideHarMock() çağrısını test eden testler) geç
+    }
+    TestBed.resetTestingModule();
+  });
 
   it('should return EnvironmentProviders (not null/undefined)', () => {
     const result = provideHarMock();
@@ -12,7 +31,7 @@ describe('provideHarMock', () => {
   });
 
   it('should apply zero-config defaults when called with no arguments (AC2)', () => {
-    TestBed.configureTestingModule({ providers: [provideHarMock()] });
+    TestBed.configureTestingModule({ providers: [provideHarMock(), provideHttpClientTesting()] });
     const config = TestBed.inject(HAR_MOCK_CONFIG);
     expect(config.harUrl).toBe('/assets/har-mock.har');
     expect(config.mode).toBe('last-match');
@@ -41,6 +60,7 @@ describe('provideHarMock', () => {
           bypassGuards: true,
           rules: [rule],
         }),
+        provideHttpClientTesting(),
       ],
     });
     const config = TestBed.inject(HAR_MOCK_CONFIG);
@@ -54,7 +74,7 @@ describe('provideHarMock', () => {
 
   it('should merge partial config with defaults (AC2+AC3)', () => {
     TestBed.configureTestingModule({
-      providers: [provideHarMock({ harUrl: '/custom.har' })],
+      providers: [provideHarMock({ harUrl: '/custom.har' }), provideHttpClientTesting()],
     });
     const config = TestBed.inject(HAR_MOCK_CONFIG);
     expect(config.harUrl).toBe('/custom.har');
@@ -66,7 +86,7 @@ describe('provideHarMock', () => {
 
   it('should preserve enabled=false without falling back to default (boolean edge case)', () => {
     TestBed.configureTestingModule({
-      providers: [provideHarMock({ enabled: false })],
+      providers: [provideHarMock({ enabled: false }), provideHttpClientTesting()],
     });
     const config = TestBed.inject(HAR_MOCK_CONFIG);
     expect(config.enabled).toBe(false);
@@ -79,7 +99,7 @@ describe('provideHarMock', () => {
 
   it('should preserve bypassGuards=true without affecting other defaults', () => {
     TestBed.configureTestingModule({
-      providers: [provideHarMock({ bypassGuards: true })],
+      providers: [provideHarMock({ bypassGuards: true }), provideHttpClientTesting()],
     });
     const config = TestBed.inject(HAR_MOCK_CONFIG);
     expect(config.bypassGuards).toBe(true);
