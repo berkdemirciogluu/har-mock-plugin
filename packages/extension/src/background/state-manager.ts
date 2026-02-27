@@ -195,6 +195,21 @@ export class StateManager {
     this.sequentialCounters = {};
   }
 
+  /** Tüm state'i fabrika ayarlarına sıfırla (accordion state'leri korunur) */
+  async resetAll(): Promise<void> {
+    const accordionStates = this.state.accordionStates;
+    this.state = this.getDefaultState();
+    this.state.accordionStates = accordionStates;
+    this.sequentialCounters = {};
+    await chrome.storage.local.remove([
+      STORAGE_KEYS.HAR_DATA,
+      STORAGE_KEYS.ACTIVE_RULES,
+      STORAGE_KEYS.MATCH_HISTORY,
+      STORAGE_KEYS.EDITED_RESPONSES,
+      STORAGE_KEYS.SETTINGS,
+    ]);
+  }
+
   // --- Private Utilities ---
 
   private getDefaultState(): ExtensionState {

@@ -471,6 +471,30 @@ async function handleMessageAsync(
       break;
     }
 
+    case MessageType.RESET_ALL: {
+      try {
+        await stateManager.resetAll();
+        await stopKeepAlive();
+        port.postMessage({
+          type: MessageType.RESET_ALL,
+          payload: { success: true },
+          requestId: message.requestId,
+        });
+        portManager.getPopupPort()?.postMessage({
+          type: MessageType.STATE_SYNC,
+          payload: stateManager.getFullState(),
+        });
+      } catch (error: unknown) {
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        port.postMessage({
+          type: MessageType.RESET_ALL,
+          payload: { success: false, error: errorMsg },
+          requestId: message.requestId,
+        });
+      }
+      break;
+    }
+
     default:
       console.warn('[HAR Mock] Unknown message type:', message.type);
       break;

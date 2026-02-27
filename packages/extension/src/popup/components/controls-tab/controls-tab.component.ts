@@ -103,6 +103,54 @@ import type { MockRule } from '@har-mock/core';
             (excludeListChange)="onExcludeListChange($event)"
           />
         </div>
+
+        <!-- Tümünü Sıfırla -->
+        <div class="mt-4 border-t border-slate-200 pt-3">
+          @if (!confirmReset()) {
+            <button
+              type="button"
+              class="flex w-full items-center justify-center gap-1.5 rounded border border-red-200 px-3 py-1.5 text-xs text-red-500 transition-colors hover:bg-red-50 hover:border-red-400"
+              (click)="confirmReset.set(true)"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3.5 w-3.5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              Tümünü Sıfırla
+            </button>
+          } @else {
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs text-slate-500"
+                >HAR, rule'lar ve ayarlar silinecek. Emin misin?</span
+              >
+              <div class="flex shrink-0 gap-1.5">
+                <button
+                  type="button"
+                  class="rounded px-2.5 py-1 text-xs font-semibold text-slate-600 bg-slate-200 transition-colors hover:bg-slate-300"
+                  (click)="confirmReset.set(false)"
+                >
+                  İptal
+                </button>
+                <button
+                  type="button"
+                  class="rounded px-2.5 py-1 text-xs font-semibold text-white bg-red-500 transition-colors hover:bg-red-600"
+                  (click)="onResetAll()"
+                >
+                  Sıfırla
+                </button>
+              </div>
+            </div>
+          }
+        </div>
       </hm-accordion>
     </div>
   `,
@@ -118,6 +166,8 @@ export class ControlsTabComponent {
 
   // Subtask 4.2 — edit modunda hangi rule'ın düzenlendiğini takip eder
   readonly editingRule = signal<MockRule | null>(null);
+  // Sıfırlama onayı toggle
+  readonly confirmReset = signal<boolean>(false);
 
   readonly hasHar = computed(() => {
     const state = this.messaging.state();
@@ -215,6 +265,16 @@ export class ControlsTabComponent {
       .sendMessage(MessageType.DELETE_RULE, payload, crypto.randomUUID())
       .catch((err: unknown) => {
         console.error('[HAR Mock] Rule silinemedi:', err);
+      });
+  }
+
+  onResetAll(): void {
+    this.confirmReset.set(false);
+    this.editingRule.set(null);
+    void this.messaging
+      .sendMessage(MessageType.RESET_ALL, undefined, crypto.randomUUID())
+      .catch((err: unknown) => {
+        console.error('[HAR Mock] Sıfırlama başarısız:', err);
       });
   }
 }

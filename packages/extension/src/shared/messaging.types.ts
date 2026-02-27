@@ -37,6 +37,8 @@ export enum MessageType {
   CLEAR_HISTORY = 'CLEAR_HISTORY',
   /** popup → background: yüklü HAR dosyasını sil */
   CLEAR_HAR = 'CLEAR_HAR',
+  /** popup → background: tüm state'i fabrika ayarlarına sıfırla */
+  RESET_ALL = 'RESET_ALL',
 }
 
 /** Generic message interface for port communication */
