@@ -69,8 +69,8 @@ import type { MockRule } from '@har-mock/core';
         title="Rules"
         [expanded]="false"
         persistKey="rules"
-        [badge]="activeRules().length.toString()"
-        [badgeVariant]="activeRules().length > 0 ? 'info' : 'default'"
+        [badge]="activeRulesBadge()"
+        [badgeVariant]="activeRulesBadgeVariant()"
       >
         <hm-rule-form (ruleCreated)="onRuleCreated($event)" />
       </hm-accordion>
@@ -101,6 +101,10 @@ export class ControlsTabComponent {
     return state !== null && state.harData !== null;
   });
   readonly activeRules = computed(() => this.messaging.state()?.activeRules ?? []);
+  readonly activeRulesBadge = computed(() => this.activeRules().length.toString());
+  readonly activeRulesBadgeVariant = computed(() =>
+    this.activeRules().length > 0 ? 'info' : 'default',
+  );
   readonly replayMode = computed<ReplayMode>(
     () => this.messaging.state()?.settings?.replayMode ?? 'last-match',
   );

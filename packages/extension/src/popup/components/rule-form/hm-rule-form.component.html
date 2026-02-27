@@ -26,7 +26,12 @@
 
 <!-- Form bölümü — showForm true iken göster (Subtask 2.2) -->
 @if (showForm()) {
-  <div data-testid="rule-form" class="space-y-2 rounded border border-slate-200 bg-slate-50 p-3">
+  <form
+    data-testid="rule-form"
+    class="space-y-2 rounded border border-slate-200 bg-slate-50 p-3"
+    novalidate
+    (submit)="onSubmit($event)"
+  >
     <!-- URL Pattern -->
     <div>
       <label for="hm-rule-url-pattern" class="mb-1 block text-xs font-medium text-slate-600">
@@ -43,7 +48,7 @@
         [class.border-red-400]="urlPatternError()"
         [class.border-slate-300]="!urlPatternError()"
         [value]="urlPattern()"
-        (input)="onUrlPatternInput($event.target!['value'])"
+        (input)="onUrlPatternInput($event)"
       />
       @if (urlPatternError()) {
         <p id="hm-rule-url-error" class="mt-0.5 text-xs text-red-500" role="alert">
@@ -83,23 +88,41 @@
           aria-label="Status Code"
           min="100"
           max="599"
-          class="w-full rounded border border-slate-300 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400"
+          [attr.aria-invalid]="statusCodeError() ? 'true' : null"
+          [attr.aria-describedby]="statusCodeError() ? 'hm-rule-status-error' : null"
+          class="w-full rounded border px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400"
+          [class.border-red-400]="statusCodeError()"
+          [class.border-slate-300]="!statusCodeError()"
           [value]="statusCode()"
           (input)="onStatusCodeChange($event)"
         />
+        @if (statusCodeError()) {
+          <p id="hm-rule-status-error" class="mt-0.5 text-xs text-red-500" role="alert">
+            {{ statusCodeError() }}
+          </p>
+        }
       </div>
     </div>
 
     <!-- Response Body (Subtask 1.8) -->
     <div>
       <label class="mb-1 block text-xs font-medium text-slate-600">Response Body (JSON)</label>
-      <div class="rounded border border-slate-300 text-xs">
+      <div
+        class="rounded border text-xs"
+        [class.border-red-400]="!jsonValid()"
+        [class.border-slate-300]="jsonValid()"
+        [attr.aria-invalid]="!jsonValid() ? 'true' : null"
+      >
         <hm-json-editor
           [value]="responseBody()"
           [isReadOnly]="false"
           (valueChange)="onResponseBodyChange($event)"
+          (jsonValidityChange)="jsonValid.set($event)"
         />
       </div>
+      @if (!jsonValid()) {
+        <p class="mt-0.5 text-xs text-red-500" role="alert">Geçersiz JSON formatı</p>
+      }
     </div>
 
     <!-- Delay (opsiyonel) -->
@@ -131,14 +154,13 @@
         İptal
       </button>
       <button
-        type="button"
+        type="submit"
         data-testid="save-button"
         aria-label="Rule kaydet"
         class="rounded bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-        (click)="onSave()"
       >
         Kaydet
       </button>
     </div>
-  </div>
+  </form>
 }

@@ -1,6 +1,6 @@
 # Story 4.1: Rule Form UI — Yeni Rule Oluşturma
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -28,31 +28,31 @@ so that HAR dosyası olmadan istediğim endpoint için herhangi bir HTTP respons
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: `hm-rule-form` Angular standalone component oluştur (AC: #1, #3, #4, #5, #6)
-  - [ ] Subtask 1.1: Dosyaları oluştur:
+- [x] Task 1: `hm-rule-form` Angular standalone component oluştur (AC: #1, #3, #4, #5, #6)
+  - [x] Subtask 1.1: Dosyaları oluştur:
     - `packages/extension/src/popup/components/rule-form/hm-rule-form.component.ts`
     - `packages/extension/src/popup/components/rule-form/hm-rule-form.component.html`
     - `packages/extension/src/popup/components/rule-form/hm-rule-form.component.spec.ts`
-  - [ ] Subtask 1.2: Signal-based output tanımla: `ruleCreated = output<MockRule>()`
-  - [ ] Subtask 1.3: Form state signals tanımla:
+  - [x] Subtask 1.2: Signal-based output tanımla: `ruleCreated = output<MockRule>()`
+  - [x] Subtask 1.3: Form state signals tanımla:
     - `urlPattern = signal<string>('')`
     - `method = signal<string>('GET')`
     - `statusCode = signal<number>(200)`
     - `responseBody = signal<string>('{\n  \n}')`
     - `delay = signal<number>(0)`
     - `showForm = signal<boolean>(false)`
-  - [ ] Subtask 1.4: Validation signals tanımla:
+  - [x] Subtask 1.4: Validation signals tanımla:
     - `urlPatternError = signal<string>('')` — boş URL pattern kontrolü
     - `jsonValid = signal<boolean>(true)` — hm-json-editor'den gelen geçerlilik durumu
-  - [ ] Subtask 1.5: `onSave()` metodu:
+  - [x] Subtask 1.5: `onSave()` metodu:
     - URL pattern boş → `urlPatternError.set('URL pattern zorunludur')`, return
     - JSON geçersiz → form submit engelle, return
     - `MockRule` nesnesi oluştur: `{ id: crypto.randomUUID(), urlPattern, method, statusCode, responseBody, responseHeaders: [], delay, enabled: true }`
     - `ruleCreated.emit(rule)`
     - Form state'ini sıfırla (`resetForm()`)
-  - [ ] Subtask 1.6: `resetForm()` metodu — tüm signal'ları varsayılan değerlere döndür, `showForm.set(false)`
-  - [ ] Subtask 1.7: `onResponseBodyChange(value: string)` handler — `responseBody.set(value)`, `jsonValid.set(true)`
-  - [ ] Subtask 1.8: `hm-json-editor` import et ve `readonly: false` ile response body alanı olarak kullan
+  - [x] Subtask 1.6: `resetForm()` metodu — tüm signal'ları varsayılan değerlere döndür, `showForm.set(false)`
+  - [x] Subtask 1.7: `onResponseBodyChange(value: string)` handler — `responseBody.set(value)`, `jsonValid.set(true)`
+  - [x] Subtask 1.8: `hm-json-editor` import et ve `readonly: false` ile response body alanı olarak kullan
 
 - [x] Task 2: Template — rule form UI (AC: #1, #3, #4, #5)
   - [x] Subtask 2.1: "Yeni Rule Ekle" butonu — `showForm()` false iken göster, tıklanınca `showForm.set(true)`
@@ -341,6 +341,11 @@ Claude Sonnet 4.6 (GitHub Copilot)
 ### Güncellenen Dosyalar
 - `packages/extension/src/popup/components/controls-tab/controls-tab.component.ts`
 - `packages/extension/src/popup/components/controls-tab/controls-tab.component.spec.ts`
+- `packages/extension/src/popup/components/rule-form/hm-rule-form.component.ts`
+- `packages/extension/src/popup/components/rule-form/hm-rule-form.component.html`
+- `packages/extension/src/popup/components/rule-form/hm-rule-form.component.spec.ts`
+- `packages/extension/src/popup/components/json-editor/hm-json-editor.component.ts`
+- `packages/extension/src/popup/components/json-editor/hm-json-editor.component.spec.ts`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
 - `_bmad-output/implementation-artifacts/4-1-rule-form-ui-yeni-rule-olusturma.md`
 
@@ -349,3 +354,4 @@ Claude Sonnet 4.6 (GitHub Copilot)
 | Tarih | Değişiklik |
 |-------|-----------|
 | 2026-02-27 | Story 4.1 implementasyonu tamamlandı — `hm-rule-form` standalone component, HTML template, ControlsTabComponent entegrasyonu; 58 test eklendi/güncellendi; 413 test geçiyor |
+| 2026-02-27 | Code review fix: 8 issue düzeltildi — jsonValidityChange output (AC#4), status code aralık doğrulaması, `<form>` element, event handler coverage, computed badge signal, a11y |

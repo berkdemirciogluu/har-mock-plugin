@@ -495,10 +495,7 @@ describe('ControlsTabComponent', () => {
       component.onRuleCreated(mockRule);
       await Promise.resolve();
       await Promise.resolve();
-      expect(consoleSpy).toHaveBeenCalledWith(
-        '[HAR Mock] Rule eklenemedi:',
-        expect.any(Error),
-      );
+      expect(consoleSpy).toHaveBeenCalledWith('[HAR Mock] Rule eklenemedi:', expect.any(Error));
       consoleSpy.mockRestore();
     });
   });
@@ -508,7 +505,8 @@ describe('ControlsTabComponent', () => {
     it('should show badge as "0" when no active rules', () => {
       mockMessagingService.state.set(makeStateSyncPayload({ activeRules: [] }));
       fixture.detectChanges();
-      expect(component.activeRules().length.toString()).toBe('0');
+      expect(component.activeRulesBadge()).toBe('0');
+      expect(component.activeRulesBadgeVariant()).toBe('default');
     });
 
     it('should show badge count matching activeRules length', () => {
@@ -536,8 +534,8 @@ describe('ControlsTabComponent', () => {
       ];
       mockMessagingService.state.set(makeStateSyncPayload({ activeRules: rules }));
       fixture.detectChanges();
-      expect(component.activeRules().length.toString()).toBe('2');
+      expect(component.activeRulesBadge()).toBe('2');
+      expect(component.activeRulesBadgeVariant()).toBe('info');
     });
   });
 });
-

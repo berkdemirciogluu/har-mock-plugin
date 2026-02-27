@@ -28,6 +28,7 @@ export class HmRuleFormComponent {
 
   // Validation signals (Subtask 1.4)
   readonly urlPatternError = signal<string>('');
+  readonly statusCodeError = signal<string>('');
   readonly jsonValid = signal<boolean>(true);
 
   // onSave metodu (Subtask 1.5)
@@ -35,6 +36,13 @@ export class HmRuleFormComponent {
     // URL pattern boş kontrolü
     if (!this.urlPattern().trim()) {
       this.urlPatternError.set('URL pattern zorunludur');
+      return;
+    }
+
+    // Status code aralık kontrolü
+    const code = this.statusCode();
+    if (code < 100 || code > 599) {
+      this.statusCodeError.set('Status code 100-599 arasında olmalıdır');
       return;
     }
 
@@ -66,6 +74,7 @@ export class HmRuleFormComponent {
     this.responseBody.set('{\n  \n}');
     this.delay.set(0);
     this.urlPatternError.set('');
+    this.statusCodeError.set('');
     this.jsonValid.set(true);
     this.showForm.set(false);
   }
@@ -77,8 +86,8 @@ export class HmRuleFormComponent {
   }
 
   // URL pattern input handler — validation error'ı temizle
-  onUrlPatternInput(value: string): void {
-    this.urlPattern.set(value);
+  onUrlPatternInput(event: Event): void {
+    this.urlPattern.set((event.target as HTMLInputElement).value);
     this.urlPatternError.set('');
   }
 
@@ -91,11 +100,18 @@ export class HmRuleFormComponent {
   onStatusCodeChange(event: Event): void {
     const val = parseInt((event.target as HTMLInputElement).value, 10);
     this.statusCode.set(isNaN(val) ? 200 : val);
+    this.statusCodeError.set('');
   }
 
   // Delay change handler
   onDelayChange(event: Event): void {
     const val = parseInt((event.target as HTMLInputElement).value, 10);
     this.delay.set(isNaN(val) ? 0 : val);
+  }
+
+  // Form submit handler — Enter tuşu desteği
+  onSubmit(event: Event): void {
+    event.preventDefault();
+    this.onSave();
   }
 }

@@ -21,6 +21,7 @@ class MockHmJsonEditorComponent {
   readonly value = input<string>('');
   readonly isReadOnly = input<boolean>(false);
   readonly valueChange = output<string>();
+  readonly jsonValidityChange = output<boolean>();
 }
 
 describe('HmRuleFormComponent', () => {
@@ -188,8 +189,8 @@ describe('HmRuleFormComponent', () => {
     // Önce hata oluştur
     component.urlPatternError.set('URL pattern zorunludur');
     // Sonra URL gir
-    component.urlPattern.set('/api/test');
-    component.onUrlPatternInput('/api/test');
+    const event = { target: { value: '/api/test' } } as unknown as Event;
+    component.onUrlPatternInput(event);
     fixture.detectChanges();
 
     expect(component.urlPatternError()).toBe('');
@@ -208,5 +209,136 @@ describe('HmRuleFormComponent', () => {
     component.onSave();
 
     expect(emittedRules.length).toBe(0);
+  });
+
+  // Fix #3: Event handler tests — coverage for onMethodChange, onStatusCodeChange, onDelayChange
+  describe('event handlers', () => {
+    it('should update method when onMethodChange is called', () => {
+      const event = { target: { value: 'POST' } } as unknown as Event;
+      component.onMethodChange(event);
+      expect(component.method()).toBe('POST');
+    });
+
+    it('should update method to DELETE', () => {
+      const event = { target: { value: 'DELETE' } } as unknown as Event;
+      component.onMethodChange(event);
+      expect(component.method()).toBe('DELETE');
+    });
+
+    it('should update statusCode when onStatusCodeChange is called', () => {
+      const event = { target: { value: '404' } } as unknown as Event;
+      component.onStatusCodeChange(event);
+      expect(component.statusCode()).toBe(404);
+    });
+
+    it('should default statusCode to 200 for NaN input', () => {
+      const event = { target: { value: 'abc' } } as unknown as Event;
+      component.onStatusCodeChange(event);
+      expect(component.statusCode()).toBe(200);
+    });
+
+    it('should clear statusCodeError on status code change', () => {
+      component.statusCodeError.set('Status code 100-599 arasında olmalıdır');
+      const event = { target: { value: '200' } } as unknown as Event;
+      component.onStatusCodeChange(event);
+      expect(component.statusCodeError()).toBe('');
+    });
+
+    it('should update delay when onDelayChange is called', () => {
+      const event = { target: { value: '500' } } as unknown as Event;
+      component.onDelayChange(event);
+      expect(component.delay()).toBe(500);
+    });
+
+    it('should default delay to 0 for NaN input', () => {
+      const event = { target: { value: '' } } as unknown as Event;
+      component.onDelayChange(event);
+      expect(component.delay()).toBe(0);
+    });
+
+    it('should update URL pattern via onUrlPatternInput event', () => {
+      const event = { target: { value: '/api/new' } } as unknown as Event;
+      component.onUrlPatternInput(event);
+      expect(component.urlPattern()).toBe('/api/new');
+    });
+  });
+
+  // Fix #4: Status code range validation
+  describe('status code range validation', () => {
+    it('should show error and NOT emit when status code is below 100', () => {
+      const emittedRules: MockRule[] = [];
+      component.ruleCreated.subscribe((rule: MockRule) => emittedRules.push(rule));
+
+      component.showForm.set(true);
+      component.urlPattern.set('/api/test');
+      component.statusCode.set(50);
+      fixture.detectChanges();
+
+      component.onSave();
+
+      expect(component.statusCodeError()).toBe('Status code 100-599 arasında olmalıdır');
+      expect(emittedRules.length).toBe(0);
+    });
+
+    it('should show error and NOT emit when status code is above 599', () => {
+      const emittedRules: MockRule[] = [];
+      component.ruleCreated.subscribe((rule: MockRule) => emittedRules.push(rule));
+
+      component.showForm.set(true);
+      component.urlPattern.set('/api/test');
+      component.statusCode.set(700);
+      fixture.detectChanges();
+
+      component.onSave();
+
+      expect(component.statusCodeError()).toBe('Status code 100-599 arasında olmalıdır');
+      expect(emittedRules.length).toBe(0);
+    });
+
+    it('should accept status code at boundary 100', () => {
+      const emittedRules: MockRule[] = [];
+      component.ruleCreated.subscribe((rule: MockRule) => emittedRules.push(rule));
+
+      component.showForm.set(true);
+      component.urlPattern.set('/api/test');
+      component.statusCode.set(100);
+      fixture.detectChanges();
+
+      component.onSave();
+
+      expect(component.statusCodeError()).toBe('');
+      expect(emittedRules.length).toBe(1);
+    });
+
+    it('should accept status code at boundary 599', () => {
+      const emittedRules: MockRule[] = [];
+      component.ruleCreated.subscribe((rule: MockRule) => emittedRules.push(rule));
+
+      component.showForm.set(true);
+      component.urlPattern.set('/api/test');
+      component.statusCode.set(599);
+      fixture.detectChanges();
+
+      component.onSave();
+
+      expect(component.statusCodeError()).toBe('');
+      expect(emittedRules.length).toBe(1);
+    });
+  });
+
+  // Fix #6: Form submit handler
+  describe('onSubmit', () => {
+    it('should prevent default and call onSave', () => {
+      component.showForm.set(true);
+      component.urlPattern.set('/api/submit-test');
+      fixture.detectChanges();
+
+      const event = { preventDefault: jest.fn() } as unknown as Event;
+      const saveSpy = jest.spyOn(component, 'onSave');
+      component.onSubmit(event);
+
+      expect(event.preventDefault).toHaveBeenCalled();
+      expect(saveSpy).toHaveBeenCalled();
+    });
   });
 });

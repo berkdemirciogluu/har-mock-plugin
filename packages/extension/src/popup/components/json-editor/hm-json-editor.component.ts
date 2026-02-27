@@ -32,6 +32,9 @@ export class HmJsonEditorComponent {
   // Signal-based output (AC: #5)
   readonly valueChange = output<string>();
 
+  // JSON validity output — emits true/false on every doc change
+  readonly jsonValidityChange = output<boolean>();
+
   // ViewChild signal reference to editor container DOM element (AC: #5)
   private readonly editorContainer = viewChild<ElementRef<HTMLElement>>('editorContainer');
 
@@ -115,15 +118,19 @@ export class HmJsonEditorComponent {
         ]),
         // Compartment: controls theme (including cursor visibility)
         this.themeCompartment.of(this.buildTheme(isReadOnly)),
-        // Listener: emit valueChange only for valid JSON (AC: #3)
+        // Listener: emit valueChange only for valid JSON (AC: #3), emit jsonValidityChange always
         EditorView.updateListener.of((update) => {
           if (!update.docChanged) return;
           const content = update.state.doc.toString();
           try {
             JSON.parse(content);
-            this.ngZone.run(() => this.valueChange.emit(content));
+            this.ngZone.run(() => {
+              this.jsonValidityChange.emit(true);
+              this.valueChange.emit(content);
+            });
           } catch {
-            // Invalid JSON — do not emit (AC: #3)
+            // Invalid JSON — do not emit valueChange (AC: #3)
+            this.ngZone.run(() => this.jsonValidityChange.emit(false));
           }
         }),
       ],

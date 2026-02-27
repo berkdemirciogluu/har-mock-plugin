@@ -107,14 +107,19 @@ function getEditorViewMockInstance(): MockEditorViewInstance | undefined {
     [value]="value"
     [isReadOnly]="readOnly"
     (valueChange)="onValueChange($event)"
+    (jsonValidityChange)="onJsonValidityChange($event)"
   />`,
 })
 class TestHostComponent {
   value = '{}';
   readOnly = false;
   lastEmitted: string | null = null;
+  lastValidity: boolean | null = null;
   onValueChange(v: string): void {
     this.lastEmitted = v;
+  }
+  onJsonValidityChange(valid: boolean): void {
+    this.lastValidity = valid;
   }
 }
 
@@ -287,6 +292,56 @@ describe('HmJsonEditorComponent', () => {
       updateListener({ docChanged: false, state: { doc: { toString: () => '{}' } } });
 
       expect(host.lastEmitted).toBeNull();
+    });
+  });
+
+  // ── jsonValidityChange output ──────────────────────────────────────────────
+  describe('jsonValidityChange output', () => {
+    const getCapturedListener2 = () =>
+      (MockEditorView as unknown as Record<string, unknown>)['_capturedUpdateListener'] as
+        | ((u: Record<string, unknown>) => void)
+        | undefined;
+
+    it('should emit true for valid JSON', () => {
+      const updateListener = getCapturedListener2();
+      expect(updateListener).toBeDefined();
+      if (!updateListener) return;
+
+      host.lastValidity = null;
+
+      updateListener({
+        docChanged: true,
+        state: { doc: { toString: () => '{"valid": true}' } },
+      });
+
+      expect(host.lastValidity).toBe(true);
+    });
+
+    it('should emit false for invalid JSON', () => {
+      const updateListener = getCapturedListener2();
+      expect(updateListener).toBeDefined();
+      if (!updateListener) return;
+
+      host.lastValidity = null;
+
+      updateListener({
+        docChanged: true,
+        state: { doc: { toString: () => '{invalid' } },
+      });
+
+      expect(host.lastValidity).toBe(false);
+    });
+
+    it('should NOT emit when doc has not changed', () => {
+      const updateListener = getCapturedListener2();
+      expect(updateListener).toBeDefined();
+      if (!updateListener) return;
+
+      host.lastValidity = null;
+
+      updateListener({ docChanged: false, state: { doc: { toString: () => '{}' } } });
+
+      expect(host.lastValidity).toBeNull();
     });
   });
 

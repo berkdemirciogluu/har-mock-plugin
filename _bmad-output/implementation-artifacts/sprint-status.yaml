@@ -80,7 +80,7 @@ development_status:
 
     # Epic 4: Chrome Extension — Rule-Based Mock
     epic-4: in-progress                                                  # SCRUM-8
-    4-1-rule-form-ui-yeni-rule-olusturma: review                          # SCRUM-26
+    4-1-rule-form-ui-yeni-rule-olusturma: done                             # SCRUM-26
     4-2-rule-list-ui-listeleme-duzenleme-silme: backlog                  # SCRUM-27
     4-3-rule-first-priority-chain-harsiz-calisma-integration: backlog    # SCRUM-28
     epic-4-retrospective: optional
