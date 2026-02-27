@@ -182,8 +182,10 @@ export class ControlsTabComponent {
   }
 
   // Subtask 4.3 — edit isteniyor: editingRule'u ayarla (form otomatik prefill olur)
+  // Spread ile yeni obje referansı oluşturuluyor → aynı rule için tekrar edit
+  // tıklandığında effect() her zaman tetiklenir (M2 edge case fix)
   onEditRuleRequested(rule: MockRule): void {
-    this.editingRule.set(rule);
+    this.editingRule.set({ ...rule });
   }
 
   // Subtask 4.4 — rule güncellendi: UPDATE_RULE mesajı gönder, edit modundan çık

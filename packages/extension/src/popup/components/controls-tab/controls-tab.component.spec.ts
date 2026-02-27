@@ -563,6 +563,20 @@ describe('ControlsTabComponent', () => {
       expect(component.editingRule()).toBeNull();
     });
 
+    // M2: Aynı rule için tekrar onEditRuleRequested çağrıldığında editingRule referansı değişmeli
+    it('should always set a new object reference for editingRule (M2 edge case fix)', () => {
+      component.onEditRuleRequested(mockRule);
+      const firstRef = component.editingRule();
+
+      // Aynı rule ile tekrar çağrılınca yeni spread referansı üretilmeli
+      component.onEditRuleRequested(mockRule);
+      const secondRef = component.editingRule();
+
+      // Değerler eşit ama referanslar farklı olmalı (spread garantisi)
+      expect(secondRef).toEqual(firstRef);
+      expect(secondRef).not.toBe(firstRef); // farklı referans → effect() tetiklenir
+    });
+
     // Subtask 5.12 — onRuleUpdated çağrıldığında UPDATE_RULE mesajı doğru payload ile gönderilmeli ve editingRule null olmalı
     it('should send UPDATE_RULE message and set editingRule to null when onRuleUpdated is called', async () => {
       component.editingRule.set(mockRule);

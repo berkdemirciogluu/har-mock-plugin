@@ -1,6 +1,6 @@
 # Story 4.2: Rule List UI — Listeleme, Düzenleme & Silme
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -555,6 +555,7 @@ Claude Sonnet 4.6 (GitHub Copilot)
 - `[class]="'static ' + (value | pipe)"` pattern'ı ile NgClass import'u gerekmeden dinamik class binding yapıldı
 - STATE_SYNC push: `UPDATE_RULE` ve `DELETE_RULE` handler'larından sonra popup port'una push yapılmadığını keşfedildi; `portManager.getPopupPort()?.postMessage()` ile düzeltildi
 - Boş rule listesi için `@if (!showForm() && !isEditMode())` kontrolü eklendi — edit mode aktifken "Yeni Rule Ekle" butonu gizlenir
+- Code Review (2026-02-27): 6 issue düzeltildi — H1 ADD_RULE STATE_SYNC, H2 pipe testleri, M1 silme onayı, M2 spread fix, L1 @for @empty, L2 aria-label
 
 ### Completion Notes List
 
@@ -562,8 +563,13 @@ Claude Sonnet 4.6 (GitHub Copilot)
 - ✅ `StatusColorPipe` ve `MethodBadgePipe` pure pipe'ları oluşturuldu — template'te fonksiyon çağrısı yasağına uygun
 - ✅ `hm-rule-form` edit mode için genişletildi: `editRule` input, `ruleUpdated` output, `effect()` ile prefill, `isEditMode` computed, `onSave()` updated
 - ✅ `ControlsTabComponent` güncellendi: `HmRuleListComponent` import, `editingRule` signal, 3 yeni handler (onEditRuleRequested, onRuleUpdated, onRuleDeleted), template güncellendi
-- ✅ `message-handler.ts`: `UPDATE_RULE` ve `DELETE_RULE` sonrası popup'a `STATE_SYNC` push eklendi — reaktif UI
-- ✅ 97 yeni test yazıldı; toplam 455/455 test geçti, 0 regresyon
+- ✅ `message-handler.ts`: `ADD_RULE`, `UPDATE_RULE` ve `DELETE_RULE` sonrası popup'a `STATE_SYNC` push eklendi — reaktif UI
+- ✅ `StatusColorPipe` ve `MethodBadgePipe` için unit test dosyaları oluşturuldu (22 yeni test)
+- ✅ `hm-rule-list`: inline silme onayı (`pendingDeleteId` signal) — tek tıkla silme engellendi
+- ✅ `onEditRuleRequested`: spread ile yeni referans — aynı rule tekrar edit edge case fix
+- ✅ `@for @empty` Angular 17+ idiomatik sözdizimi — iki ayrı `@if` yerine
+- ✅ `<li>` aria-label method+url+statusCode içeriyor
+- ✅ 37 yeni test yazıldı; toplam 492/492 test geçti, 0 regresyon
 
 ### File List
 
@@ -580,6 +586,13 @@ Claude Sonnet 4.6 (GitHub Copilot)
 - `packages/extension/src/popup/components/rule-form/hm-rule-form.component.spec.ts`
 - `packages/extension/src/popup/components/controls-tab/controls-tab.component.ts`
 - `packages/extension/src/popup/components/controls-tab/controls-tab.component.spec.ts`
+- `packages/extension/src/popup/components/rule-list/hm-rule-list.component.ts` *(code review fix)*
+- `packages/extension/src/popup/components/rule-list/hm-rule-list.component.html` *(code review fix)*
+- `packages/extension/src/popup/components/rule-list/hm-rule-list.component.spec.ts` *(code review fix)*
 - `packages/extension/src/background/message-handler.ts`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
 - `_bmad-output/implementation-artifacts/4-2-rule-list-ui-listeleme-duzenleme-silme.md`
+
+**Code Review sonrası eklenen dosyalar:**
+- `packages/extension/src/popup/pipes/status-color.pipe.spec.ts`
+- `packages/extension/src/popup/pipes/method-badge.pipe.spec.ts`

@@ -1,52 +1,46 @@
-<!-- Boş durum mesajı — rules yokken göster (Subtask 2.1, AC #4) -->
-@if (rules().length === 0) {
-  <p class="py-4 text-center text-xs text-slate-400" data-testid="empty-state-message">
-    Henüz rule tanımlanmadı. 'Yeni Rule Ekle' butonuyla başlayın.
-  </p>
-}
-
-<!-- Liste — rules varken göster (Subtask 2.2, AC #1) -->
-@if (rules().length > 0) {
-  <ul class="mb-2 space-y-1" role="list" aria-label="Aktif rule listesi">
-    @for (rule of rules(); track rule.id) {
-      <li
-        class="flex items-center gap-2 rounded border border-slate-200 bg-white px-2 py-1.5 text-xs"
-        [attr.aria-label]="rule.urlPattern + ' kuralı'"
-        data-testid="rule-item"
+<!-- Liste — @for @empty ile Angular 17+ idiomatik pattern (L1 fix) -->
+<ul class="mb-2 space-y-1" role="list" aria-label="Aktif rule listesi">
+  @for (rule of rules(); track rule.id) {
+    <li
+      class="flex items-center gap-2 rounded border border-slate-200 bg-white px-2 py-1.5 text-xs"
+      [attr.aria-label]="rule.method + ' ' + rule.urlPattern + ' — HTTP ' + rule.statusCode"
+      data-testid="rule-item"
+    >
+      <!-- HTTP Method badge (Subtask 2.2) -->
+      <span
+        [class]="
+          'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase ' +
+          (rule.method | methodBadge)
+        "
+        data-testid="rule-method"
       >
-        <!-- HTTP Method badge (Subtask 2.2) -->
-        <span
-          [class]="
-            'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase ' +
-            (rule.method | methodBadge)
-          "
-          data-testid="rule-method"
-        >
-          {{ rule.method }}
-        </span>
+        {{ rule.method }}
+      </span>
 
-        <!-- URL pattern — uzun pattern'larda truncate (Subtask 2.2) -->
-        <span
-          class="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-slate-700"
-          [title]="rule.urlPattern"
-          data-testid="rule-url-pattern"
-        >
-          {{ rule.urlPattern }}
-        </span>
+      <!-- URL pattern — uzun pattern'larda truncate (Subtask 2.2) -->
+      <span
+        class="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-slate-700"
+        [title]="rule.urlPattern"
+        data-testid="rule-url-pattern"
+      >
+        {{ rule.urlPattern }}
+      </span>
 
-        <!-- Status code — renk kodlaması (Subtask 2.2) -->
-        <span
-          [class]="'shrink-0 font-medium ' + (rule.statusCode | statusColor)"
-          data-testid="rule-status-code"
-        >
-          {{ rule.statusCode }}
-        </span>
+      <!-- Status code — renk kodlaması (Subtask 2.2) -->
+      <span
+        [class]="'shrink-0 font-medium ' + (rule.statusCode | statusColor)"
+        data-testid="rule-status-code"
+      >
+        {{ rule.statusCode }}
+      </span>
 
-        <!-- Delay — sadece > 0 ise göster (Subtask 2.2) -->
-        @if (rule.delay > 0) {
-          <span class="shrink-0 text-slate-400" data-testid="rule-delay"> {{ rule.delay }}ms </span>
-        }
+      <!-- Delay — sadece > 0 ise göster (Subtask 2.2) -->
+      @if (rule.delay > 0) {
+        <span class="shrink-0 text-slate-400" data-testid="rule-delay"> {{ rule.delay }}ms </span>
+      }
 
+      <!-- Silme onayı aktif değilken: normal düzenle/sil butonları (M1 fix) -->
+      @if (pendingDeleteId() !== rule.id) {
         <!-- Düzenle butonu (Subtask 2.2, AC #2) -->
         <button
           type="button"
@@ -90,7 +84,37 @@
             />
           </svg>
         </button>
-      </li>
-    }
-  </ul>
-}
+      } @else {
+        <!-- Silme onayı — M1 fix: inline confirm/cancel -->
+        <span class="shrink-0 text-[10px] text-slate-500" data-testid="delete-confirm-label"
+          >Emin misin?</span
+        >
+        <button
+          type="button"
+          aria-label="Silmeyi onayla"
+          class="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold text-white transition-colors bg-red-500 hover:bg-red-600"
+          data-testid="confirm-delete-button"
+          (click)="onConfirmDelete(rule.id)"
+        >
+          Sil
+        </button>
+        <button
+          type="button"
+          aria-label="Silmeyi iptal et"
+          class="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 transition-colors bg-slate-200 hover:bg-slate-300"
+          data-testid="cancel-delete-button"
+          (click)="onCancelDelete()"
+        >
+          İptal
+        </button>
+      }
+    </li>
+  } @empty {
+    <!-- Boş durum mesajı — @for @empty ile (L1 fix, AC #4) -->
+    <li>
+      <p class="py-4 text-center text-xs text-slate-400" data-testid="empty-state-message">
+        Henüz rule tanımlanmadı. 'Yeni Rule Ekle' butonuyla başlayın.
+      </p>
+    </li>
+  }
+</ul>

@@ -314,6 +314,11 @@ async function handleMessageAsync(
           payload: { success: true },
           requestId: message.requestId,
         });
+        // Reaktif UI: güncel state'i popup'a push et
+        portManager.getPopupPort()?.postMessage({
+          type: MessageType.STATE_SYNC,
+          payload: stateManager.getFullState(),
+        });
       } catch (error: unknown) {
         const errorMsg = error instanceof Error ? error.message : 'Unknown error';
         port.postMessage({

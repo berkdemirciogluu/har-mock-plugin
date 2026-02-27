@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
 import type { MockRule } from '@har-mock/core';
 import { StatusColorPipe } from '../../pipes/status-color.pipe';
 import { MethodBadgePipe } from '../../pipes/method-badge.pipe';
@@ -18,13 +18,28 @@ export class HmRuleListComponent {
   readonly editRuleRequested = output<MockRule>();
   readonly deleteRuleRequested = output<string>();
 
+  // M1: Silme onayı için bekleyen ruleId — null = onay yok
+  readonly pendingDeleteId = signal<string | null>(null);
+
   // Subtask 1.4 — Edit butonuna tıklanınca üst component'e sinyal gönder
   onEditClick(rule: MockRule): void {
+    this.pendingDeleteId.set(null); // Açık onay varsa kapat
     this.editRuleRequested.emit(rule);
   }
 
-  // Subtask 1.5 — Sil butonuna tıklanınca üst component'e ruleId gönder
+  // M1: İlk tıklamada onay iste
   onDeleteClick(ruleId: string): void {
+    this.pendingDeleteId.set(ruleId);
+  }
+
+  // M1: Onaylandı — gerçekten sil
+  onConfirmDelete(ruleId: string): void {
+    this.pendingDeleteId.set(null);
     this.deleteRuleRequested.emit(ruleId);
+  }
+
+  // M1: İptal — onayı kapat
+  onCancelDelete(): void {
+    this.pendingDeleteId.set(null);
   }
 }
