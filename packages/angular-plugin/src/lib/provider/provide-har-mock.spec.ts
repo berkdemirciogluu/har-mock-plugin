@@ -28,12 +28,13 @@ const mockIsDevMode = isDevMode as jest.Mock;
 describe('provideHarMock', () => {
   afterEach(() => {
     mockIsDevMode.mockReturnValue(true);
-    // Bekleyen HAR yükleme isteklerini flush et — "Cannot log after tests are done" önler
+    // Bekleyen HAR yükleme isteklerini flush et, ardından beklenmeyen request yoksa doğrula
     try {
       const ctrl = TestBed.inject(HttpTestingController);
       ctrl.match(() => true).forEach((req) => req.flush('{}'));
+      ctrl.verify();
     } catch {
-      // HttpTestingController yoksa (sadece provideHarMock() çağrısını test eden testler) geç
+      // HttpTestingController mevcut değilse (ör. provideHarMock() döndürdüğü değeri kontrol eden test) geç
     }
     TestBed.resetTestingModule();
   });
@@ -44,7 +45,7 @@ describe('provideHarMock', () => {
   });
 
   it('should apply zero-config defaults when called with no arguments (AC2)', () => {
-    TestBed.configureTestingModule({ providers: [provideHarMock(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({ teardown: { destroyAfterEach: true }, providers: [provideHarMock(), provideHttpClientTesting()] });
     const config = TestBed.inject(HAR_MOCK_CONFIG);
     expect(config.harUrl).toBe('/assets/har-mock.har');
     expect(config.mode).toBe('last-match');
@@ -65,6 +66,7 @@ describe('provideHarMock', () => {
       enabled: true,
     };
     TestBed.configureTestingModule({
+      teardown: { destroyAfterEach: true },
       providers: [
         provideHarMock({
           harUrl: '/assets/custom.har',
@@ -87,6 +89,7 @@ describe('provideHarMock', () => {
 
   it('should merge partial config with defaults (AC2+AC3)', () => {
     TestBed.configureTestingModule({
+      teardown: { destroyAfterEach: true },
       providers: [provideHarMock({ harUrl: '/custom.har' }), provideHttpClientTesting()],
     });
     const config = TestBed.inject(HAR_MOCK_CONFIG);
@@ -99,6 +102,7 @@ describe('provideHarMock', () => {
 
   it('should preserve enabled=false without falling back to default (boolean edge case)', () => {
     TestBed.configureTestingModule({
+      teardown: { destroyAfterEach: true },
       providers: [provideHarMock({ enabled: false }), provideHttpClientTesting()],
     });
     const config = TestBed.inject(HAR_MOCK_CONFIG);
@@ -112,6 +116,7 @@ describe('provideHarMock', () => {
 
   it('should preserve bypassGuards=true without affecting other defaults', () => {
     TestBed.configureTestingModule({
+      teardown: { destroyAfterEach: true },
       providers: [provideHarMock({ bypassGuards: true }), provideHttpClientTesting()],
     });
     const config = TestBed.inject(HAR_MOCK_CONFIG);
@@ -152,6 +157,20 @@ describe('provideHarMock', () => {
     controller.verify();
   });
 
+  it('isDevMode()=false && enabled=false olduğunda APP_INITIALIZER HAR fetch yapmamalı (guard kombinasyonu)', async () => {
+    mockIsDevMode.mockReturnValue(false);
+    TestBed.configureTestingModule({
+      teardown: { destroyAfterEach: true },
+      providers: [provideHarMock({ enabled: false }), provideHttpClientTesting()],
+    });
+
+    await TestBed.inject(ApplicationInitStatus).donePromise;
+
+    const controller = TestBed.inject(HttpTestingController);
+    controller.expectNone('/assets/har-mock.har');
+    controller.verify();
+  });
+
   it('isDevMode()=true && enabled=true olduğunda APP_INITIALIZER HAR fetch yapmalı (AC3)', async () => {
     TestBed.configureTestingModule({
       teardown: { destroyAfterEach: true },
@@ -161,6 +180,8 @@ describe('provideHarMock', () => {
     const controller = TestBed.inject(HttpTestingController);
     const donePromise = TestBed.inject(ApplicationInitStatus).donePromise;
 
+    // APP_INITIALIZER HTTP request'i TestBed başlatıldığında synchronous olarak sıraya girer;
+    // bu nedenle await donePromise'den önce expectOne güvenle çağrılabilir
     const req = controller.expectOne('/assets/har-mock.har');
     req.flush('{}');
 

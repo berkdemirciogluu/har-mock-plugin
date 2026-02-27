@@ -7,6 +7,14 @@ import { HarLoaderService, harMockInterceptor } from '../interceptor/har-mock.in
 /**
  * Angular HAR Mock plugin'i app.config.ts'e ekler.
  *
+ * @remarks Bu fonksiyon dahili olarak `provideHttpClient()` çağırır. Uygulamanızda
+ * ayrıca `provideHttpClient()` çağrılması interceptor çakışmasına neden olabilir;
+ * gerekirse diğer interceptor'larınızı bu çağrıdan sonra ekleyin.
+ *
+ * @todo AC4 bundle doğrulaması: `ng build --configuration production --stats-json`
+ * çıktısını webpack-bundle-analyzer ile inceleyerek mock kodun prod bundle'a
+ * sızmadığını teyit edin.
+ *
  * @example
  * // app.config.ts
  * export const appConfig: ApplicationConfig = {

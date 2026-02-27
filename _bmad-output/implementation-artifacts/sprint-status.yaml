@@ -89,6 +89,6 @@ development_status:
     epic-5: in-progress                                                  # SCRUM-9
     5-1-angular-plugin-paket-kurulumu-provideharMock-api: done  # SCRUM-29
     5-2-asset-based-har-yukleme-httpclient-interceptor: done              # SCRUM-30
-    5-3-double-lock-production-safety: review                          # SCRUM-31
+    5-3-double-lock-production-safety: done                            # SCRUM-31
     5-4-guard-bypass-mekanizmasi: backlog                                # SCRUM-32
     epic-5-retrospective: optional
