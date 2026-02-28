@@ -40,14 +40,18 @@ function connectToBackground(): chrome.runtime.Port | null {
 
     newPort.onDisconnect.addListener(() => {
       port = null;
-      // chrome.runtime.lastError varsa extension context geçersiz olmuş olabilir
-      if (chrome.runtime.lastError) {
+      // chrome.runtime.lastError erişimi kendisi de throw edebilir — try/catch sarılı
+      try {
+        if (chrome.runtime.lastError) {
+          contextInvalidated = true;
+          console.warn('[HAR Mock] Extension context invalidated — reconnect disabled');
+        } else {
+          console.log(
+            '[HAR Mock] Content script port disconnected (SW idle) — will reconnect on next request',
+          );
+        }
+      } catch {
         contextInvalidated = true;
-        console.warn('[HAR Mock] Extension context invalidated — reconnect disabled');
-      } else {
-        console.log(
-          '[HAR Mock] Content script port disconnected (SW idle) — will reconnect on next request',
-        );
       }
     });
 
