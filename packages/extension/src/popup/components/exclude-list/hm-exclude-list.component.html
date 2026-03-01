@@ -4,8 +4,8 @@
     <input
       type="text"
       class="flex-1 rounded border border-slate-300 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      placeholder="URL pattern (örn: /api/auth)"
-      aria-label="Yeni exclude pattern gir"
+      [placeholder]="placeholder()"
+      [attr.aria-label]="inputAriaLabel()"
       [value]="newPattern()"
       (input)="onNewPatternInput($event)"
       (keydown.enter)="addPattern()"
@@ -45,7 +45,7 @@
   } @else {
     <!-- Empty state -->
     <p class="text-xs text-slate-400 italic">
-      Exclude listesi boş. Tüm eşleşen endpoint'ler mock'lanıyor.
+      {{ emptyMessage() }}
     </p>
   }
 </div>

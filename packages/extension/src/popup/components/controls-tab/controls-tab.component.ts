@@ -103,6 +103,16 @@ import type { MockRule } from '@har-mock/core';
             (excludeListChange)="onExcludeListChange($event)"
           />
         </div>
+        <div class="mt-3">
+          <p class="mb-1 text-xs font-medium text-slate-500">Domain Filter</p>
+          <hm-exclude-list
+            [excludeList]="domainFilter()"
+            (excludeListChange)="onDomainFilterChange($event)"
+            placeholder="Domain (örn: api.example.com veya 15.237.105.224:8080)"
+            inputAriaLabel="Yeni domain gir"
+            emptyMessage="Domain filter boş. Tüm domain'lerdeki istekler mock'lanıyor."
+          />
+        </div>
 
         <!-- Tümünü Sıfırla -->
         <div class="mt-4 border-t border-slate-200 pt-3">
@@ -190,6 +200,9 @@ export class ControlsTabComponent {
   readonly excludeList = computed<readonly string[]>(
     () => this.messaging.state()?.settings?.excludeList ?? [],
   );
+  readonly domainFilter = computed<readonly string[]>(
+    () => this.messaging.state()?.settings?.domainFilter ?? [],
+  );
 
   onReplayModeChange(mode: ReplayMode): void {
     const payload: UpdateSettingsPayload = { settings: { replayMode: mode } };
@@ -224,6 +237,15 @@ export class ControlsTabComponent {
       .sendMessage(MessageType.UPDATE_SETTINGS, payload, crypto.randomUUID())
       .catch((err: unknown) => {
         console.error('[HAR Mock] Exclude list güncellenemedi:', err);
+      });
+  }
+
+  onDomainFilterChange(list: readonly string[]): void {
+    const payload: UpdateSettingsPayload = { settings: { domainFilter: list } };
+    void this.messaging
+      .sendMessage(MessageType.UPDATE_SETTINGS, payload, crypto.randomUUID())
+      .catch((err: unknown) => {
+        console.error('[HAR Mock] Domain filter güncellenemedi:', err);
       });
   }
 

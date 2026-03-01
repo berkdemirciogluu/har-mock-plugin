@@ -19,6 +19,8 @@ const makeStateSyncPayload = (overrides: Partial<StateSyncPayload> = {}): StateS
     replayMode: 'last-match',
     timingReplay: false,
     excludeList: [],
+    resourceTypeFilter: ['xhr', 'fetch'],
+    domainFilter: [],
   },
   editedResponses: {},
   matchHistory: [],
@@ -149,6 +151,8 @@ describe('ControlsTabComponent', () => {
             replayMode: 'sequential',
             timingReplay: false,
             excludeList: [],
+            resourceTypeFilter: ['xhr', 'fetch'],
+            domainFilter: [],
           },
         }),
       );
@@ -182,6 +186,8 @@ describe('ControlsTabComponent', () => {
             replayMode: 'last-match',
             timingReplay: false,
             excludeList: [],
+            resourceTypeFilter: ['xhr', 'fetch'],
+            domainFilter: [],
           },
         }),
       );
@@ -272,6 +278,8 @@ describe('ControlsTabComponent', () => {
             replayMode: 'last-match',
             timingReplay: true,
             excludeList: [],
+            resourceTypeFilter: ['xhr', 'fetch'],
+            domainFilter: [],
           },
         }),
       );
@@ -306,6 +314,8 @@ describe('ControlsTabComponent', () => {
             replayMode: 'last-match',
             timingReplay: true,
             excludeList: [],
+            resourceTypeFilter: ['xhr', 'fetch'],
+            domainFilter: [],
           },
         }),
       );
@@ -351,6 +361,8 @@ describe('ControlsTabComponent', () => {
             replayMode: 'last-match',
             timingReplay: false,
             excludeList: ['/api/auth', '/api/health'],
+            resourceTypeFilter: ['xhr', 'fetch'],
+            domainFilter: [],
           },
         }),
       );

@@ -368,4 +368,34 @@ describe('parseHar', () => {
     const result = parseHar(JSON.stringify(har));
     expect(result.entries[0]!.method).toBe('PROPFIND');
   });
+
+  // _resourceType extraction from Chrome DevTools HAR export
+  it('should extract _resourceType from HAR entry when present', () => {
+    const har = structuredClone(VALID_HAR_MINIMAL);
+    (har.log.entries[0] as Record<string, unknown>)['_resourceType'] = 'xhr';
+
+    const result = parseHar(JSON.stringify(har));
+    expect(result.entries[0]!.resourceType).toBe('xhr');
+  });
+
+  it('should extract fetch _resourceType from HAR entry', () => {
+    const har = structuredClone(VALID_HAR_MINIMAL);
+    (har.log.entries[0] as Record<string, unknown>)['_resourceType'] = 'fetch';
+
+    const result = parseHar(JSON.stringify(har));
+    expect(result.entries[0]!.resourceType).toBe('fetch');
+  });
+
+  it('should leave resourceType undefined when _resourceType is missing', () => {
+    const result = parseHar(JSON.stringify(VALID_HAR_MINIMAL));
+    expect(result.entries[0]!.resourceType).toBeUndefined();
+  });
+
+  it('should extract non-xhr/fetch _resourceType values', () => {
+    const har = structuredClone(VALID_HAR_MINIMAL);
+    (har.log.entries[0] as Record<string, unknown>)['_resourceType'] = 'document';
+
+    const result = parseHar(JSON.stringify(har));
+    expect(result.entries[0]!.resourceType).toBe('document');
+  });
 });

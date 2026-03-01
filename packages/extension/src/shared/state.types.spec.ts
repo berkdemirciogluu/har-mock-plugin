@@ -28,6 +28,8 @@ describe('state.types — type compatibility', () => {
       replayMode: 'sequential',
       timingReplay: false,
       excludeList: [],
+      resourceTypeFilter: ['xhr', 'fetch'],
+      domainFilter: [],
     };
     expect(settings.replayMode).toBe('sequential');
   });
@@ -38,6 +40,8 @@ describe('state.types — type compatibility', () => {
       replayMode: 'last-match',
       timingReplay: true,
       excludeList: ['example.com'],
+      resourceTypeFilter: ['xhr', 'fetch'],
+      domainFilter: [],
     };
     expect(settings.replayMode).toBe('last-match');
   });
@@ -79,6 +83,8 @@ describe('state.types — type compatibility', () => {
         replayMode: 'last-match',
         timingReplay: false,
         excludeList: [],
+        resourceTypeFilter: ['xhr', 'fetch'],
+        domainFilter: [],
       },
       editedResponses: {},
       matchHistory: [],

@@ -48,6 +48,8 @@ function createMockStateManager(): jest.Mocked<StateManager> {
     replayMode: 'last-match',
     timingReplay: false,
     excludeList: [],
+    resourceTypeFilter: ['xhr', 'fetch'],
+    domainFilter: [],
   };
   const defaultFullState: StateSyncPayload = {
     harData: null,
@@ -146,6 +148,15 @@ describe('handleMessage', () => {
   let port: chrome.runtime.Port;
   let stateManager: jest.Mocked<StateManager>;
   let portManager: jest.Mocked<PortManager>;
+
+  const testDefaultSettings: ExtensionSettings = {
+    enabled: true,
+    replayMode: 'last-match',
+    timingReplay: false,
+    excludeList: [],
+    resourceTypeFilter: ['xhr', 'fetch'],
+    domainFilter: [],
+  };
 
   beforeEach(() => {
     port = createMockPort();
@@ -249,6 +260,8 @@ describe('handleMessage', () => {
       replayMode: 'last-match',
       timingReplay: false,
       excludeList: [],
+      resourceTypeFilter: ['xhr', 'fetch'],
+      domainFilter: [],
     });
     const message: Message = {
       type: MessageType.MATCH_QUERY,
@@ -270,6 +283,8 @@ describe('handleMessage', () => {
       replayMode: 'last-match',
       timingReplay: false,
       excludeList: ['excluded.com'],
+      resourceTypeFilter: ['xhr', 'fetch'],
+      domainFilter: [],
     });
     const message: Message = {
       type: MessageType.MATCH_QUERY,
@@ -367,6 +382,8 @@ describe('handleMessage', () => {
       replayMode: 'sequential',
       timingReplay: false,
       excludeList: [],
+      resourceTypeFilter: ['xhr', 'fetch'],
+      domainFilter: [],
     });
     stateManager.getSequentialIndex.mockReturnValue(0);
     mockMatchUrl.mockReturnValue({
@@ -405,6 +422,8 @@ describe('handleMessage', () => {
       replayMode: 'last-match',
       timingReplay: true,
       excludeList: [],
+      resourceTypeFilter: ['xhr', 'fetch'],
+      domainFilter: [],
     });
     mockMatchUrl.mockReturnValue({
       pattern: {
@@ -465,6 +484,306 @@ describe('handleMessage', () => {
 
     expect(port.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({ type: MessageType.MATCH_RESULT, payload: { matched: false } }),
+    );
+  });
+
+  // --- MATCH_QUERY — resourceType filtering ---
+
+  it('should filter out entries whose resourceType does not match resourceTypeFilter', async () => {
+    const harData: HarSessionData = {
+      entries: [{ ...makeHarEntry(), resourceType: 'document' }],
+      patterns: [
+        {
+          original: 'https://api.test.com/data',
+          template: 'https://api.test.com/data',
+          segments: [],
+          method: 'GET',
+        },
+      ],
+      fileName: 'test.har',
+      loadedAt: Date.now(),
+    };
+    stateManager.getHarData.mockReturnValue(harData);
+    stateManager.getSettings.mockReturnValue({
+      ...testDefaultSettings,
+      resourceTypeFilter: ['xhr', 'fetch'],
+    });
+    mockMatchUrl.mockReturnValue({
+      pattern: {
+        original: 'https://api.test.com/data',
+        template: 'https://api.test.com/data',
+        segments: [],
+        method: 'GET',
+      },
+    });
+
+    const message: Message = {
+      type: MessageType.MATCH_QUERY,
+      payload: { url: 'https://api.test.com/data', method: 'GET', tabId: 1 },
+    };
+    handleMessage(message, port, stateManager, portManager);
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(port.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ type: MessageType.MATCH_RESULT, payload: { matched: false } }),
+    );
+  });
+
+  it('should match entries whose resourceType is in resourceTypeFilter', async () => {
+    const harData: HarSessionData = {
+      entries: [{ ...makeHarEntry(), resourceType: 'xhr' }],
+      patterns: [
+        {
+          original: 'https://api.test.com/data',
+          template: 'https://api.test.com/data',
+          segments: [],
+          method: 'GET',
+        },
+      ],
+      fileName: 'test.har',
+      loadedAt: Date.now(),
+    };
+    stateManager.getHarData.mockReturnValue(harData);
+    stateManager.getSettings.mockReturnValue({
+      ...testDefaultSettings,
+      resourceTypeFilter: ['xhr', 'fetch'],
+    });
+    mockMatchUrl.mockReturnValue({
+      pattern: {
+        original: 'https://api.test.com/data',
+        template: 'https://api.test.com/data',
+        segments: [],
+        method: 'GET',
+      },
+    });
+
+    const message: Message = {
+      type: MessageType.MATCH_QUERY,
+      payload: { url: 'https://api.test.com/data', method: 'GET', tabId: 1 },
+    };
+    handleMessage(message, port, stateManager, portManager);
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(port.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: MessageType.MATCH_RESULT,
+        payload: expect.objectContaining({ matched: true }),
+      }),
+    );
+  });
+
+  it('should match entries with undefined resourceType (backward compat)', async () => {
+    const harData: HarSessionData = {
+      entries: [makeHarEntry()], // no resourceType
+      patterns: [
+        {
+          original: 'https://api.test.com/data',
+          template: 'https://api.test.com/data',
+          segments: [],
+          method: 'GET',
+        },
+      ],
+      fileName: 'test.har',
+      loadedAt: Date.now(),
+    };
+    stateManager.getHarData.mockReturnValue(harData);
+    stateManager.getSettings.mockReturnValue({
+      ...testDefaultSettings,
+      resourceTypeFilter: ['xhr', 'fetch'],
+    });
+    mockMatchUrl.mockReturnValue({
+      pattern: {
+        original: 'https://api.test.com/data',
+        template: 'https://api.test.com/data',
+        segments: [],
+        method: 'GET',
+      },
+    });
+
+    const message: Message = {
+      type: MessageType.MATCH_QUERY,
+      payload: { url: 'https://api.test.com/data', method: 'GET', tabId: 1 },
+    };
+    handleMessage(message, port, stateManager, portManager);
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(port.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: MessageType.MATCH_RESULT,
+        payload: expect.objectContaining({ matched: true }),
+      }),
+    );
+  });
+
+  it('should match all resourceTypes when resourceTypeFilter is empty', async () => {
+    const harData: HarSessionData = {
+      entries: [{ ...makeHarEntry(), resourceType: 'document' }],
+      patterns: [
+        {
+          original: 'https://api.test.com/data',
+          template: 'https://api.test.com/data',
+          segments: [],
+          method: 'GET',
+        },
+      ],
+      fileName: 'test.har',
+      loadedAt: Date.now(),
+    };
+    stateManager.getHarData.mockReturnValue(harData);
+    stateManager.getSettings.mockReturnValue({
+      ...testDefaultSettings,
+      resourceTypeFilter: [],
+    });
+    mockMatchUrl.mockReturnValue({
+      pattern: {
+        original: 'https://api.test.com/data',
+        template: 'https://api.test.com/data',
+        segments: [],
+        method: 'GET',
+      },
+    });
+
+    const message: Message = {
+      type: MessageType.MATCH_QUERY,
+      payload: { url: 'https://api.test.com/data', method: 'GET', tabId: 1 },
+    };
+    handleMessage(message, port, stateManager, portManager);
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(port.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: MessageType.MATCH_RESULT,
+        payload: expect.objectContaining({ matched: true }),
+      }),
+    );
+  });
+
+  // --- MATCH_QUERY — domainFilter ---
+
+  it('should passthrough when domainFilter is set and URL domain does not match', async () => {
+    stateManager.getSettings.mockReturnValue({
+      ...testDefaultSettings,
+      domainFilter: ['api.allowed.com'],
+    });
+    const message: Message = {
+      type: MessageType.MATCH_QUERY,
+      payload: { url: 'https://api.blocked.com/data', method: 'GET', tabId: 1 },
+    };
+    handleMessage(message, port, stateManager, portManager);
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(port.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ type: MessageType.MATCH_RESULT, payload: { matched: false } }),
+    );
+  });
+
+  it('should proceed when domainFilter is set and URL domain matches', async () => {
+    stateManager.getSettings.mockReturnValue({
+      ...testDefaultSettings,
+      domainFilter: ['api.test.com'],
+    });
+    stateManager.getHarData.mockReturnValue(makeHarData());
+    mockMatchUrl.mockReturnValue({
+      pattern: {
+        original: 'https://api.test.com/data',
+        template: 'https://api.test.com/data',
+        segments: [],
+        method: 'GET',
+      },
+    });
+    const message: Message = {
+      type: MessageType.MATCH_QUERY,
+      payload: { url: 'https://api.test.com/data', method: 'GET', tabId: 1 },
+    };
+    handleMessage(message, port, stateManager, portManager);
+    await new Promise((r) => setTimeout(r, 10));
+
+    // Should NOT be passthrough — should continue to HAR matching
+    expect(port.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: MessageType.MATCH_RESULT,
+        payload: expect.objectContaining({ matched: true }),
+      }),
+    );
+  });
+
+  it('should allow all domains when domainFilter is empty', async () => {
+    stateManager.getSettings.mockReturnValue({
+      ...testDefaultSettings,
+      domainFilter: [],
+    });
+    stateManager.getHarData.mockReturnValue(makeHarData());
+    mockMatchUrl.mockReturnValue({
+      pattern: {
+        original: 'https://api.test.com/data',
+        template: 'https://api.test.com/data',
+        segments: [],
+        method: 'GET',
+      },
+    });
+    const message: Message = {
+      type: MessageType.MATCH_QUERY,
+      payload: { url: 'https://api.test.com/data', method: 'GET', tabId: 1 },
+    };
+    handleMessage(message, port, stateManager, portManager);
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(port.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: MessageType.MATCH_RESULT,
+        payload: expect.objectContaining({ matched: true }),
+      }),
+    );
+  });
+
+  it('should match IP:port domain in domainFilter', async () => {
+    stateManager.getSettings.mockReturnValue({
+      ...testDefaultSettings,
+      domainFilter: ['15.237.105.224:8080'],
+    });
+    const ipHarData: HarSessionData = {
+      entries: [
+        {
+          ...makeHarEntry(),
+          url: 'http://15.237.105.224:8080/api/general-service/admin/getFilterMenuInfo/55',
+        },
+      ],
+      patterns: [
+        {
+          original: 'http://15.237.105.224:8080/api/general-service/admin/getFilterMenuInfo/55',
+          template: 'http://15.237.105.224:8080/api/general-service/admin/getFilterMenuInfo/55',
+          segments: [],
+          method: 'GET',
+        },
+      ],
+      fileName: 'test.har',
+      loadedAt: Date.now(),
+    };
+    stateManager.getHarData.mockReturnValue(ipHarData);
+    mockMatchUrl.mockReturnValue({
+      pattern: {
+        original: 'http://15.237.105.224:8080/api/general-service/admin/getFilterMenuInfo/55',
+        template: 'http://15.237.105.224:8080/api/general-service/admin/getFilterMenuInfo/55',
+        segments: [],
+        method: 'GET',
+      },
+    });
+    const message: Message = {
+      type: MessageType.MATCH_QUERY,
+      payload: {
+        url: 'http://15.237.105.224:8080/api/general-service/admin/getFilterMenuInfo/55',
+        method: 'GET',
+        tabId: 1,
+      },
+    };
+    handleMessage(message, port, stateManager, portManager);
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(port.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: MessageType.MATCH_RESULT,
+        payload: expect.objectContaining({ matched: true }),
+      }),
     );
   });
 
@@ -962,6 +1281,8 @@ describe('handleMessage', () => {
       replayMode: 'last-match',
       timingReplay: false,
       excludeList: [],
+      resourceTypeFilter: ['xhr', 'fetch'],
+      domainFilter: [],
     });
     const message: Message = {
       type: MessageType.MATCH_QUERY,
@@ -985,6 +1306,8 @@ describe('handleMessage', () => {
       replayMode: 'last-match',
       timingReplay: false,
       excludeList: ['excluded.com'],
+      resourceTypeFilter: ['xhr', 'fetch'],
+      domainFilter: [],
     });
     const message: Message = {
       type: MessageType.MATCH_QUERY,

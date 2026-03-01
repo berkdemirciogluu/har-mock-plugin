@@ -73,6 +73,11 @@ function mapEntry(raw: HarRawEntry): HarEntry {
 
   const timings = mapTimings(raw.timings);
 
+  // Chrome DevTools _resourceType custom field — undefined if not present
+  const resourceType = (raw as unknown as Record<string, unknown>)['_resourceType'] as
+    | string
+    | undefined;
+
   return {
     url: raw.request.url,
     method: raw.request.method,
@@ -82,6 +87,7 @@ function mapEntry(raw: HarRawEntry): HarEntry {
     responseHeaders,
     requestHeaders,
     timings,
+    ...(resourceType !== undefined && resourceType !== null ? { resourceType } : {}),
   };
 }
 

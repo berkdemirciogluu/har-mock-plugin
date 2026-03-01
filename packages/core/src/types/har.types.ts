@@ -53,6 +53,7 @@ export interface HarEntry {
   readonly responseHeaders: readonly HarHeader[];
   readonly requestHeaders: readonly HarHeader[];
   readonly timings: HarTimings;
+  readonly resourceType?: string; // Chrome DevTools _resourceType: 'xhr' | 'fetch' | 'document' | 'stylesheet' | 'script' | 'image' | 'font' | ...
 }
 
 export interface HarCreator {
@@ -126,6 +127,7 @@ export interface HarRawEntry {
   readonly request: HarRawRequest;
   readonly response: HarRawResponse;
   readonly timings?: HarRawTimings; // M1-R2: optional — some HAR exporters omit timings entirely
+  readonly _resourceType?: string; // Chrome DevTools custom field — xhr, fetch, document, stylesheet, script, image, font, etc.
 }
 
 export interface HarRawCreator {

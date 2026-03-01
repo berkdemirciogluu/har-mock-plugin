@@ -11,6 +11,11 @@ type ValidationError = 'empty' | 'duplicate' | null;
 export class HmExcludeListComponent {
   readonly excludeList = input<readonly string[]>([]);
   readonly excludeListChange = output<readonly string[]>();
+  readonly placeholder = input<string>('URL pattern (örn: /api/auth)');
+  readonly emptyMessage = input<string>(
+    "Exclude listesi boş. Tüm eşleşen endpoint'ler mock'lanıyor.",
+  );
+  readonly inputAriaLabel = input<string>('Yeni exclude pattern gir');
 
   readonly newPattern = signal<string>('');
   readonly validationError = signal<ValidationError>(null);

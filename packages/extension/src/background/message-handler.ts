@@ -175,6 +175,31 @@ async function handleMessageAsync(
           break;
         }
 
+        // Domain filter kontrolü — boş array = tüm domain'ler geçer
+        const domains = settings.domainFilter ?? [];
+        if (domains.length > 0) {
+          try {
+            const hostname = new URL(url).host; // host = hostname:port
+            const matchesDomain = domains.some((d) => hostname === d || hostname.endsWith('.' + d));
+            if (!matchesDomain) {
+              const domainPassEvent = createMatchEvent(url, method, 'passthrough');
+              await stateManager.addMatchEvent(domainPassEvent);
+              portManager.sendToPopup({
+                type: MessageType.MATCH_EVENT,
+                payload: domainPassEvent,
+              } as Message<MatchEvent>);
+              port.postMessage({
+                type: MessageType.MATCH_RESULT,
+                payload: { matched: false } satisfies MatchResultPayload,
+                requestId: message.requestId,
+              });
+              break;
+            }
+          } catch {
+            // URL parse edilemezse domain filter'ı atla
+          }
+        }
+
         // Exclude list kontrolü
         if (settings.excludeList.some((pattern) => url.includes(pattern))) {
           const excludeEvent = createMatchEvent(url, method, 'passthrough');
@@ -247,9 +272,15 @@ async function handleMessageAsync(
         if (harData !== null) {
           const match = matchUrl(url, method, [...harData.patterns]);
           if (match !== null) {
+            const resourceFilter = settings.resourceTypeFilter ?? [];
             const matchingEntries = harData.entries.filter(
               (e) =>
-                e.url === match.pattern.original && e.method.toUpperCase() === method.toUpperCase(),
+                e.url === match.pattern.original &&
+                e.method.toUpperCase() === method.toUpperCase() &&
+                // resourceTypeFilter: boş array = tüm tipler geçer; dolu = sadece belirtilen tipler + resourceType undefined olanlar
+                (resourceFilter.length === 0 ||
+                  e.resourceType === undefined ||
+                  resourceFilter.includes(e.resourceType)),
             );
             if (matchingEntries.length > 0) {
               let selectedEntry: HarEntry;
@@ -459,6 +490,11 @@ async function handleMessageAsync(
           type: MessageType.CLEAR_HISTORY,
           payload: { success: true },
           requestId: message.requestId,
+        });
+        // Reaktif UI: güncel state'i popup'a push et
+        portManager.getPopupPort()?.postMessage({
+          type: MessageType.STATE_SYNC,
+          payload: stateManager.getFullState(),
         });
       } catch (error: unknown) {
         const errorMsg = error instanceof Error ? error.message : 'Unknown error';

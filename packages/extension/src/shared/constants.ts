@@ -31,6 +31,8 @@ export const DEFAULT_SETTINGS = {
   replayMode: 'last-match' as const,
   timingReplay: false,
   excludeList: [] as readonly string[],
+  resourceTypeFilter: ['xhr', 'fetch'] as readonly string[],
+  domainFilter: [] as readonly string[],
 } as const;
 
 /** Maximum number of match events stored in history */

@@ -64,6 +64,8 @@ const makeSettings = (): ExtensionSettings => ({
   replayMode: 'sequential',
   timingReplay: true,
   excludeList: ['excluded.com'],
+  resourceTypeFilter: ['xhr', 'fetch'],
+  domainFilter: [],
 });
 
 const makeEditedResponse = (): EditedResponse => ({

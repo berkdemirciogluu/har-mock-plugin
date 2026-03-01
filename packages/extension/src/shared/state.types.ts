@@ -17,6 +17,8 @@ export type ExtensionSettings = {
   readonly replayMode: 'sequential' | 'last-match';
   readonly timingReplay: boolean;
   readonly excludeList: readonly string[];
+  readonly resourceTypeFilter: readonly string[]; // Boş array = tüm tipler, dolu = sadece belirtilen tipler (ör: ['xhr', 'fetch'])
+  readonly domainFilter: readonly string[]; // Boş array = tüm domain'ler, dolu = sadece belirtilen domain'ler (ör: ['15.237.105.224:8080', 'api.example.com'])
 };
 
 /** Düzenlenmiş response — key: `${method}:${url}` */
