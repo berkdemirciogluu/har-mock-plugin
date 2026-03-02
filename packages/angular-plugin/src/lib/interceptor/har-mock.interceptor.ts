@@ -48,9 +48,7 @@ export class HarLoaderService {
 
   private async fetchAndParse(): Promise<void> {
     try {
-      const raw = await firstValueFrom(
-        this.http.get(this.config.harUrl, { responseType: 'text' }),
-      );
+      const raw = await firstValueFrom(this.http.get(this.config.harUrl, { responseType: 'text' }));
       const harFile = parseHar(raw);
       this.entries = [...harFile.entries];
       this.urlPatterns = parameterize(harFile.entries);
@@ -82,6 +80,21 @@ export const harMockInterceptor: HttpInterceptorFn = (req, next) => {
   // Double-lock: production'da veya devre dışıysa her zaman passthrough
   if (!isDevMode() || !config.enabled) {
     return next(req);
+  }
+
+  // Domain filter: boş array = tüm domain'ler geçer; dolu = sadece listelenen domain'ler mocklanır
+  if (config.domainFilter.length > 0) {
+    try {
+      const hostname = new URL(req.url, 'http://localhost').host;
+      const matchesDomain = config.domainFilter.some(
+        (d) => hostname === d || hostname.endsWith('.' + d),
+      );
+      if (!matchesDomain) {
+        return next(req);
+      }
+    } catch {
+      // URL parse edilemezse domain filter'ı atla
+    }
   }
 
   const entries = loader.getEntries();

@@ -1,4 +1,10 @@
-import { makeEnvironmentProviders, EnvironmentProviders, APP_INITIALIZER, inject, isDevMode } from '@angular/core';
+import {
+  makeEnvironmentProviders,
+  EnvironmentProviders,
+  APP_INITIALIZER,
+  inject,
+  isDevMode,
+} from '@angular/core';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import type { HarMockConfig } from '../types/har-mock-config.types';
 import { HAR_MOCK_CONFIG } from '../types/har-mock-config.types';
@@ -32,6 +38,7 @@ export function provideHarMock(config?: HarMockConfig): EnvironmentProviders {
     bypassGuards: config?.bypassGuards ?? false,
     preserveGuards: config?.preserveGuards ?? [],
     rules: config?.rules ?? [],
+    domainFilter: config?.domainFilter ?? [],
   };
 
   return makeEnvironmentProviders([

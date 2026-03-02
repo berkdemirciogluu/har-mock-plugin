@@ -45,7 +45,10 @@ describe('provideHarMock', () => {
   });
 
   it('should apply zero-config defaults when called with no arguments (AC2)', () => {
-    TestBed.configureTestingModule({ teardown: { destroyAfterEach: true }, providers: [provideHarMock(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({
+      teardown: { destroyAfterEach: true },
+      providers: [provideHarMock(), provideHttpClientTesting()],
+    });
     const config = TestBed.inject(HAR_MOCK_CONFIG);
     expect(config.harUrl).toBe('/assets/har-mock.har');
     expect(config.mode).toBe('last-match');
@@ -53,6 +56,7 @@ describe('provideHarMock', () => {
     expect(config.bypassGuards).toBe(false);
     expect(config.preserveGuards).toEqual([]);
     expect(config.rules).toEqual([]);
+    expect(config.domainFilter).toEqual([]);
   });
 
   it('should use all provided config values (AC3)', () => {

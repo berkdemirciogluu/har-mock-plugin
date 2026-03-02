@@ -43,12 +43,14 @@ const DEFAULT_CONFIG: {
   enabled: boolean;
   bypassGuards: boolean;
   rules: MockRule[];
+  domainFilter: string[];
 } = {
   harUrl: '/assets/test.har',
   mode: 'last-match',
   enabled: true,
   bypassGuards: false,
   rules: [],
+  domainFilter: [],
 };
 
 const SAMPLE_ENTRY: HarEntry = {
@@ -349,6 +351,106 @@ describe('harMockInterceptor', () => {
     const apiReq = controller.expectOne('https://api.example.com/users');
     apiReq.flush({});
 
+    controller.verify();
+  });
+
+  // --- Domain Filter testleri ---
+
+  it('domainFilter dolu ise eşleşmeyen domain passthrough geçmeli', async () => {
+    setupTestBed({ domainFilter: ['api.allowed.com'] });
+    parseHar.mockReturnValue({ entries: [SAMPLE_ENTRY] });
+    parameterize.mockReturnValue([SAMPLE_PATTERN]);
+
+    const loader = TestBed.inject(HarLoaderService);
+    const controller = TestBed.inject(HttpTestingController);
+
+    const loadPromise = loader.load();
+    controller.expectOne('/assets/test.har').flush('{}');
+    await loadPromise;
+
+    const http = TestBed.inject(HttpClient);
+    http.get('https://api.blocked.com/data').subscribe();
+
+    expect(resolve).not.toHaveBeenCalled();
+    const apiReq = controller.expectOne('https://api.blocked.com/data');
+    apiReq.flush({});
+    controller.verify();
+  });
+
+  it('domainFilter dolu ise eşleşen domain mock response döndürmeli', async () => {
+    setupTestBed({ domainFilter: ['api.example.com'] });
+    parseHar.mockReturnValue({ entries: [SAMPLE_ENTRY] });
+    parameterize.mockReturnValue([SAMPLE_PATTERN]);
+
+    const loader = TestBed.inject(HarLoaderService);
+    const controller = TestBed.inject(HttpTestingController);
+
+    const loadPromise = loader.load();
+    controller.expectOne('/assets/test.har').flush('{}');
+    await loadPromise;
+
+    resolve.mockReturnValue({
+      source: 'har',
+      response: { statusCode: 200, body: '{"id":1}', headers: [], delay: 0 },
+    });
+
+    const http = TestBed.inject(HttpClient);
+    let responseBody: unknown;
+    http.get('https://api.example.com/users').subscribe((body) => (responseBody = body));
+    expect(resolve).toHaveBeenCalled();
+    expect(responseBody).toEqual({ id: 1 });
+    controller.verify();
+  });
+
+  it('domainFilter boşsa tüm domainler mock edilmeli', async () => {
+    setupTestBed({ domainFilter: [] });
+    parseHar.mockReturnValue({ entries: [SAMPLE_ENTRY] });
+    parameterize.mockReturnValue([SAMPLE_PATTERN]);
+
+    const loader = TestBed.inject(HarLoaderService);
+    const controller = TestBed.inject(HttpTestingController);
+
+    const loadPromise = loader.load();
+    controller.expectOne('/assets/test.har').flush('{}');
+    await loadPromise;
+
+    resolve.mockReturnValue({
+      source: 'har',
+      response: { statusCode: 200, body: '{"ok":true}', headers: [], delay: 0 },
+    });
+
+    const http = TestBed.inject(HttpClient);
+    let responseBody: unknown;
+    http.get('https://any-domain.com/data').subscribe((body) => (responseBody = body));
+    expect(resolve).toHaveBeenCalled();
+    expect(responseBody).toEqual({ ok: true });
+    controller.verify();
+  });
+
+  it('domainFilter IP:port formatını desteklemeli', async () => {
+    setupTestBed({ domainFilter: ['15.237.105.224:8080'] });
+    parseHar.mockReturnValue({ entries: [SAMPLE_ENTRY] });
+    parameterize.mockReturnValue([SAMPLE_PATTERN]);
+
+    const loader = TestBed.inject(HarLoaderService);
+    const controller = TestBed.inject(HttpTestingController);
+
+    const loadPromise = loader.load();
+    controller.expectOne('/assets/test.har').flush('{}');
+    await loadPromise;
+
+    resolve.mockReturnValue({
+      source: 'har',
+      response: { statusCode: 200, body: '{"data":1}', headers: [], delay: 0 },
+    });
+
+    const http = TestBed.inject(HttpClient);
+    let responseBody: unknown;
+    http
+      .get('http://15.237.105.224:8080/api/service/data')
+      .subscribe((body) => (responseBody = body));
+    expect(resolve).toHaveBeenCalled();
+    expect(responseBody).toEqual({ data: 1 });
     controller.verify();
   });
 

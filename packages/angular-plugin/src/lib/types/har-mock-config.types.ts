@@ -53,6 +53,16 @@ export interface HarMockConfig {
    * @default []
    */
   rules?: MockRule[];
+
+  /**
+   * Domain filter list.
+   * Empty array = all domains are mocked.
+   * Filled array = only requests to listed domains are mocked, others passthrough.
+   * Supports hostname, hostname:port, and subdomain matching.
+   * @example ['api.example.com', '15.237.105.224:8080']
+   * @default []
+   */
+  domainFilter?: string[];
 }
 
 /** Angular DI token — injects the resolved (Required<HarMockConfig>) configuration */

@@ -109,10 +109,25 @@ describe('ControlsTabComponent', () => {
     expect(component.endpointCount()).toBeNull();
   });
 
-  it('should update endpointCount when set', () => {
-    component.endpointCount.set(42);
-    expect(component.endpointCount()).toBe(42);
+  it('should update endpointCount from state harData patterns', () => {
+    const patterns = Array.from({ length: 42 }, (_, i) => ({
+      original: `/api/endpoint-${i}`,
+      template: `/api/endpoint-${i}`,
+      segments: [{ kind: 'static' as const, value: `/api/endpoint-${i}` }],
+      method: 'GET',
+    }));
+    mockMessagingService.state.set(
+      makeStateSyncPayload({
+        harData: {
+          entries: [],
+          patterns,
+          fileName: 'test.har',
+          loadedAt: Date.now(),
+        },
+      }),
+    );
     fixture.detectChanges();
+    expect(component.endpointCount()).toBe(42);
   });
 
   describe('hm-strategy-toggle (progressive disclosure)', () => {
