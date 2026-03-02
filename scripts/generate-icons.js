@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // HAR Mock Plugin — Icon Generator
-// Tasarım: Koyu indigo arka plan üzerine beyaz WiFi-tarzı yay + merkez nokta
-// Konsept: Ağ trafiği yakalama ve tekrar oynatma
+// Tasarım: Koyu teal arka plan, HAR dosya gövdesi, HTTP log çizgileri, replay oku
+// Konsept: HAR dosyası yakalama ve tekrar oynatma (mock)
 
 const sharp = require('sharp');
 const path = require('path');
@@ -9,64 +9,109 @@ const path = require('path');
 const OUTPUT_DIR = path.join(__dirname, '..', 'packages', 'extension', 'public');
 
 function createIconSvg(size) {
-  const cornerRadius = Math.round(size * 0.22);
+  const s = size;
+  const cr = Math.round(s * 0.2); // köşe yuvarlama
 
-  // WiFi yaylarının merkez noktası (aşağıda)
-  const acx = size / 2;
-  const acy = size * 0.7;
+  // Dosya gövdesi boyutları (ortalanmış)
+  const docW = s * 0.54;
+  const docH = s * 0.62;
+  const docX = (s - docW) / 2;
+  const docY = s * 0.14;
+  const docR = s * 0.07;
+  const fold = s * 0.15; // kıvrık köşe boyutu
 
-  // Yay yarıçapları
-  const rSmall = size * 0.115;
-  const rMedium = size * 0.245;
-  const rLarge = size * 0.375;
+  // Log çizgileri (3 adet, ortada)
+  const lineX1 = docX + docW * 0.17;
+  const lineX2req = docX + docW * 0.72; // request: kısa (→)
+  const lineX2res = docX + docW * 0.58; // response: daha kısa (←)
+  const lineX2mid = docX + docW * 0.65; // orta satır
+  const lineY1 = docY + docH * 0.33;
+  const lineY2 = docY + docH * 0.52;
+  const lineY3 = docY + docH * 0.71;
+  const lw = Math.max(s * 0.055, 1); // çizgi kalınlığı
+  const dotR = s * 0.045; // ok başı nokta
 
-  // Çizgi kalınlığı ve nokta yarıçapı
-  const sw = Math.max(size * 0.075, 1);
-  const dotR = size * 0.072;
+  // Replay dairesi (sağ alt köşede, döngü oku)
+  const rcx = s * 0.725;
+  const rcy = s * 0.755;
+  const rr = s * 0.165;
+  const rsw = Math.max(s * 0.065, 1);
 
-  // Yay başlangıç/bitiş: -145° → -35° (yukarı açılan kavis)
-  function arcPath(radius) {
-    const a1 = (-145 * Math.PI) / 180;
-    const a2 = (-35 * Math.PI) / 180;
-    const x1 = (acx + radius * Math.cos(a1)).toFixed(3);
-    const y1 = (acy + radius * Math.sin(a1)).toFixed(3);
-    const x2 = (acx + radius * Math.cos(a2)).toFixed(3);
-    const y2 = (acy + radius * Math.sin(a2)).toFixed(3);
-    return `M ${x1} ${y1} A ${radius} ${radius} 0 0 1 ${x2} ${y2}`;
-  }
+  // Replay ok ucu (dairedeki kesik noktada küçük üçgen)
+  const arrowAngle = (-20 * Math.PI) / 180;
+  const ax = (rcx + rr * Math.cos(arrowAngle)).toFixed(2);
+  const ay = (rcy + rr * Math.sin(arrowAngle)).toFixed(2);
+  const arrowSize = s * 0.085;
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+  // Dosya kırpık köşe path: sol üst → sağ üst (fold öncesi) → fold → sağ alt → sol alt
+  const docPath = [
+    `M ${docX + docR} ${docY}`,
+    `H ${docX + docW - fold}`,
+    `L ${docX + docW} ${docY + fold}`,
+    `V ${docY + docH - docR}`,
+    `Q ${docX + docW} ${docY + docH} ${docX + docW - docR} ${docY + docH}`,
+    `H ${docX + docR}`,
+    `Q ${docX} ${docY + docH} ${docX} ${docY + docH - docR}`,
+    `V ${docY + docR}`,
+    `Q ${docX} ${docY} ${docX + docR} ${docY}`,
+    `Z`,
+  ].join(' ');
+
+  // Kıvrık köşe üçgeni (fold detayı)
+  const foldPath = [
+    `M ${docX + docW - fold} ${docY}`,
+    `L ${docX + docW - fold} ${docY + fold}`,
+    `L ${docX + docW} ${docY + fold}`,
+  ].join(' ');
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 ${s} ${s}">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%"   stop-color="#4338ca"/>
-      <stop offset="100%" stop-color="#1e1b4b"/>
+      <stop offset="0%"   stop-color="#0d9488"/>
+      <stop offset="100%" stop-color="#0f3460"/>
     </linearGradient>
-    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%"   stop-color="#a5b4fc"/>
-      <stop offset="100%" stop-color="#818cf8"/>
+    <linearGradient id="docFill" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="rgba(255,255,255,0.18)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0.07)"/>
+    </linearGradient>
+    <linearGradient id="replayGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#5eead4"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
     </linearGradient>
   </defs>
 
   <!-- Arka plan -->
-  <rect width="${size}" height="${size}" rx="${cornerRadius}" fill="url(#bg)"/>
+  <rect width="${s}" height="${s}" rx="${cr}" fill="url(#bg)"/>
 
-  <!-- Büyük yay (soluk) -->
-  <path d="${arcPath(rLarge)}"
-        stroke="white" stroke-width="${sw}" fill="none"
-        stroke-linecap="round" opacity="0.35"/>
+  <!-- Dosya gövdesi (içi yarı saydam) -->
+  <path d="${docPath}" fill="url(#docFill)" stroke="rgba(255,255,255,0.55)" stroke-width="${Math.max(s * 0.028, 1)}"/>
 
-  <!-- Orta yay -->
-  <path d="${arcPath(rMedium)}"
-        stroke="white" stroke-width="${sw}" fill="none"
-        stroke-linecap="round" opacity="0.65"/>
+  <!-- Kıvrık köşe çizgisi -->
+  <path d="${foldPath}" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="${Math.max(s * 0.028, 1)}"/>
 
-  <!-- Küçük yay (tam opak) -->
-  <path d="${arcPath(rSmall)}"
-        stroke="white" stroke-width="${sw}" fill="none"
-        stroke-linecap="round"/>
+  <!-- Satır 1: REQUEST → (soldan sağa, ok ucu sağda) -->
+  <line x1="${lineX1}" y1="${lineY1}" x2="${lineX2req}" y2="${lineY1}"
+        stroke="rgba(255,255,255,0.90)" stroke-width="${lw}" stroke-linecap="round"/>
+  <circle cx="${lineX2req}" cy="${lineY1}" r="${dotR}" fill="rgba(255,255,255,0.90)"/>
 
-  <!-- Merkez nokta (vurgu rengi) -->
-  <circle cx="${acx}" cy="${acy}" r="${dotR}" fill="url(#accent)"/>
+  <!-- Satır 2: RESPONSE ← (sağdan sola, ok ucu solda) -->
+  <line x1="${lineX1}" y1="${lineY2}" x2="${lineX2res}" y2="${lineY2}"
+        stroke="rgba(94,234,212,0.85)" stroke-width="${lw}" stroke-linecap="round"/>
+  <circle cx="${lineX1}" cy="${lineY2}" r="${dotR}" fill="rgba(94,234,212,0.85)"/>
+
+  <!-- Satır 3: soluk (daha kısa) -->
+  <line x1="${lineX1}" y1="${lineY3}" x2="${lineX2mid}" y2="${lineY3}"
+        stroke="rgba(255,255,255,0.40)" stroke-width="${lw}" stroke-linecap="round"/>
+
+  <!-- Replay dairesi (sağ altta, teal) - yayın büyük kısmı -->
+  <path d="M ${rcx} ${rcy - rr} A ${rr} ${rr} 0 1 1 ${ax} ${ay}"
+        fill="none" stroke="url(#replayGrad)" stroke-width="${rsw}" stroke-linecap="round"/>
+
+  <!-- Replay ok başı (küçük üçgen) -->
+  <polygon points="${ax},${ay}
+                   ${(parseFloat(ax) - arrowSize * 0.7).toFixed(2)},${(parseFloat(ay) - arrowSize).toFixed(2)}
+                   ${(parseFloat(ax) + arrowSize * 0.55).toFixed(2)},${(parseFloat(ay) - arrowSize * 0.85).toFixed(2)}"
+           fill="url(#replayGrad)"/>
 </svg>`;
 }
 
