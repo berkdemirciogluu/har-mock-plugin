@@ -1,4 +1,4 @@
-import { Injectable, inject, isDevMode } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
   HttpBackend,
   HttpClient,
@@ -71,14 +71,14 @@ export class HarLoaderService {
  * Angular HttpClient isteklerini yakalar; HAR veya Rule eşleşmesi varsa mock döndürür.
  *
  * Öncelik: Rules > HAR > Passthrough (priority-chain ile — FR32)
- * Double-lock: isDevMode() === false veya enabled === false → passthrough (NFR13)
+ * enabled === false → passthrough (NFR13)
  */
 export const harMockInterceptor: HttpInterceptorFn = (req, next) => {
   const config = inject(HAR_MOCK_CONFIG);
   const loader = inject(HarLoaderService);
 
-  // Double-lock: production'da veya devre dışıysa her zaman passthrough
-  if (!isDevMode() || !config.enabled) {
+  // Devre dışıysa her zaman passthrough
+  if (!config.enabled) {
     return next(req);
   }
 

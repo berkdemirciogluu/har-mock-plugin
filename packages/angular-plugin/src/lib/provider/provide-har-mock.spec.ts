@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { isDevMode, ApplicationInitStatus } from '@angular/core';
+import { ApplicationInitStatus } from '@angular/core';
 import { provideHarMock } from './provide-har-mock';
 import { HAR_MOCK_CONFIG } from '../types/har-mock-config.types';
 import type { MockRule } from '@har-mock/core';
@@ -14,20 +14,8 @@ jest.mock('@har-mock/core', () => ({
   HarParseError: class extends Error {},
 }));
 
-// @angular/core'dan isDevMode mock'u — double-lock testleri için
-jest.mock('@angular/core', () => {
-  const original = jest.requireActual('@angular/core');
-  return {
-    ...original,
-    isDevMode: jest.fn(() => true),
-  };
-});
-
-const mockIsDevMode = isDevMode as jest.Mock;
-
 describe('provideHarMock', () => {
   afterEach(() => {
-    mockIsDevMode.mockReturnValue(true);
     // Bekleyen HAR yükleme isteklerini flush et, ardından beklenmeyen request yoksa doğrula
     try {
       const ctrl = TestBed.inject(HttpTestingController);
@@ -159,23 +147,9 @@ describe('provideHarMock', () => {
     expect(config.rules).toEqual([]);
   });
 
-  // ─── Double-Lock Guard testleri ────────────────────────────────
+  // ─── Guard testleri ───────────────────────────────────────────────────────
 
-  it('isDevMode()=false olduğunda APP_INITIALIZER HAR fetch yapmamalı (AC1)', async () => {
-    mockIsDevMode.mockReturnValue(false);
-    TestBed.configureTestingModule({
-      teardown: { destroyAfterEach: true },
-      providers: [provideHarMock({ enabled: true }), provideHttpClientTesting()],
-    });
-
-    await TestBed.inject(ApplicationInitStatus).donePromise;
-
-    const controller = TestBed.inject(HttpTestingController);
-    controller.expectNone('/assets/har-mock.har');
-    controller.verify();
-  });
-
-  it('enabled=false olduğunda APP_INITIALIZER HAR fetch yapmamalı (AC2)', async () => {
+  it('enabled=false olduğunda APP_INITIALIZER HAR fetch yapmamalı', async () => {
     TestBed.configureTestingModule({
       teardown: { destroyAfterEach: true },
       providers: [provideHarMock({ enabled: false }), provideHttpClientTesting()],
@@ -188,21 +162,7 @@ describe('provideHarMock', () => {
     controller.verify();
   });
 
-  it('isDevMode()=false && enabled=false olduğunda APP_INITIALIZER HAR fetch yapmamalı (guard kombinasyonu)', async () => {
-    mockIsDevMode.mockReturnValue(false);
-    TestBed.configureTestingModule({
-      teardown: { destroyAfterEach: true },
-      providers: [provideHarMock({ enabled: false }), provideHttpClientTesting()],
-    });
-
-    await TestBed.inject(ApplicationInitStatus).donePromise;
-
-    const controller = TestBed.inject(HttpTestingController);
-    controller.expectNone('/assets/har-mock.har');
-    controller.verify();
-  });
-
-  it('isDevMode()=true && enabled=true olduğunda APP_INITIALIZER HAR fetch yapmalı (AC3)', async () => {
+  it('enabled=true olduğunda APP_INITIALIZER HAR fetch yapmalı', async () => {
     TestBed.configureTestingModule({
       teardown: { destroyAfterEach: true },
       providers: [provideHarMock({ enabled: true }), provideHttpClientTesting()],

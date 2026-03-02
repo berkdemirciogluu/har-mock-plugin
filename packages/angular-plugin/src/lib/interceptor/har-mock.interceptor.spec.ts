@@ -1,7 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient, withInterceptors, HttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { isDevMode } from '@angular/core';
 import { harMockInterceptor, HarLoaderService } from './har-mock.interceptor';
 import { HAR_MOCK_CONFIG } from '../types';
 import type { HarEntry, UrlPattern, MockRule } from '@har-mock/core';
@@ -25,17 +24,6 @@ const { parseHar, parameterize, resolve } = jest.requireMock('@har-mock/core') a
   parameterize: jest.Mock;
   resolve: jest.Mock;
 };
-
-// @angular/core'dan isDevMode mock'u
-jest.mock('@angular/core', () => {
-  const original = jest.requireActual('@angular/core');
-  return {
-    ...original,
-    isDevMode: jest.fn(() => true),
-  };
-});
-
-const mockIsDevMode = isDevMode as jest.Mock;
 
 const DEFAULT_CONFIG: {
   harUrl: string;
@@ -226,7 +214,6 @@ describe('HarLoaderService', () => {
 describe('harMockInterceptor', () => {
   afterEach(() => {
     jest.clearAllMocks();
-    mockIsDevMode.mockReturnValue(true);
     TestBed.resetTestingModule();
   });
 
@@ -290,30 +277,6 @@ describe('harMockInterceptor', () => {
 
   it('enabled=false ise tüm requestler passthrough geçmeli (AC2)', async () => {
     setupTestBed({ enabled: false });
-    parseHar.mockReturnValue({ entries: [] });
-    parameterize.mockReturnValue([]);
-
-    const loader = TestBed.inject(HarLoaderService);
-    const controller = TestBed.inject(HttpTestingController);
-
-    const loadPromise = loader.load();
-    const req = controller.expectOne('/assets/test.har');
-    req.flush('{}');
-    await loadPromise;
-
-    const http = TestBed.inject(HttpClient);
-    http.get('https://api.example.com/users').subscribe();
-
-    const apiReq = controller.expectOne('https://api.example.com/users');
-    apiReq.flush({});
-
-    expect(resolve).not.toHaveBeenCalled();
-    controller.verify();
-  });
-
-  it('isDevMode()=false ise tüm requestler passthrough geçmeli (AC2)', async () => {
-    mockIsDevMode.mockReturnValue(false);
-    setupTestBed();
     parseHar.mockReturnValue({ entries: [] });
     parameterize.mockReturnValue([]);
 

@@ -28,13 +28,13 @@ export interface HarMockConfig {
 
   /**
    * Enables/disables the plugin.
-   * Double-lock: If isDevMode() is false, the plugin stays inactive regardless of this value.
+   * When false, the plugin stays inactive regardless of other settings.
    * @default true
    */
   enabled?: boolean;
 
   /**
-   * Disables Angular route guards in dev mode.
+   * Disables Angular route guards when enabled.
    * Uses APP_INITIALIZER to mutate Router.config.
    * @default false
    */
@@ -69,7 +69,7 @@ export interface HarMockConfig {
   /**
    * Uygulama bootstrap anında localStorage veya sessionStorage'a inject edilecek key-value çiftleri.
    * Önceki inject edilen değerler üzerine yazılır.
-   * Yalnızca dev mode + enabled=true kombinasyonunda çalışır (double-lock).
+   * Yalnızca enabled=true olduğunda çalışır.
    * @default []
    */
   storageEntries?: StorageEntry[];

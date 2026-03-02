@@ -1,20 +1,8 @@
-// Subtask 2.1: jest.mock hoisting — dosyanın EN ÜSTÜNDE (import'lardan önce)
-jest.mock('@angular/core', () => {
-  const original = jest.requireActual('@angular/core');
-  return {
-    ...original,
-    isDevMode: jest.fn(() => true), // default: dev mode aktif
-  };
-});
-
 import { TestBed } from '@angular/core/testing';
 import { Router, RouteConfigLoadEnd, type Route } from '@angular/router';
 import { EMPTY, Subject } from 'rxjs';
-import { isDevMode } from '@angular/core';
 import { harMockGuardBypassFactory } from './har-mock.initializer';
 import { HAR_MOCK_CONFIG } from '../types/har-mock-config.types';
-
-const mockIsDevMode = isDevMode as jest.Mock;
 
 const DEFAULT_CONFIG = {
   harUrl: '/assets/test.har',
@@ -26,14 +14,13 @@ const DEFAULT_CONFIG = {
 };
 
 describe('harMockGuardBypassFactory', () => {
-  // Subtask 2.1: afterEach isDevMode reset — state sızıntısını önle
+  // Subtask 2.1: afterEach reset
   afterEach(() => {
-    mockIsDevMode.mockReturnValue(true);
     TestBed.resetTestingModule();
   });
 
   // Subtask 2.2: Test AC1
-  it('AC1: bypassGuards=true, enabled=true, isDevMode=true → canActivate/canDeactivate/canMatch temizlenmeli', () => {
+  it('AC1: bypassGuards=true, enabled=true → canActivate/canDeactivate/canMatch temizlenmeli', () => {
     const mockAuthGuard = jest.fn(() => true);
     const mockUnsavedGuard = jest.fn(() => true);
     const routes: Route[] = [
@@ -64,7 +51,7 @@ describe('harMockGuardBypassFactory', () => {
   });
 
   // Subtask 2.3: Test AC3 — recursive children traversal
-  it('AC3 (eager): nested children içindeki guard\'lar → recursive traversal tüm seviyelerdeki guard\'ları temizlemeli', () => {
+  it("AC3 (eager): nested children içindeki guard'lar → recursive traversal tüm seviyelerdeki guard'ları temizlemeli", () => {
     const mockAuthGuard = jest.fn(() => true);
     const mockAdminGuard = jest.fn(() => true);
     const routes: Route[] = [
@@ -101,7 +88,7 @@ describe('harMockGuardBypassFactory', () => {
   });
 
   // L2: 3-seviye derin nested route — recursive traversal edge case
-  it('AC3 (3-level deep): üç seviye iç içe children\'daki guard\'lar → tüm seviyelerde temizlenmeli', () => {
+  it("AC3 (3-level deep): üç seviye iç içe children'daki guard'lar → tüm seviyelerde temizlenmeli", () => {
     const mockGuard = jest.fn(() => true);
     const routes: Route[] = [
       {
@@ -163,27 +150,7 @@ describe('harMockGuardBypassFactory', () => {
     expect(routes[0]!.canActivate).toEqual([authGuard]);
   });
 
-  // Subtask 2.5: Test AC4b
-  it('AC4b: isDevMode()=false → router.config değişmemeli', () => {
-    mockIsDevMode.mockReturnValue(false);
-    const authGuard = jest.fn(() => true);
-    const routes: Route[] = [{ path: 'admin', canActivate: [authGuard] }];
-
-    // Subtask 2.8
-    TestBed.configureTestingModule({
-      teardown: { destroyAfterEach: true },
-      providers: [
-        { provide: HAR_MOCK_CONFIG, useValue: { ...DEFAULT_CONFIG } },
-        { provide: Router, useValue: { config: routes, events: EMPTY } },
-      ],
-    });
-
-    const factory = TestBed.runInInjectionContext(harMockGuardBypassFactory);
-    factory();
-
-    expect(routes[0]!.canActivate).toEqual([authGuard]);
-  });
-
+  // Subtask 2.5: Removed (isDevMode check removed)
   // Subtask 2.6: Test AC4c
   it('AC4c: enabled=false → router.config değişmemeli', () => {
     const authGuard = jest.fn(() => true);
@@ -232,10 +199,15 @@ describe('harMockGuardBypassFactory', () => {
   });
 
   // Subtask 2.3 (lazy): RouteConfigLoadEnd — lazy-loaded route guard temizleme
-  it('AC3 (lazy): RouteConfigLoadEnd event → yeni lazy-loaded route\'ların guard\'larını temizlemeli', () => {
+  it("AC3 (lazy): RouteConfigLoadEnd event → yeni lazy-loaded route'ların guard'larını temizlemeli", () => {
     const subject = new Subject<any>();
     const mockGuard = jest.fn(() => true);
-    const lazyRoute: Route = { path: 'lazy', canActivate: [mockGuard], canDeactivate: [mockGuard], canMatch: [mockGuard] };
+    const lazyRoute: Route = {
+      path: 'lazy',
+      canActivate: [mockGuard],
+      canDeactivate: [mockGuard],
+      canMatch: [mockGuard],
+    };
     let currentRoutes: Route[] = []; // başlangıçta boş (lazy yüklenmeden önce)
 
     const mockRouter = {
@@ -291,7 +263,10 @@ describe('harMockGuardBypassFactory', () => {
     TestBed.configureTestingModule({
       teardown: { destroyAfterEach: true },
       providers: [
-        { provide: HAR_MOCK_CONFIG, useValue: { ...DEFAULT_CONFIG, preserveGuards: [mockBssGuard] } },
+        {
+          provide: HAR_MOCK_CONFIG,
+          useValue: { ...DEFAULT_CONFIG, preserveGuards: [mockBssGuard] },
+        },
         { provide: Router, useValue: { config: routes, events: EMPTY } },
       ],
     });
@@ -300,11 +275,11 @@ describe('harMockGuardBypassFactory', () => {
     factory();
 
     const adminRoute = routes[0]!;
-    expect(adminRoute.canActivate).toEqual([mockBssGuard]);   // bss kaldı
-    expect(adminRoute.canDeactivate).toEqual([]);             // auth temizlendi
+    expect(adminRoute.canActivate).toEqual([mockBssGuard]); // bss kaldı
+    expect(adminRoute.canDeactivate).toEqual([]); // auth temizlendi
     const usersRoute = adminRoute.children![0]!;
-    expect(usersRoute.canActivate).toEqual([mockBssGuard]);   // recursive — bss kaldı
-    expect(usersRoute.canMatch).toEqual([]);                  // auth temizlendi
+    expect(usersRoute.canActivate).toEqual([mockBssGuard]); // recursive — bss kaldı
+    expect(usersRoute.canMatch).toEqual([]); // auth temizlendi
   });
 
   // Story 5.5 — AC2: Birden fazla guard korunmalı
@@ -337,14 +312,14 @@ describe('harMockGuardBypassFactory', () => {
 
     const route = routes[0]!;
     expect(route.canActivate).toEqual([mockAuthGuard, mockAdminGuard]); // ikisi kaldı
-    expect(route.canDeactivate).toEqual([]);                            // unsaved temizlendi
-    expect(route.canMatch).toEqual([mockAuthGuard]);                    // auth kaldı
+    expect(route.canDeactivate).toEqual([]); // unsaved temizlendi
+    expect(route.canMatch).toEqual([mockAuthGuard]); // auth kaldı
   });
 
   // Story 5.5 — AC4: Functional guard referansı ile çalışmalı
-  it('5.5 AC4: functional guard — aynı referans preserveGuards\'ta → korunmalı; farklı referans → temizlenmeli', () => {
-    const preservedGuardFn = jest.fn(() => true);      // preserve listesine girecek fn
-    const differentRefGuardFn = jest.fn(() => true);   // preserve listesinde olmayan fn (farklı referans)
+  it("5.5 AC4: functional guard — aynı referans preserveGuards'ta → korunmalı; farklı referans → temizlenmeli", () => {
+    const preservedGuardFn = jest.fn(() => true); // preserve listesine girecek fn
+    const differentRefGuardFn = jest.fn(() => true); // preserve listesinde olmayan fn (farklı referans)
     const routes: Route[] = [
       {
         path: 'profile',
@@ -356,7 +331,10 @@ describe('harMockGuardBypassFactory', () => {
     TestBed.configureTestingModule({
       teardown: { destroyAfterEach: true },
       providers: [
-        { provide: HAR_MOCK_CONFIG, useValue: { ...DEFAULT_CONFIG, preserveGuards: [preservedGuardFn] } },
+        {
+          provide: HAR_MOCK_CONFIG,
+          useValue: { ...DEFAULT_CONFIG, preserveGuards: [preservedGuardFn] },
+        },
         { provide: Router, useValue: { config: routes, events: EMPTY } },
       ],
     });
@@ -366,11 +344,11 @@ describe('harMockGuardBypassFactory', () => {
 
     const route = routes[0]!;
     expect(route.canActivate).toEqual([preservedGuardFn]); // aynı referans → kaldı
-    expect(route.canMatch).toEqual([]);                    // farklı referans → temizlendi
+    expect(route.canMatch).toEqual([]); // farklı referans → temizlendi
   });
 
   // Story 5.5 — H3/L1: preserveGuards undefined olduğunda ?? [] fallback çalışmalı (branch coverage)
-  it('5.5 H3: preserveGuards config\'da tanımsızsa ?? [] fallback → tüm guard\'lar temizlenmeli', () => {
+  it("5.5 H3: preserveGuards config'da tanımsızsa ?? [] fallback → tüm guard'lar temizlenmeli", () => {
     const mockAuthGuard = jest.fn(() => true);
     const routes: Route[] = [
       { path: 'admin', canActivate: [mockAuthGuard], canDeactivate: [mockAuthGuard] },
@@ -396,12 +374,12 @@ describe('harMockGuardBypassFactory', () => {
     const factory = TestBed.runInInjectionContext(harMockGuardBypassFactory);
     factory();
 
-    expect(routes[0]!.canActivate).toEqual([]);   // ?? [] → tümü temizlendi
+    expect(routes[0]!.canActivate).toEqual([]); // ?? [] → tümü temizlendi
     expect(routes[0]!.canDeactivate).toEqual([]); // ?? [] → tümü temizlendi
   });
 
   // Story 5.5 — AC5: Lazy route'da preserveGuards uygulanmalı
-  it('5.5 AC5: RouteConfigLoadEnd sonrası lazy route\'da preserveGuards uygulanmalı', () => {
+  it("5.5 AC5: RouteConfigLoadEnd sonrası lazy route'da preserveGuards uygulanmalı", () => {
     const subject = new Subject<any>();
     const mockBssGuard = jest.fn(() => true);
     const mockAuthGuard = jest.fn(() => true);
@@ -414,14 +392,19 @@ describe('harMockGuardBypassFactory', () => {
     let currentRoutes: Route[] = [];
 
     const mockRouter = {
-      get config() { return currentRoutes; },
+      get config() {
+        return currentRoutes;
+      },
       events: subject.asObservable(),
     };
 
     TestBed.configureTestingModule({
       teardown: { destroyAfterEach: true },
       providers: [
-        { provide: HAR_MOCK_CONFIG, useValue: { ...DEFAULT_CONFIG, preserveGuards: [mockBssGuard] } },
+        {
+          provide: HAR_MOCK_CONFIG,
+          useValue: { ...DEFAULT_CONFIG, preserveGuards: [mockBssGuard] },
+        },
         { provide: Router, useValue: mockRouter },
       ],
     });
@@ -433,17 +416,15 @@ describe('harMockGuardBypassFactory', () => {
     subject.next(new RouteConfigLoadEnd({} as Route));
 
     expect(lazyRoute.canActivate).toEqual([mockBssGuard]); // bss kaldı
-    expect(lazyRoute.canDeactivate).toEqual([]);           // auth temizlendi
-    expect(lazyRoute.canMatch).toEqual([mockBssGuard]);    // bss kaldı
+    expect(lazyRoute.canDeactivate).toEqual([]); // auth temizlendi
+    expect(lazyRoute.canMatch).toEqual([mockBssGuard]); // bss kaldı
   });
 
   // Story 5.5 — AC6: bypassGuards=false → preserveGuards görmezden gelinmeli
-  it('5.5 AC6: bypassGuards=false → preserveGuards dolu olsa dahi guard\'lara dokunulmamalı', () => {
+  it("5.5 AC6: bypassGuards=false → preserveGuards dolu olsa dahi guard'lara dokunulmamalı", () => {
     const mockBssGuard = jest.fn(() => true);
     const mockAuthGuard = jest.fn(() => true);
-    const routes: Route[] = [
-      { path: 'admin', canActivate: [mockAuthGuard, mockBssGuard] },
-    ];
+    const routes: Route[] = [{ path: 'admin', canActivate: [mockAuthGuard, mockBssGuard] }];
 
     TestBed.configureTestingModule({
       teardown: { destroyAfterEach: true },

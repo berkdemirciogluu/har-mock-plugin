@@ -1,14 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { isDevMode } from '@angular/core';
 import { harMockStorageInitializerFactory } from './har-mock-storage.initializer';
 import { HAR_MOCK_CONFIG } from '../types/har-mock-config.types';
-
-jest.mock('@angular/core', () => ({
-  ...jest.requireActual('@angular/core'),
-  isDevMode: jest.fn(),
-}));
-
-const mockIsDevMode = isDevMode as jest.MockedFunction<typeof isDevMode>;
 
 describe('harMockStorageInitializerFactory', () => {
   const baseConfig = {
@@ -28,15 +20,14 @@ describe('harMockStorageInitializerFactory', () => {
     jest.clearAllMocks();
   });
 
-  function setup(configOverride = {}, devMode = true) {
-    mockIsDevMode.mockReturnValue(devMode);
+  function setup(configOverride = {}) {
     TestBed.configureTestingModule({
       providers: [{ provide: HAR_MOCK_CONFIG, useValue: { ...baseConfig, ...configOverride } }],
     });
     return TestBed.runInInjectionContext(() => harMockStorageInitializerFactory());
   }
 
-  it('isDevMode=true + enabled=true → localStorage.setItem çağrılır', () => {
+  it('enabled=true → localStorage.setItem çağrılır', () => {
     const setLocalItem = jest.spyOn(Storage.prototype, 'setItem');
     const fn = setup({
       storageEntries: [{ key: 'token', value: 'abc', type: 'localStorage' }],
@@ -45,7 +36,7 @@ describe('harMockStorageInitializerFactory', () => {
     expect(setLocalItem).toHaveBeenCalledWith('token', 'abc');
   });
 
-  it('isDevMode=true + enabled=true → sessionStorage.setItem çağrılır', () => {
+  it('enabled=true → sessionStorage.setItem çağrılır', () => {
     const setSessionItem = jest.spyOn(Storage.prototype, 'setItem');
     const fn = setup({
       storageEntries: [{ key: 'sess', value: 'val', type: 'sessionStorage' }],
@@ -54,17 +45,7 @@ describe('harMockStorageInitializerFactory', () => {
     expect(setSessionItem).toHaveBeenCalledWith('sess', 'val');
   });
 
-  it('isDevMode=false → setItem çağrılmaz (double-lock)', () => {
-    const setItem = jest.spyOn(Storage.prototype, 'setItem');
-    const fn = setup(
-      { storageEntries: [{ key: 'token', value: 'abc', type: 'localStorage' }] },
-      false,
-    );
-    fn();
-    expect(setItem).not.toHaveBeenCalled();
-  });
-
-  it('enabled=false → setItem çağrılmaz (double-lock)', () => {
+  it('enabled=false → setItem çağrılmaz', () => {
     const setItem = jest.spyOn(Storage.prototype, 'setItem');
     const fn = setup({
       enabled: false,
