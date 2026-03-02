@@ -2,7 +2,7 @@
 title: 'Storage Inject — localStorage/sessionStorage Manuel Key-Value Injection'
 slug: 'storage-inject'
 created: '2026-03-03'
-status: 'implementation-complete'
+status: 'completed'
 stepsCompleted: [1, 2, 3, 4, 5, 6]
 tech_stack:
   - TypeScript
