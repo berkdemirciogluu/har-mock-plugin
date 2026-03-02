@@ -16,6 +16,7 @@ export type {
   MatchEvent,
   ExtensionState,
   SequentialCounterMap,
+  StorageEntry,
 } from './state.types';
 export type {
   LoadHarPayload,
@@ -26,5 +27,6 @@ export type {
   RulePayload,
   DeleteRulePayload,
   UpdateResponsePayload,
+  UpdateStorageEntriesPayload,
   StateSyncPayload,
 } from './payload.types';

@@ -2,7 +2,13 @@
  * Message Payload Types — Her MessageType için gönderilen/alınan payload şemaları
  */
 import type { HarEntry, UrlPattern, MockRule, HarHeader } from '@har-mock/core';
-import type { HarSessionData, ExtensionSettings, EditedResponse, MatchEvent } from './state.types';
+import type {
+  HarSessionData,
+  ExtensionSettings,
+  EditedResponse,
+  MatchEvent,
+  StorageEntry,
+} from './state.types';
 
 /** LOAD_HAR payload — popup'tan gelen HAR verisi */
 export interface LoadHarPayload {
@@ -55,6 +61,11 @@ export interface DeleteRulePayload {
   readonly ruleId: string;
 }
 
+/** UPDATE_STORAGE_ENTRIES payload */
+export interface UpdateStorageEntriesPayload {
+  readonly entries: readonly StorageEntry[];
+}
+
 /** UPDATE_RESPONSE payload */
 export interface UpdateResponsePayload {
   readonly key: string;
@@ -69,4 +80,5 @@ export interface StateSyncPayload {
   readonly editedResponses: Record<string, EditedResponse>;
   readonly matchHistory: MatchEvent[];
   readonly accordionStates: Record<string, boolean>;
+  readonly storageEntries: readonly StorageEntry[];
 }

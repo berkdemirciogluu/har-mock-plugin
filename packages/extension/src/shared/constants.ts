@@ -23,6 +23,7 @@ export const STORAGE_KEYS = {
   EDITED_RESPONSES: 'editedResponses',
   SETTINGS: 'settings',
   ACCORDION_STATES: 'accordionStates',
+  STORAGE_ENTRIES: 'storageEntries',
 } as const;
 
 /** Default extension settings */

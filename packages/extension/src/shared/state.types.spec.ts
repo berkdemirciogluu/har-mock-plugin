@@ -89,6 +89,7 @@ describe('state.types — type compatibility', () => {
       editedResponses: {},
       matchHistory: [],
       accordionStates: {},
+      storageEntries: [],
     };
     expect(state.harData).toBeNull();
   });

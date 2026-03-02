@@ -4,6 +4,13 @@ import { InjectionToken, type Type } from '@angular/core';
 /** HAR mock response selection mode */
 export type MockMode = 'last-match' | 'sequential';
 
+/** localStorage veya sessionStorage'a inject edilecek key-value kaydı */
+export interface StorageEntry {
+  readonly key: string;
+  readonly value: string;
+  readonly type: 'localStorage' | 'sessionStorage';
+}
+
 /**
  * Configuration for the provideHarMock() factory function.
  * All fields are optional; unspecified fields use zero-config defaults.
@@ -63,6 +70,14 @@ export interface HarMockConfig {
    * @default []
    */
   domainFilter?: string[];
+
+  /**
+   * Uygulama bootstrap anında localStorage veya sessionStorage'a inject edilecek key-value çiftleri.
+   * Önceki inject edilen değerler üzerine yazılır.
+   * Yalnızca dev mode + enabled=true kombinasyonunda çalışır (double-lock).
+   * @default []
+   */
+  storageEntries?: StorageEntry[];
 }
 
 /** Angular DI token — injects the resolved (Required<HarMockConfig>) configuration */

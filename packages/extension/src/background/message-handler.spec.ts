@@ -58,6 +58,7 @@ function createMockStateManager(): jest.Mocked<StateManager> {
     editedResponses: {},
     matchHistory: [],
     accordionStates: {},
+    storageEntries: [],
   };
   return {
     initialize: jest.fn().mockResolvedValue(undefined),
@@ -80,6 +81,8 @@ function createMockStateManager(): jest.Mocked<StateManager> {
     clearMatchHistory: jest.fn().mockResolvedValue(undefined),
     getAccordionStates: jest.fn().mockReturnValue({}),
     updateAccordionState: jest.fn().mockResolvedValue(undefined),
+    getStorageEntries: jest.fn().mockReturnValue([]),
+    setStorageEntries: jest.fn().mockResolvedValue(undefined),
     getSequentialIndex: jest.fn().mockReturnValue(0),
     incrementSequentialIndex: jest.fn(),
     resetSequentialCounters: jest.fn(),

@@ -9,6 +9,7 @@ import { SettingsSectionComponent } from '../settings-section/hm-settings-sectio
 import { HmExcludeListComponent } from '../exclude-list/hm-exclude-list.component';
 import { HmRuleFormComponent } from '../rule-form/hm-rule-form.component';
 import { HmRuleListComponent } from '../rule-list/hm-rule-list.component';
+import { StorageInjectComponent } from '../storage-inject/storage-inject.component';
 import { ExtensionMessagingService } from '../../services/extension-messaging.service';
 import { MessageType } from '../../../shared/messaging.types';
 import type {
@@ -30,6 +31,7 @@ import type { MockRule } from '@har-mock/core';
     HmExcludeListComponent,
     HmRuleFormComponent,
     HmRuleListComponent,
+    StorageInjectComponent,
   ],
   host: { class: 'flex flex-col flex-1 min-h-0 overflow-y-auto' },
   template: `
@@ -89,6 +91,16 @@ import type { MockRule } from '@har-mock/core';
           (ruleUpdated)="onRuleUpdated($event)"
           (editCancelled)="editingRule.set(null)"
         />
+      </hm-accordion>
+
+      <hm-accordion
+        title="Storage"
+        [expanded]="false"
+        persistKey="storage"
+        [badge]="storageEntries().length > 0 ? storageEntries().length.toString() : ''"
+        [badgeVariant]="storageEntries().length > 0 ? 'info' : 'default'"
+      >
+        <hm-storage-inject [entries]="storageEntries()" />
       </hm-accordion>
 
       <hm-accordion title="Settings" [expanded]="false" persistKey="settings">
@@ -202,6 +214,9 @@ export class ControlsTabComponent {
   );
   readonly domainFilter = computed<readonly string[]>(
     () => this.messaging.state()?.settings?.domainFilter ?? [],
+  );
+  readonly storageEntries = computed<readonly import('../../../shared/state.types').StorageEntry[]>(
+    () => this.messaging.state()?.storageEntries ?? [],
   );
 
   onReplayModeChange(mode: ReplayMode): void {

@@ -39,6 +39,10 @@ export enum MessageType {
   CLEAR_HAR = 'CLEAR_HAR',
   /** popup → background: tüm state'i fabrika ayarlarına sıfırla */
   RESET_ALL = 'RESET_ALL',
+  /** popup → background: storage entries güncelle */
+  UPDATE_STORAGE_ENTRIES = 'UPDATE_STORAGE_ENTRIES',
+  /** background → content: storage entries push (sayfa yüklendiğinde inject için) */
+  STORAGE_PUSH = 'STORAGE_PUSH',
 }
 
 /** Generic message interface for port communication */

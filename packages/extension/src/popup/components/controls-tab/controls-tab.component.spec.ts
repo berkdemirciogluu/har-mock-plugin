@@ -25,6 +25,7 @@ const makeStateSyncPayload = (overrides: Partial<StateSyncPayload> = {}): StateS
   editedResponses: {},
   matchHistory: [],
   accordionStates: {},
+  storageEntries: [],
   ...overrides,
 });
 
@@ -67,9 +68,9 @@ describe('ControlsTabComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should render 3 accordion components', () => {
+  it('should render 4 accordion components', () => {
     const accordions = el.querySelectorAll('hm-accordion');
-    expect(accordions.length).toBe(3);
+    expect(accordions.length).toBe(4);
   });
 
   it('should have HAR accordion expanded by default', async () => {
@@ -90,8 +91,15 @@ describe('ControlsTabComponent', () => {
 
   it('should have Settings accordion collapsed by default', () => {
     const accordions = el.querySelectorAll('hm-accordion');
-    const settingsAccordion = accordions[2] as HTMLElement;
+    const settingsAccordion = accordions[3] as HTMLElement;
     const body = settingsAccordion.querySelector('[role="region"]') as HTMLElement;
+    expect(body.style.maxHeight).toBe('0px');
+  });
+
+  it('should have Storage accordion collapsed by default', () => {
+    const accordions = el.querySelectorAll('hm-accordion');
+    const storageAccordion = accordions[2] as HTMLElement;
+    const body = storageAccordion.querySelector('[role="region"]') as HTMLElement;
     expect(body.style.maxHeight).toBe('0px');
   });
 

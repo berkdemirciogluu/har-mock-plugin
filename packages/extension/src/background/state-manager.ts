@@ -11,6 +11,7 @@ import type {
   MatchEvent,
   ExtensionState,
   SequentialCounterMap,
+  StorageEntry,
 } from '../shared/state.types';
 import type { StateSyncPayload } from '../shared/payload.types';
 
@@ -62,6 +63,11 @@ export class StateManager {
       this.state.accordionStates = accordionStates;
     }
 
+    const storageEntries = result[STORAGE_KEYS.STORAGE_ENTRIES] as StorageEntry[] | undefined;
+    if (storageEntries !== undefined) {
+      this.state.storageEntries = storageEntries;
+    }
+
     this.initialized = true;
   }
 
@@ -79,6 +85,7 @@ export class StateManager {
       editedResponses: this.state.editedResponses,
       matchHistory: this.state.matchHistory,
       accordionStates: this.state.accordionStates,
+      storageEntries: this.state.storageEntries,
     };
   }
 
@@ -180,6 +187,17 @@ export class StateManager {
     await this.persistToStorage(STORAGE_KEYS.ACCORDION_STATES, this.state.accordionStates);
   }
 
+  // --- Storage Entries ---
+
+  getStorageEntries(): readonly StorageEntry[] {
+    return this.state.storageEntries;
+  }
+
+  async setStorageEntries(entries: readonly StorageEntry[]): Promise<void> {
+    this.state.storageEntries = entries;
+    await this.persistToStorage(STORAGE_KEYS.STORAGE_ENTRIES, entries);
+  }
+
   // --- Sequential Counter (in-memory only, storage'a kaydedilmez) ---
 
   getSequentialIndex(patternTemplate: string): number {
@@ -207,6 +225,7 @@ export class StateManager {
       STORAGE_KEYS.MATCH_HISTORY,
       STORAGE_KEYS.EDITED_RESPONSES,
       STORAGE_KEYS.SETTINGS,
+      STORAGE_KEYS.STORAGE_ENTRIES,
     ]);
   }
 
@@ -220,6 +239,7 @@ export class StateManager {
       editedResponses: {},
       matchHistory: [],
       accordionStates: {},
+      storageEntries: [],
     };
   }
 

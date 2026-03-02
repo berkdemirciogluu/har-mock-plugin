@@ -31,5 +31,16 @@ export interface WindowMatchResult {
   readonly source?: 'rule' | 'har';
 }
 
+/** ISOLATED → MAIN: Storage inject — localStorage/sessionStorage key-value çiftleri */
+export interface WindowStorageInject {
+  readonly channel: typeof HAR_MOCK_CHANNEL;
+  readonly type: 'STORAGE_INJECT';
+  readonly entries: ReadonlyArray<{
+    readonly key: string;
+    readonly value: string;
+    readonly type: 'localStorage' | 'sessionStorage';
+  }>;
+}
+
 /** Union type for window message discrimination */
-export type WindowMessage = WindowMatchQuery | WindowMatchResult;
+export type WindowMessage = WindowMatchQuery | WindowMatchResult | WindowStorageInject;

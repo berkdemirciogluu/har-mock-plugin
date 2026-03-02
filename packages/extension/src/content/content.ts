@@ -10,6 +10,7 @@ import {
   HAR_MOCK_CHANNEL,
   type WindowMatchQuery,
   type WindowMatchResult,
+  type WindowStorageInject,
 } from './window-messaging.types';
 
 /** chrome.storage.local'dan extension enabled durumunu oku (SW uyandırmaz) */
@@ -135,6 +136,17 @@ function onPortMessage(message: Message): void {
         source: payload.source,
       };
       window.postMessage(result, '*');
+      break;
+    }
+    case MessageType.STORAGE_PUSH: {
+      // Background'dan gelen storage entries → MAIN world'e forward (inject için)
+      const { entries } = message.payload as { entries: WindowStorageInject['entries'] };
+      const inject: WindowStorageInject = {
+        channel: HAR_MOCK_CHANNEL,
+        type: 'STORAGE_INJECT',
+        entries,
+      };
+      window.postMessage(inject, '*');
       break;
     }
     default:

@@ -10,6 +10,7 @@ import type { HarMockConfig } from '../types/har-mock-config.types';
 import { HAR_MOCK_CONFIG } from '../types/har-mock-config.types';
 import { HarLoaderService, harMockInterceptor } from '../interceptor/har-mock.interceptor';
 import { harMockGuardBypassFactory } from '../initializer';
+import { harMockStorageInitializerFactory } from '../initializer/har-mock-storage.initializer';
 
 /**
  * Angular HAR Mock plugin'i app.config.ts'e ekler.
@@ -39,6 +40,7 @@ export function provideHarMock(config?: HarMockConfig): EnvironmentProviders {
     preserveGuards: config?.preserveGuards ?? [],
     rules: config?.rules ?? [],
     domainFilter: config?.domainFilter ?? [],
+    storageEntries: config?.storageEntries ?? [],
   };
 
   return makeEnvironmentProviders([
@@ -61,6 +63,11 @@ export function provideHarMock(config?: HarMockConfig): EnvironmentProviders {
     {
       provide: APP_INITIALIZER,
       useFactory: harMockGuardBypassFactory,
+      multi: true,
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: harMockStorageInitializerFactory,
       multi: true,
     },
   ]);

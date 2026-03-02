@@ -3,6 +3,13 @@
  */
 import type { HarEntry, UrlPattern, MockRule, HarHeader } from '@har-mock/core';
 
+/** Storage inject kaydı — localStorage veya sessionStorage'a yazılacak key-value çifti */
+export interface StorageEntry {
+  readonly key: string;
+  readonly value: string;
+  readonly type: 'localStorage' | 'sessionStorage';
+}
+
 /** HAR session verisi — parse edilmiş entries + auto-parameterized patterns */
 export interface HarSessionData {
   readonly entries: readonly HarEntry[];
@@ -48,6 +55,7 @@ export interface ExtensionState {
   editedResponses: Record<string, EditedResponse>;
   matchHistory: MatchEvent[];
   accordionStates: Record<string, boolean>;
+  storageEntries: readonly StorageEntry[];
 }
 
 /** Sequential replay counter — key: pattern template */
