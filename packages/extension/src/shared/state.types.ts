@@ -1,14 +1,9 @@
 /**
  * Extension State Types — Background SW in-memory cache yapısı ve ortak veri modelleri
  */
-import type { HarEntry, UrlPattern, MockRule, HarHeader } from '@har-mock/core';
+import type { HarEntry, UrlPattern, MockRule, HarHeader, StorageEntry } from '@har-mock/core';
 
-/** Storage inject kaydı — localStorage veya sessionStorage'a yazılacak key-value çifti */
-export interface StorageEntry {
-  readonly key: string;
-  readonly value: string;
-  readonly type: 'localStorage' | 'sessionStorage';
-}
+export type { StorageEntry } from '@har-mock/core';
 
 /** HAR session verisi — parse edilmiş entries + auto-parameterized patterns */
 export interface HarSessionData {

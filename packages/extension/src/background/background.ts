@@ -33,11 +33,15 @@ chrome.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
 
   // Content script bağlandığında storage entries'i push et (sayfa yüklendiğinde inject)
   if (port.name.startsWith(PORT_NAME_CONTENT_PREFIX)) {
-    const entries = stateManager.getStorageEntries();
-    port.postMessage({
-      type: MessageType.STORAGE_PUSH,
-      payload: { entries },
-    } as Message<{ entries: typeof entries }>);
+    // F1+F8: Extension kapalıysa veya state henüz yüklenmemişse push yapma
+    if (stateManager.isInitialized() && stateManager.getSettings().enabled) {
+      const entries = stateManager.getStorageEntries();
+      const msg: Message = {
+        type: MessageType.STORAGE_PUSH,
+        payload: { entries },
+      };
+      port.postMessage(msg);
+    }
   }
 
   port.onDisconnect.addListener(() => {

@@ -1,15 +1,10 @@
-import type { MockRule } from '@har-mock/core';
+import type { MockRule, StorageEntry } from '@har-mock/core';
 import { InjectionToken, type Type } from '@angular/core';
+
+export type { StorageEntry } from '@har-mock/core';
 
 /** HAR mock response selection mode */
 export type MockMode = 'last-match' | 'sequential';
-
-/** localStorage veya sessionStorage'a inject edilecek key-value kaydı */
-export interface StorageEntry {
-  readonly key: string;
-  readonly value: string;
-  readonly type: 'localStorage' | 'sessionStorage';
-}
 
 /**
  * Configuration for the provideHarMock() factory function.

@@ -28,6 +28,7 @@ export type {
   MockRequest,
   ResolveSource,
   ResolveResult,
+  StorageEntry,
 } from './types';
 
 // Errors

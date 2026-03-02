@@ -34,3 +34,5 @@ export type {
   ResolveSource,
   ResolveResult,
 } from './rule.types';
+
+export type { StorageEntry } from './storage.types';

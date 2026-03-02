@@ -138,7 +138,13 @@ type StorageType = 'localStorage' | 'sessionStorage';
         [disabled]="saving()"
         (click)="save()"
       >
-        {{ saving() ? 'Kaydediliyor…' : 'Kaydet & Inject Et' }}
+        {{
+          saving()
+            ? 'Kaydediliyor…'
+            : localEntries().length === 0
+              ? 'Tümünü Kaldır & Uygula'
+              : 'Kaydet & Inject Et'
+        }}
       </button>
 
       @if (saveError()) {
@@ -162,10 +168,14 @@ export class StorageInjectComponent implements OnChanges {
   readonly keyError = signal(false);
   readonly saving = signal(false);
   readonly saveError = signal('');
+  /** F4: Kullanıcı entry ekledi/sildi ama henüz kaydetmedi — incoming STATE_SYNC localEntries'i ezmesin */
+  private readonly dirty = signal(false);
 
   ngOnChanges(): void {
-    // input() değiştiğinde local kopya güncellenir (background'dan yeni state geldiğinde)
-    this.localEntries.set([...this.entries()]);
+    // input() değiştiğinde local kopya güncellenir — ancak kullanıcı unsaved değişiklik yaptıysa ezilmez
+    if (!this.dirty()) {
+      this.localEntries.set([...this.entries()]);
+    }
   }
 
   getInputValue(event: Event): string {
@@ -185,10 +195,13 @@ export class StorageInjectComponent implements OnChanges {
     ]);
     this.newKey.set('');
     this.newValue.set('');
+    // F10: newType kasıtlı olarak sıfırlanmaz — kullanıcı genellikle aynı tipte art arda entry ekler
+    this.dirty.set(true);
   }
 
   removeEntry(index: number): void {
     this.localEntries.update((prev) => prev.filter((_, i) => i !== index));
+    this.dirty.set(true);
   }
 
   save(): void {
@@ -203,6 +216,7 @@ export class StorageInjectComponent implements OnChanges {
       )
       .then(() => {
         this.saving.set(false);
+        this.dirty.set(false); // Kayıt başarılı — incoming STATE_SYNC kabul edilebilir
       })
       .catch((err: unknown) => {
         this.saving.set(false);

@@ -534,23 +534,39 @@ async function handleMessageAsync(
 
     case MessageType.UPDATE_STORAGE_ENTRIES: {
       try {
-        const { entries } = message.payload as UpdateStorageEntriesPayload;
-        await stateManager.setStorageEntries(entries);
-        port.postMessage({
-          type: MessageType.UPDATE_STORAGE_ENTRIES,
-          payload: { success: true },
-          requestId: message.requestId,
-        });
+        // F5: Payload validation
+        const payload = message.payload as UpdateStorageEntriesPayload | undefined;
+        if (!payload || !Array.isArray(payload.entries)) {
+          port.postMessage({
+            type: MessageType.UPDATE_STORAGE_ENTRIES,
+            payload: { success: false, error: 'Invalid payload: entries must be an array' },
+            requestId: message.requestId,
+          });
+          break;
+        }
+        const validEntries = payload.entries.filter(
+          (e): e is import('../shared/state.types').StorageEntry =>
+            typeof e?.key === 'string' &&
+            e.key.trim().length > 0 &&
+            typeof e?.value === 'string' &&
+            (e?.type === 'localStorage' || e?.type === 'sessionStorage'),
+        );
+        await stateManager.setStorageEntries(validEntries);
+        // F9: Broadcast ÖNCE, başarı yanıtı SONRA — tüm tab'lar inject alsın
+        portManager.broadcastToContent({
+          type: MessageType.STORAGE_PUSH,
+          payload: { entries: validEntries },
+        } as Message);
         // Popup'a güncel state push et
         portManager.getPopupPort()?.postMessage({
           type: MessageType.STATE_SYNC,
           payload: stateManager.getFullState(),
         });
-        // Tüm content port'lara yeni entries push et (canlı tab'lar inject alsın)
-        portManager.broadcastToContent({
-          type: MessageType.STORAGE_PUSH,
-          payload: { entries },
-        } as Message<{ entries: typeof entries }>);
+        port.postMessage({
+          type: MessageType.UPDATE_STORAGE_ENTRIES,
+          payload: { success: true },
+          requestId: message.requestId,
+        });
       } catch (error: unknown) {
         const errorMsg = error instanceof Error ? error.message : 'Unknown error';
         port.postMessage({

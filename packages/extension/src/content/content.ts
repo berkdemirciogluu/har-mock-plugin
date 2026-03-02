@@ -140,13 +140,20 @@ function onPortMessage(message: Message): void {
     }
     case MessageType.STORAGE_PUSH: {
       // Background'dan gelen storage entries → MAIN world'e forward (inject için)
-      const { entries } = message.payload as { entries: WindowStorageInject['entries'] };
-      const inject: WindowStorageInject = {
-        channel: HAR_MOCK_CHANNEL,
-        type: 'STORAGE_INJECT',
-        entries,
-      };
-      window.postMessage(inject, '*');
+      // F2: Extension kapalıysa inject yapma
+      void isExtensionEnabled().then((enabled) => {
+        if (!enabled) return;
+        // F6: Payload güvenli erişim
+        const payload = message.payload as { entries?: WindowStorageInject['entries'] } | undefined;
+        const entries = payload?.entries;
+        if (!Array.isArray(entries)) return;
+        const inject: WindowStorageInject = {
+          channel: HAR_MOCK_CHANNEL,
+          type: 'STORAGE_INJECT',
+          entries,
+        };
+        window.postMessage(inject, '*');
+      });
       break;
     }
     default:
