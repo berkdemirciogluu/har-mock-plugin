@@ -106,7 +106,7 @@ packages/extension/dist/
 1. Chrome'da `chrome://extensions` adresine git
 2. Sağ üstten **"Geliştirici modu"** (Developer mode) toggle'ını aç
 3. **"Paketlenmemiş öğe yükle"** (Load unpacked) butonuna tıkla
-4. `packages/extension/dist/` klasörünü seç
+4. `packages/extension/dist/extension` klasörünü seç
 5. Extension yüklenecek ve araç çubuğunda **HAR Mock Plugin** ikonu görünecek
 
 > **İpucu:** Extension ikonunu araç çubuğuna sabitlemek için 🧩 (puzzle) ikonuna tıklayıp "Sabitle" (Pin) butonuna bas.
