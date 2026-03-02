@@ -120,9 +120,9 @@ import type { MockRule } from '@har-mock/core';
           <hm-exclude-list
             [excludeList]="domainFilter()"
             (excludeListChange)="onDomainFilterChange($event)"
-            placeholder="Domain (örn: api.example.com veya 15.237.105.224:8080)"
-            inputAriaLabel="Yeni domain gir"
-            emptyMessage="Domain filter boş. Tüm domain'lerdeki istekler mock'lanıyor."
+            placeholder="Domain (e.g. api.example.com or 15.237.105.224:8080)"
+            inputAriaLabel="Enter new domain"
+            emptyMessage="Domain filter is empty. Requests from all domains are being mocked."
           />
         </div>
 
@@ -147,12 +147,12 @@ import type { MockRule } from '@har-mock/core';
                   clip-rule="evenodd"
                 />
               </svg>
-              Tümünü Sıfırla
+              Reset All
             </button>
           } @else {
             <div class="flex items-center justify-between gap-2">
               <span class="text-xs text-slate-500"
-                >HAR, rule'lar ve ayarlar silinecek. Emin misin?</span
+                >HAR, rules and settings will be deleted. Are you sure?</span
               >
               <div class="flex shrink-0 gap-1.5">
                 <button
@@ -160,14 +160,14 @@ import type { MockRule } from '@har-mock/core';
                   class="rounded px-2.5 py-1 text-xs font-semibold text-slate-600 bg-slate-200 transition-colors hover:bg-slate-300"
                   (click)="confirmReset.set(false)"
                 >
-                  İptal
+                  Cancel
                 </button>
                 <button
                   type="button"
                   class="rounded px-2.5 py-1 text-xs font-semibold text-white bg-red-500 transition-colors hover:bg-red-600"
                   (click)="onResetAll()"
                 >
-                  Sıfırla
+                  Reset
                 </button>
               </div>
             </div>

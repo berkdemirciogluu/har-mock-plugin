@@ -13,10 +13,10 @@
     <button
       type="button"
       class="rounded bg-indigo-600 px-2 py-1 text-xs font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
-      aria-label="Ekle — pattern listesine ekle"
+      aria-label="Add — add to pattern list"
       (click)="addPattern()"
     >
-      Ekle
+      Add
     </button>
   </div>
 
@@ -34,10 +34,10 @@
           <button
             type="button"
             class="ml-2 shrink-0 text-xs text-red-500 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-1"
-            [attr.aria-label]="'Kaldır — ' + pattern + ' pattern\'ını sil'"
+            [attr.aria-label]="'Remove — ' + pattern"
             (click)="removePattern(i)"
           >
-            Kaldır
+            Remove
           </button>
         </li>
       }

@@ -3,7 +3,7 @@
   <button
     type="button"
     data-testid="add-rule-button"
-    aria-label="Yeni rule ekle"
+    aria-label="Add new rule"
     class="flex w-full items-center justify-center gap-1 rounded border border-dashed border-slate-300 px-3 py-2 text-xs text-slate-500 transition-colors hover:border-indigo-300 hover:text-indigo-600"
     (click)="showForm.set(true)"
   >
@@ -20,7 +20,7 @@
         clip-rule="evenodd"
       />
     </svg>
-    Yeni Rule Ekle
+    Add New Rule
   </button>
 }
 
@@ -35,9 +35,9 @@
     <!-- Form başlığı — edit vs create mode (Subtask 3.7) -->
     <p class="text-xs font-semibold text-slate-700" data-testid="form-title">
       @if (isEditMode()) {
-        Rule Düzenle
+        Edit Rule
       } @else {
-        Yeni Rule Ekle
+        Add New Rule
       }
     </p>
     <!-- URL Pattern -->
@@ -51,7 +51,7 @@
         aria-label="URL Pattern"
         [attr.aria-invalid]="urlPatternError() ? 'true' : null"
         [attr.aria-describedby]="urlPatternError() ? 'hm-rule-url-error' : null"
-        placeholder="/api/endpoint veya /api/*"
+        placeholder="/api/endpoint or /api/*"
         class="w-full rounded border px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400"
         [class.border-red-400]="urlPatternError()"
         [class.border-slate-300]="!urlPatternError()"
@@ -129,19 +129,19 @@
         />
       </div>
       @if (!jsonValid()) {
-        <p class="mt-0.5 text-xs text-red-500" role="alert">Geçersiz JSON formatı</p>
+        <p class="mt-0.5 text-xs text-red-500" role="alert">Invalid JSON format</p>
       }
     </div>
 
     <!-- Delay (opsiyonel) -->
     <div>
       <label for="hm-rule-delay" class="mb-1 block text-xs font-medium text-slate-600">
-        Delay (ms) — opsiyonel
+        Delay (ms) — optional
       </label>
       <input
         id="hm-rule-delay"
         type="number"
-        aria-label="Delay milisaniye"
+        aria-label="Delay milliseconds"
         min="0"
         placeholder="0"
         class="w-full rounded border border-slate-300 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400"
@@ -155,22 +155,22 @@
       <button
         type="button"
         data-testid="cancel-button"
-        aria-label="Formu iptal et"
+        aria-label="Cancel form"
         class="rounded border border-slate-300 px-3 py-1.5 text-xs text-slate-600 transition-colors hover:bg-slate-100"
         (click)="resetForm()"
       >
-        İptal
+        Cancel
       </button>
       <button
         type="submit"
         data-testid="save-button"
-        aria-label="Rule kaydet"
+        aria-label="Save rule"
         class="rounded bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
       >
         @if (isEditMode()) {
-          Güncelle
+          Update
         } @else {
-          Kaydet
+          Save
         }
       </button>
     </div>

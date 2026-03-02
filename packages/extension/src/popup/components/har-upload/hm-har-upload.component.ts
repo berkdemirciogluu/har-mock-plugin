@@ -56,7 +56,7 @@ export class HarUploadComponent {
     const file = event.dataTransfer?.files[0];
     if (!file) return;
     if (!file.name.endsWith('.har')) {
-      this.errorMessage.set('Sadece .har uzantılı dosyalar desteklenir.');
+      this.errorMessage.set('Only .har files are supported.');
       return;
     }
     this.processFile(file);
@@ -67,7 +67,7 @@ export class HarUploadComponent {
     const file = input.files?.[0];
     if (!file) return;
     if (!file.name.endsWith('.har')) {
-      this.errorMessage.set('Sadece .har uzantılı dosyalar desteklenir.');
+      this.errorMessage.set('Only .har files are supported.');
       return;
     }
     this.processFile(file);
@@ -108,14 +108,14 @@ export class HarUploadComponent {
           const count = (response.data as { patternCount: number } | undefined)?.patternCount ?? 0;
           this.onEndpointLoaded.emit(count);
         } else {
-          this.errorMessage.set(response.error?.message ?? 'Bilinmeyen hata');
+          this.errorMessage.set(response.error?.message ?? 'Unknown error');
         }
       })
       .catch((err: unknown) => {
         if (err instanceof HarParseError) {
           this.errorMessage.set(`${err.type}: ${err.rootCause} \u2014 ${err.suggestedAction}`);
         } else {
-          this.errorMessage.set('HAR dosyası işlenirken beklenmeyen hata oluştu.');
+          this.errorMessage.set('An unexpected error occurred while processing the HAR file.');
         }
       })
       .finally(() => {

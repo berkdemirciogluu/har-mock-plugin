@@ -1,5 +1,5 @@
 <!-- Liste — @for @empty ile Angular 17+ idiomatik pattern (L1 fix) -->
-<ul class="mb-2 space-y-1" role="list" aria-label="Aktif rule listesi">
+<ul class="mb-2 space-y-1" role="list" aria-label="Active rule list">
   @for (rule of rules(); track rule.id) {
     <li
       class="flex items-center gap-2 rounded border border-slate-200 bg-white px-2 py-1.5 text-xs"
@@ -44,7 +44,7 @@
         <!-- Düzenle butonu (Subtask 2.2, AC #2) -->
         <button
           type="button"
-          [attr.aria-label]="rule.urlPattern + ' rule\'unu düzenle'"
+          [attr.aria-label]="rule.urlPattern + ' — edit rule'"
           class="shrink-0 rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-indigo-600"
           data-testid="edit-rule-button"
           (click)="onEditClick(rule)"
@@ -65,7 +65,7 @@
         <!-- Sil butonu (Subtask 2.2, AC #3) -->
         <button
           type="button"
-          [attr.aria-label]="rule.urlPattern + ' rule\'unu sil'"
+          [attr.aria-label]="rule.urlPattern + ' — delete rule'"
           class="shrink-0 rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-red-600"
           data-testid="delete-rule-button"
           (click)="onDeleteClick(rule.id)"
@@ -87,25 +87,25 @@
       } @else {
         <!-- Silme onayı — M1 fix: inline confirm/cancel -->
         <span class="shrink-0 text-[10px] text-slate-500" data-testid="delete-confirm-label"
-          >Emin misin?</span
+          >Are you sure?</span
         >
         <button
           type="button"
-          aria-label="Silmeyi onayla"
+          aria-label="Confirm delete"
           class="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold text-white transition-colors bg-red-500 hover:bg-red-600"
           data-testid="confirm-delete-button"
           (click)="onConfirmDelete(rule.id)"
         >
-          Sil
+          Delete
         </button>
         <button
           type="button"
-          aria-label="Silmeyi iptal et"
+          aria-label="Cancel delete"
           class="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 transition-colors bg-slate-200 hover:bg-slate-300"
           data-testid="cancel-delete-button"
           (click)="onCancelDelete()"
         >
-          İptal
+          Cancel
         </button>
       }
     </li>
@@ -113,7 +113,7 @@
     <!-- Boş durum mesajı — @for @empty ile (L1 fix, AC #4) -->
     <li>
       <p class="py-4 text-center text-xs text-slate-400" data-testid="empty-state-message">
-        Henüz rule tanımlanmadı. 'Yeni Rule Ekle' butonuyla başlayın.
+        No rules defined yet. Use the 'Add New Rule' button to get started.
       </p>
     </li>
   }

@@ -7,7 +7,7 @@
  */
 export function formatRelativeTime(timestamp: number): string {
   const diff = Math.floor((Date.now() - timestamp) / 1000);
-  if (diff < 1) return 'şimdi';
+  if (diff < 1) return 'just now';
   if (diff < 60) return `${diff}s`;
   if (diff < 3600) return `${Math.floor(diff / 60)}m`;
   return `${Math.floor(diff / 3600)}h`;

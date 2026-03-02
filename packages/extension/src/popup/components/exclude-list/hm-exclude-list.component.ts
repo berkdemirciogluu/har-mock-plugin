@@ -11,19 +11,19 @@ type ValidationError = 'empty' | 'duplicate' | null;
 export class HmExcludeListComponent {
   readonly excludeList = input<readonly string[]>([]);
   readonly excludeListChange = output<readonly string[]>();
-  readonly placeholder = input<string>('URL pattern (örn: /api/auth)');
+  readonly placeholder = input<string>('URL pattern (e.g. /api/auth)');
   readonly emptyMessage = input<string>(
-    "Exclude listesi boş. Tüm eşleşen endpoint'ler mock'lanıyor.",
+    'Exclude list is empty. All matching endpoints are being mocked.',
   );
-  readonly inputAriaLabel = input<string>('Yeni exclude pattern gir');
+  readonly inputAriaLabel = input<string>('Enter new exclude pattern');
 
   readonly newPattern = signal<string>('');
   readonly validationError = signal<ValidationError>(null);
 
   readonly errorMessage = computed<string>(() => {
     const err = this.validationError();
-    if (err === 'empty') return 'URL pattern gerekli';
-    if (err === 'duplicate') return 'Bu pattern zaten listede';
+    if (err === 'empty') return 'URL pattern is required';
+    if (err === 'duplicate') return 'This pattern is already in the list';
     return '';
   });
 

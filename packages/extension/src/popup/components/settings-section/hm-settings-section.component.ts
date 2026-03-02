@@ -7,7 +7,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
   template: `
     <div class="flex items-center justify-between py-1">
       <span class="text-xs font-medium text-slate-700">
-        {{ extensionEnabled() ? 'Extension Aktif' : 'Extension Kapalı' }}
+        {{ extensionEnabled() ? 'Extension Active' : 'Extension Disabled' }}
       </span>
       <button
         type="button"
@@ -18,8 +18,8 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
         [attr.aria-checked]="extensionEnabled()"
         [attr.aria-label]="
           extensionEnabled()
-            ? 'Extension aktif, kapatmak için tıkla'
-            : 'Extension kapalı, açmak için tıkla'
+            ? 'Extension active, click to disable'
+            : 'Extension disabled, click to enable'
         "
         (click)="toggle()"
       >

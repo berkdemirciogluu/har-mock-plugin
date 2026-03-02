@@ -20,7 +20,7 @@ type StorageType = 'localStorage' | 'sessionStorage';
     <div class="space-y-3">
       <!-- Mevcut entries listesi -->
       @if (localEntries().length === 0) {
-        <p class="text-xs text-slate-400 italic">Inject edilecek kayıt yok.</p>
+        <p class="text-xs text-slate-400 italic">No entries to inject.</p>
       } @else {
         <ul class="space-y-1">
           @for (entry of localEntries(); track $index) {
@@ -45,7 +45,7 @@ type StorageType = 'localStorage' | 'sessionStorage';
               <button
                 type="button"
                 class="ml-1 shrink-0 rounded p-0.5 text-slate-400 hover:bg-red-50 hover:text-red-500 focus:outline-none focus:ring-1 focus:ring-red-400"
-                [attr.aria-label]="'Sil: ' + entry.key"
+                [attr.aria-label]="'Delete: ' + entry.key"
                 (click)="removeEntry($index)"
               >
                 <svg
@@ -111,14 +111,14 @@ type StorageType = 'localStorage' | 'sessionStorage';
         <input
           type="text"
           class="w-full rounded border border-slate-200 px-2 py-1 text-xs font-mono placeholder-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
-          placeholder="value (string, JSON, vb.)"
+          placeholder="value (string, JSON, etc.)"
           aria-label="Storage value"
           [value]="newValue()"
           (input)="newValue.set(getInputValue($event))"
         />
 
         @if (keyError()) {
-          <p class="text-xs text-red-500">Key boş olamaz.</p>
+          <p class="text-xs text-red-500">Key cannot be empty.</p>
         }
 
         <!-- Add butonu -->
@@ -127,7 +127,7 @@ type StorageType = 'localStorage' | 'sessionStorage';
           class="w-full rounded border border-slate-200 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-1 focus:ring-indigo-400"
           (click)="addEntry()"
         >
-          + Ekle
+          + Add
         </button>
       </div>
 
@@ -140,10 +140,10 @@ type StorageType = 'localStorage' | 'sessionStorage';
       >
         {{
           saving()
-            ? 'Kaydediliyor…'
+            ? 'Saving…'
             : localEntries().length === 0
-              ? 'Tümünü Kaldır & Uygula'
-              : 'Kaydet & Inject Et'
+              ? 'Remove All & Apply'
+              : 'Save & Inject'
         }}
       </button>
 
@@ -220,7 +220,7 @@ export class StorageInjectComponent implements OnChanges {
       })
       .catch((err: unknown) => {
         this.saving.set(false);
-        this.saveError.set(err instanceof Error ? err.message : 'Kaydetme başarısız.');
+        this.saveError.set(err instanceof Error ? err.message : 'Save failed.');
       });
   }
 }

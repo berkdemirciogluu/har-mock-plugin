@@ -138,7 +138,7 @@ export class HmResponseViewerComponent {
       })
       .catch((err: unknown) => {
         this.isSaving.set(false);
-        const msg = err instanceof Error ? err.message : 'Kaydetme başarısız oldu';
+        const msg = err instanceof Error ? err.message : 'Save failed';
         this.errorMessage.set(msg);
         console.error('saveResponse failed:', err);
       });

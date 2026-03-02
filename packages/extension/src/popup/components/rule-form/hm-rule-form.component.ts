@@ -70,14 +70,14 @@ export class HmRuleFormComponent {
   onSave(): void {
     // URL pattern boş kontrolü
     if (!this.urlPattern().trim()) {
-      this.urlPatternError.set('URL pattern zorunludur');
+      this.urlPatternError.set('URL pattern is required');
       return;
     }
 
     // Status code aralık kontrolü
     const code = this.statusCode();
     if (code < 100 || code > 599) {
-      this.statusCodeError.set('Status code 100-599 arasında olmalıdır');
+      this.statusCodeError.set('Status code must be between 100 and 599');
       return;
     }
 

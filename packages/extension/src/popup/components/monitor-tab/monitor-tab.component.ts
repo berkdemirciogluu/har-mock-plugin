@@ -40,8 +40,8 @@ import { HmResponseViewerComponent } from '../response-viewer/hm-response-viewer
             d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
           />
         </svg>
-        <p class="text-sm text-slate-500">Henüz intercept edilmiş request yok.</p>
-        <p class="text-xs text-slate-400 mt-1">Sayfayı yenileyip bir istek başlatın.</p>
+        <p class="text-sm text-slate-500">No intercepted requests yet.</p>
+        <p class="text-xs text-slate-400 mt-1">Reload the page and trigger a request.</p>
       </div>
     } @else {
       <!-- Feed Header: count + clear button -->
@@ -49,13 +49,13 @@ import { HmResponseViewerComponent } from '../response-viewer/hm-response-viewer
         class="flex items-center justify-between px-3 py-1.5 border-b border-slate-100 bg-slate-50/50 shrink-0"
       >
         <span class="text-[10px] text-slate-500 font-medium">
-          {{ matchHistory().length }} request yakalandı
+          {{ matchHistory().length }} requests captured
         </span>
         <button
           class="text-[10px] text-red-400 hover:text-red-600 cursor-pointer"
           (click)="clearHistory()"
         >
-          Temizle
+          Clear
         </button>
       </div>
       <!-- Feed List -->
@@ -103,10 +103,10 @@ import { HmResponseViewerComponent } from '../response-viewer/hm-response-viewer
               [class.text-slate-500]="event.source === 'passthrough'"
               [title]="
                 event.source === 'rule'
-                  ? 'Rule eşleşmesi'
+                  ? 'Rule match'
                   : event.source === 'har'
-                    ? 'HAR eşleşmesi'
-                    : 'Passthrough (eşleşme yok)'
+                    ? 'HAR match'
+                    : 'Passthrough (no match)'
               "
             >
               @if (event.source === 'rule') {
