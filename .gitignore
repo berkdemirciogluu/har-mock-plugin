@@ -7,6 +7,7 @@ coverage/
 *.tsbuildinfo
 
 # BMAD & Claude - lokalde tutuluyor, remote'da yok
+.vscode/
 _bmad/
 _bmad-output/
 CLAUDE.md
