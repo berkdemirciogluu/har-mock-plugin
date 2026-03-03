@@ -6,10 +6,11 @@ coverage/
 *.d.ts.map
 *.tsbuildinfo
 
-# BMAD - lokalde tutuluyor, remote'da yok
+# BMAD & Claude - lokalde tutuluyor, remote'da yok
 _bmad/
 _bmad-output/
 CLAUDE.md
+.claude/
 .github/agents/
 .github/prompts/
 .github/copilot-instructions.md
