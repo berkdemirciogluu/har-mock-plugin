@@ -1,523 +1,518 @@
-# HAR Mock Plugin — Chrome Extension Kullanım & Entegrasyon Kılavuzu
+# HAR Mock Plugin — Chrome Extension Usage Guide
 
-> **Versiyon:** 0.0.1  
-> **Platform:** Chrome MV3 Extension  
-> **Uyumluluk:** Chromium tabanlı tüm tarayıcılar (Chrome, Edge, Brave, Arc…)
+> **Version:** 0.0.1
+> **Platform:** Chrome MV3 Extension
+> **Compatibility:** All Chromium-based browsers (Chrome, Edge, Brave, Arc, ...)
 
 ---
 
-## İçindekiler
+## Table of Contents
 
-1. [Genel Bakış](#genel-bakış)
-2. [Kurulum](#kurulum)
-3. [Extension Yükleme (Chrome'a)](#extension-yükleme-chromea)
-4. [Temel Kavramlar](#temel-kavramlar)
-5. [İlk Kullanım — HAR Dosyası Yükleme](#i̇lk-kullanım--har-dosyası-yükleme)
-6. [HAR Dosyası Hazırlama](#har-dosyası-hazırlama)
-7. [Controls — Yapılandırma Paneli](#controls--yapılandırma-paneli)
-   - [HAR Yönetimi](#har-yönetimi)
-   - [Rule Yönetimi](#rule-yönetimi)
+1. [Overview](#overview)
+2. [Installation](#installation)
+3. [Loading the Extension in Chrome](#loading-the-extension-in-chrome)
+4. [Core Concepts](#core-concepts)
+5. [First Use — Loading a HAR File](#first-use--loading-a-har-file)
+6. [Preparing a HAR File](#preparing-a-har-file)
+7. [Controls — Configuration Panel](#controls--configuration-panel)
+   - [HAR Management](#har-management)
+   - [Rule Management](#rule-management)
    - [Storage Inject](#storage-inject)
-   - [Ayarlar (Settings)](#ayarlar-settings)
-8. [Monitor — Canlı İstek Takibi](#monitor--canlı-i̇stek-takibi)
-9. [Response Düzenleme](#response-düzenleme)
-10. [Interception Çalışma Prensibi](#interception-çalışma-prensibi)
-11. [Öncelik Zinciri (Priority Chain)](#öncelik-zinciri-priority-chain)
-12. [Mimari Genel Bakış](#mimari-genel-bakış)
-13. [Geliştiriciler İçin Build & Test](#geliştiriciler-i̇çin-build--test)
-14. [Sık Sorulan Sorular (SSS)](#sık-sorulan-sorular-sss)
-15. [Sorun Giderme](#sorun-giderme)
+   - [Settings](#settings)
+8. [Monitor — Live Request Tracking](#monitor--live-request-tracking)
+9. [Response Editor](#response-editor)
+10. [Interception Mechanism](#interception-mechanism)
+11. [Priority Chain](#priority-chain)
+12. [Architecture Overview](#architecture-overview)
+13. [Build & Test for Developers](#build--test-for-developers)
+14. [FAQ](#faq)
+15. [Troubleshooting](#troubleshooting)
 
 ---
 
-## Genel Bakış
+## Overview
 
-**HAR Mock Plugin**, tarayıcıdan dışa aktarılan HAR (HTTP Archive) dosyalarını kullanarak HTTP isteklerini yakalayıp mock yanıtlar döndüren bir Chrome Extension'dır.
+**HAR Mock Plugin** is a Chrome Extension that intercepts HTTP requests and returns mock responses using HAR (HTTP Archive) files exported from the browser.
 
-### Ne İşe Yarar?
+### What does it do?
 
-- **Backend olmadan frontend geliştirme:** API henüz hazır değilken HAR dosyasıyla çalış
-- **Hata senaryosu simülasyonu:** 500, 404, 429 gibi HTTP yanıtlarını kolayca test et
-- **Performans testi:** Gerçek network gecikmelerini HAR timing ile simüle et
-- **Bağımsız demo ortamı:** Canlı API'ye bağımlı olmadan demo hazırla
-- **API regresyon testi:** Bilinen yanıtlarla UI davranışını doğrula
+- **Frontend development without a backend:** Work with a HAR file while the API is not yet ready
+- **Error scenario simulation:** Easily test 500, 404, 429 and other HTTP responses
+- **Performance testing:** Simulate real network latency using HAR timings
+- **Self-contained demo environment:** Run demos without a live API
+- **API regression testing:** Verify UI behavior against known responses
 
-### Temel Özellikler
+### Key Features
 
-| Özellik               | Açıklama                                                                         |
-| --------------------- | -------------------------------------------------------------------------------- |
-| HAR Yükleme           | Drag & drop veya dosya seçici ile `.har` dosyası yükle                           |
-| Fetch & XHR Yakalama  | `window.fetch` ve `XMLHttpRequest` otomatik override                             |
-| Rule Tabanlı Mock     | HAR'dan bağımsız, URL pattern + method + status + body ile özel mock tanımla     |
-| Canlı Monitor         | Gerçek zamanlı istek akışı — hangi istekler mock'landı, hangisi passthrough oldu |
-| Response Düzenleme    | CodeMirror 6 JSON editörü ile yanıtları yerinde düzenle ve kalıcı kaydet         |
-| Timing Replay         | HAR'daki `wait + receive` süresini gecikme olarak uygula                         |
-| Exclude List          | Belirli URL pattern'larını mock'lamadan geçir                                    |
-| Domain Filter         | Sadece belirli domain'leri mock'la                                               |
-| Storage Inject        | `localStorage` / `sessionStorage`'a anahtar-değer çiftleri inject et             |
-| Tek Tuşla Açma/Kapama | Extension'ı anlık olarak devre dışı bırak                                        |
+| Feature | Description |
+|---|---|
+| HAR Loading | Load `.har` files via drag & drop or file picker |
+| Fetch & XHR Interception | Automatic `window.fetch` and `XMLHttpRequest` override |
+| Rule-Based Mocking | Custom URL pattern + method + status + body rules, independent of HAR |
+| Live Monitor | Real-time request feed — see which requests were mocked and which passed through |
+| Response Editor | Edit responses inline with CodeMirror 6 JSON editor and persist them |
+| Timing Replay | Apply HAR `wait + receive` timings as artificial delay |
+| Exclude List | Skip specific URL patterns from mocking |
+| Domain Filter | Mock only requests to specific domains |
+| Storage Inject | Inject key-value pairs into `localStorage` / `sessionStorage` |
+| One-Click Toggle | Instantly enable or disable all interception |
 
 ---
 
-## Kurulum
+## Installation
 
-### Ön Koşullar
+### Prerequisites
 
-| Gereksinim        | Minimum Versiyon   |
-| ----------------- | ------------------ |
-| Node.js           | 18+                |
-| Yarn              | 1.22+              |
-| Chrome / Chromium | 116+ (MV3 desteği) |
+| Requirement | Minimum Version |
+|---|---|
+| Node.js | 18+ |
+| Yarn | 1.22+ |
+| Chrome / Chromium | 116+ (MV3 support) |
 
 ### Build
 
 ```bash
-# 1. Proje kökünde bağımlılıkları kur
+# Install dependencies
 yarn install
 
-# 2. Core paketini derle (extension buna bağımlı)
+# Build the core package (extension depends on it)
 yarn build:core
 
-# 3. Extension'ı derle
+# Build the extension
 yarn build:extension
 ```
 
-Build çıktısı `packages/extension/dist/` klasöründe oluşur:
+Build output is placed in `packages/extension/dist/`:
 
 ```
 packages/extension/dist/
-├── background.js         ← Service Worker
-├── content.js            ← Content Script (ISOLATED world)
-├── interceptor.js        ← Interceptor (MAIN world)
+├── background.js         <- Service Worker
+├── content.js            <- Content Script (ISOLATED world)
+├── interceptor.js        <- Interceptor (MAIN world)
 ├── popup/
-│   └── index.html        ← Popup UI
+│   └── index.html        <- Popup UI
 ├── manifest.json
 ├── icon-16.png
 ├── icon-48.png
 └── icon-128.png
 ```
 
-> **Dev build için:** `yarn workspace @har-mock/extension build:dev` — source map'lerle birlikte derlenir.
+> **Dev build:** `yarn workspace @har-mock/extension build:dev` — includes source maps.
 
 ---
 
-## Extension Yükleme (Chrome'a)
+## Loading the Extension in Chrome
 
-1. Chrome'da `chrome://extensions` adresine git
-2. Sağ üstten **"Geliştirici modu"** (Developer mode) toggle'ını aç
-3. **"Paketlenmemiş öğe yükle"** (Load unpacked) butonuna tıkla
-4. `packages/extension/dist/extension` klasörünü seç
-5. Extension yüklenecek ve araç çubuğunda **HAR Mock Plugin** ikonu görünecek
+1. Navigate to `chrome://extensions`
+2. Enable **Developer mode** (top-right toggle)
+3. Click **Load unpacked**
+4. Select the `packages/extension/dist/` folder
+5. The extension loads and the **HAR Mock Plugin** icon appears in the toolbar
 
-> **İpucu:** Extension ikonunu araç çubuğuna sabitlemek için 🧩 (puzzle) ikonuna tıklayıp "Sabitle" (Pin) butonuna bas.
+> **Tip:** Click the 🧩 (puzzle) icon in the toolbar and pin the extension for easy access.
 
-### Extension Güncelleme
-
-Kod değişikliği sonrası:
+### Updating after a rebuild
 
 ```bash
 yarn build:extension
 ```
 
-Ardından `chrome://extensions` sayfasında extension kartındaki **yeniden yükle** (↻) butonuna tıkla. Açık sekmelerde **sayfayı yenile** (F5).
+Then click the reload (↻) button on the extension card at `chrome://extensions`. Refresh open tabs (F5).
 
 ---
 
-## Temel Kavramlar
+## Core Concepts
 
-### HAR Dosyası
+### HAR File
 
-HAR (HTTP Archive), tarayıcı ağ trafiğinin standart bir JSON formatıdır. Chrome DevTools'tan dışa aktarabilirsin. Extension bu dosyadaki HTTP yanıtlarını kullanarak gerçek API çağrılarını taklit eder.
+HAR (HTTP Archive) is a standard JSON format for browser network traffic. Export it from Chrome DevTools. The extension uses the HTTP responses in this file to simulate real API calls.
 
 ### URL Pattern & Auto-Parameterization
 
-HAR dosyası yüklendiğinde URL'ler otomatik olarak parametrize edilir. Örneğin:
+When a HAR file is loaded, URLs are automatically parameterized:
 
 ```
-/api/users/123    → /api/users/{param}
-/api/users/456    → /api/users/{param}
+/api/users/123    -> /api/users/{param}
+/api/users/456    -> /api/users/{param}
 ```
 
-Bu sayede aynı endpoint'e farklı ID'lerle yapılan istekler tek bir pattern ile eşleşir.
+Requests to the same endpoint with different IDs match the same pattern.
 
-### Replay Modları
+### Replay Modes
 
-| Mod          | Davranış                                               |
-| ------------ | ------------------------------------------------------ |
-| `last-match` | URL ile eşleşen **son** HAR entry'sinin yanıtı döner   |
-| `sequential` | Her istek için sıradaki entry kullanılır (round-robin) |
+| Mode | Behavior |
+|---|---|
+| `last-match` | Returns the response from the **last** matching HAR entry |
+| `sequential` | Uses the next entry in sequence for each request (round-robin) |
 
 ### Mock Rule
 
-HAR'dan bağımsız, kullanıcı tarafından tanımlanan mock kurallarıdır. Priority chain'de HAR'dan **önce** değerlendirilir.
+User-defined mock rules that are independent of HAR. Evaluated **before** HAR in the priority chain.
 
 ---
 
-## İlk Kullanım — HAR Dosyası Yükleme
+## First Use — Loading a HAR File
 
-1. Extension ikonuna tıklayarak popup'ı aç
-2. **Controls** sekmesinde **HAR** accordion'unu genişlet
-3. `.har` dosyanı:
-   - **Sürükle-bırak (drag & drop)** ile yükleme alanına bırak, veya
-   - **Dosya Seç** butonuna tıklayarak dosya seçiciden seç
-4. Yükleme başarılıysa dosya adı ve bulunan entry sayısı gösterilir
-5. **Artık sayfanı yenile** — bu andan itibaren HAR'daki URL'lerle eşleşen istekler mock yanıt alacak
+1. Click the extension icon to open the popup
+2. In the **Controls** tab, expand the **HAR** accordion
+3. Load your `.har` file:
+   - **Drag & drop** it onto the upload area, or
+   - Click **Choose File** to browse
+4. On success, the file name and entry count are displayed
+5. **Refresh the page** — from this point, requests matching HAR URLs return mock responses
 
-### Hızlı Doğrulama
+### Quick Verification
 
-1. **Monitor** sekmesine geç
-2. Sayfanı yenile veya bir aksiyon yap
-3. İsteklerin yanında yeşil **"HAR ✓"** veya mavi **"Rule ✓"** badge'i görüyorsan → mock çalışıyor
-4. Gri **"→"** badge'i → bu istek passthrough olmuş (mock'lanmamış)
-
----
-
-## HAR Dosyası Hazırlama
-
-### Chrome DevTools ile HAR Dışa Aktarma
-
-1. Mock'lamak istediğin web uygulamasını aç
-2. **Chrome DevTools → Network** sekmesini aç (`F12` veya `Ctrl+Shift+I`)
-3. Sayfayı yenile veya mock'lamak istediğin aksiyonları gerçekleştir
-4. Network logları dolunca herhangi bir isteğe **sağ tıkla**
-5. **"Save all as HAR with content"** seç
-6. Dosyayı kaydet (ör. `my-app-api.har`)
-
-### İpuçları
-
-- HAR'da **sadece API isteklerini** tutmak istiyorsan, Network sekmesinde **XHR/Fetch** filtresini etkinleştirip dışa aktar
-- HAR dosyası büyükse gereksiz kaynak isteklerini (CSS, JS, image) metin editörüyle temizleyebilirsin
-- Hassas veriler (token, cookie) içerebilir — `.gitignore`'a eklemeyi unutma
+1. Switch to the **Monitor** tab
+2. Refresh the page or trigger an action
+3. If requests show a green **HAR ✓** or blue **Rule ✓** badge → mock is working
+4. A grey **→** badge → request passed through (no match found)
 
 ---
 
-## Controls — Yapılandırma Paneli
+## Preparing a HAR File
 
-Extension popup'ı iki sekmeden oluşur: **Controls** ve **Monitor**. Controls sekmesinde tüm yapılandırma işlemleri yapılır.
+### Export from Chrome DevTools
 
-### HAR Yönetimi
+1. Open the web app you want to mock
+2. Open **Chrome DevTools → Network** tab (`F12` or `Ctrl+Shift+I`)
+3. Refresh the page or perform the actions you want to capture
+4. Right-click any request
+5. Select **"Save all as HAR with content"**
+6. Save the file (e.g. `my-app-api.har`)
 
-**HAR** accordion'u altında:
+### Tips
 
-| İşlem                | Açıklama                                                                 |
-| -------------------- | ------------------------------------------------------------------------ |
-| **Dosya Yükle**      | Drag & drop veya dosya seçici ile `.har` yükle                           |
-| **HAR Temizle**      | Yüklü HAR'ı tamamen sil                                                  |
-| **Farklı HAR Yükle** | Mevcut HAR'ı silip yeni dosya yükle                                      |
-| **Replay Modu**      | `last-match` (son eşleşen) veya `sequential` (sıralı) strateji seç       |
-| **Timing Replay**    | Açıkken HAR'daki gerçek `wait + receive` süresini gecikme olarak uygular |
+- For API-only HAR files, enable the **XHR/Fetch** filter in the Network tab before exporting
+- For large HAR files, remove irrelevant resources (CSS, JS, images) with a text editor
+- HAR files may contain sensitive data (tokens, cookies) — add them to `.gitignore`
 
-#### Timing Replay Detayı
+---
 
-HAR dosyasındaki her entry'de `timings.wait` (TTFB) ve `timings.receive` (indirme süresi) değerleri bulunur. Timing Replay açıkken bu süreler toplam gecikme olarak uygulanır:
+## Controls — Configuration Panel
+
+The popup has two tabs: **Controls** and **Monitor**. All configuration is done in the Controls tab.
+
+### HAR Management
+
+Under the **HAR** accordion:
+
+| Action | Description |
+|---|---|
+| **Upload File** | Load a `.har` file via drag & drop or file picker |
+| **Clear HAR** | Remove the loaded HAR entirely |
+| **Replace HAR** | Delete the current HAR and load a new one |
+| **Replay Mode** | Choose `last-match` or `sequential` |
+| **Timing Replay** | When on, applies the real `wait + receive` values from HAR as delay |
+
+#### Timing Replay Detail
+
+Each HAR entry contains `timings.wait` (TTFB) and `timings.receive` (download time). When Timing Replay is enabled:
 
 ```
-Toplam gecikme = wait + receive (milisaniye)
+Total delay = wait + receive (milliseconds)
 ```
 
-Bu sayede gerçek ağ koşullarını simüle edebilirsin. Kapalıyken (varsayılan) yanıt anında döner.
+This simulates real network conditions. When disabled (default), responses are returned instantly.
 
 ---
 
-### Rule Yönetimi
+### Rule Management
 
-**Rules** accordion'u altında HAR'dan bağımsız mock kuralları tanımlanır.
+Under the **Rules** accordion, define mock rules independent of HAR.
 
-#### Yeni Rule Oluşturma
+#### Creating a New Rule
 
-1. **"+ Yeni Rule"** butonuna tıkla
-2. Formu doldur:
+1. Click **"+ New Rule"**
+2. Fill in the form:
 
-| Alan              | Açıklama                             | Örnek                           |
-| ----------------- | ------------------------------------ | ------------------------------- |
-| **URL Pattern**   | Exact URL veya wildcard (`*`) kullan | `/api/users`, `/api/data/*`     |
-| **Method**        | HTTP metodu                          | `GET`, `POST`, `PUT`, `DELETE`… |
-| **Status Code**   | Yanıt durum kodu (100-599)           | `200`, `404`, `500`             |
-| **Response Body** | JSON formatında yanıt gövdesi        | `{"users": []}`                 |
-| **Delay (ms)**    | Yapay gecikme süresi                 | `0` (anında), `1500` (1.5s)     |
-| **Enabled**       | Rule aktif/pasif                     | ✓ / ✗                           |
+| Field | Description | Example |
+|---|---|---|
+| **URL Pattern** | Exact URL or wildcard (`*`) | `/api/users`, `/api/data/*` |
+| **Method** | HTTP method | `GET`, `POST`, `PUT`, `DELETE`, ... |
+| **Status Code** | Response status (100–599) | `200`, `404`, `500` |
+| **Response Body** | JSON response body | `{"users": []}` |
+| **Delay (ms)** | Artificial delay | `0` (instant), `1500` (1.5s) |
+| **Enabled** | Active/inactive | ✓ / ✗ |
 
-3. **"Kaydet"** butonuna tıkla
+3. Click **"Save"**
 
-#### Rule Düzenleme & Silme
+#### Editing & Deleting Rules
 
-- **Düzenleme:** Rule listesinde bir rule'un yanındaki ✏️ (düzenle) butonuna tıkla → form önceki değerlerle dolar → değişiklikleri yap → Kaydet
-- **Silme:** 🗑️ (sil) butonu → inline onay mesajı → "Evet" ile sil
+- **Edit:** Click the ✏️ button next to a rule → form fills with existing values → modify → Save
+- **Delete:** Click 🗑️ → inline confirmation → "Yes" to delete
 
-#### URL Pattern Söz Dizimi
+#### URL Pattern Syntax
 
-| Pattern          | Eşleşir                                | Eşleşmez         |
-| ---------------- | -------------------------------------- | ---------------- |
-| `/api/users`     | `/api/users` (exact)                   | `/api/users/123` |
-| `/api/users/*`   | `/api/users/123`, `/api/users/abc`     | `/api/users`     |
-| `/api/*/profile` | `/api/123/profile`, `/api/abc/profile` | `/api/users`     |
+| Pattern | Matches | Does not match |
+|---|---|---|
+| `/api/users` | `/api/users` (exact) | `/api/users/123` |
+| `/api/users/*` | `/api/users/123`, `/api/users/abc` | `/api/users` |
+| `/api/*/profile` | `/api/123/profile`, `/api/abc/profile` | `/api/users` |
 
-> **Önemli:** Rule'lar priority chain'de HAR'dan **önce** değerlendirilir. Aynı URL için hem rule hem HAR eşleşmesi varsa rule kazanır.
+Rules are evaluated **before** HAR in the priority chain. If both a rule and a HAR entry match, the rule wins.
 
 ---
 
 ### Storage Inject
 
-**Storage** accordion'u altında sayfa yüklendiğinde `localStorage` veya `sessionStorage`'a otomatik olarak değer enjekte edebilirsin.
+Under the **Storage** accordion, inject key-value pairs into `localStorage` or `sessionStorage` when pages load.
 
-#### Kullanım Senaryoları
+#### Use Cases
 
-- **Auth token inject:** Login olmadan token set ederek backend çağrılarını test et
-- **Feature flag:** `localStorage`'daki flag'leri override et
-- **Kullanıcı tercihleri:** Tema, dil gibi ayarları önceden set et
+- **Auth token injection:** Set a token to test backend calls without logging in
+- **Feature flags:** Override `localStorage` flags
+- **User preferences:** Pre-set theme, language, etc.
 
-#### Nasıl Kullanılır
+#### How to Use
 
-1. **Tip seç:** `localStorage` veya `sessionStorage`
-2. **Key** ve **Value** alanlarını doldur
-3. **"Ekle"** butonuna tıkla → listeye eklenir
-4. Tüm entry'leri ekledikten sonra **"Kaydet & Inject Et"** butonuna bas
-5. Tüm açık sekmelere anında inject edilir; yeni açılan sekmelerde de otomatik uygulanır
+1. Select type: `localStorage` or `sessionStorage`
+2. Enter **Key** and **Value**
+3. Click **"Add"** → entry appears in the list
+4. After adding all entries, click **"Save & Inject"**
+5. Injected immediately to all open tabs; applied automatically to new tabs
 
-| Alan      | Açıklama                | Örnek                                  |
-| --------- | ----------------------- | -------------------------------------- |
-| **Type**  | Storage tipi toggle     | `localStorage` / `sessionStorage`      |
-| **Key**   | Storage anahtarı        | `auth_token`, `theme`, `feature_flags` |
-| **Value** | Storage değeri (string) | `"eyJhbGciOi..."`, `"dark"`, `"true"`  |
+| Field | Description | Example |
+|---|---|---|
+| **Type** | Storage type toggle | `localStorage` / `sessionStorage` |
+| **Key** | Storage key | `auth_token`, `theme`, `feature_flags` |
+| **Value** | Storage value (string) | `"eyJhbGciOi..."`, `"dark"`, `"true"` |
 
-#### Önemli Notlar
-
-- Extension kapatılınca veya "Kaydet" ile boş liste gönderilince **önceki inject'ler temizlenir**
-- Value her zaman **string** olarak yazılır (`JSON.stringify` gerekmez, direkt string gir)
-- Her sayfa yenilemesinde inject otomatik tekrarlanır
+**Notes:**
+- Previous injections are cleared when the extension is closed or when an empty list is saved
+- Values are always stored as strings (no `JSON.stringify` needed — enter the string directly)
+- Injection is automatically re-applied on every page refresh
 
 ---
 
-### Ayarlar (Settings)
+### Settings
 
-**Settings** accordion'u altında genel extension ayarları yönetilir.
+Under the **Settings** accordion, manage general extension configuration.
 
-#### Extension Açma/Kapama
+#### Enable/Disable Toggle
 
-Tek bir toggle ile tüm interception'ı anlık olarak açıp kapatabilirsin. Kapatıldığında:
+A single toggle that instantly enables or disables all interception. When disabled:
 
-- Tüm HTTP istekleri doğrudan sunucuya gider (passthrough)
-- Storage inject durur
-- Monitor'da yeni event oluşmaz
-- HAR ve rule verileri **korunur** (silinmez)
+- All HTTP requests go directly to the server (passthrough)
+- Storage injection stops
+- No new events appear in Monitor
+- HAR and rule data are **preserved** (not deleted)
 
-#### Exclude List (URL Dışlama)
+#### Exclude List
 
-Mock'lanmasını istemediğin URL'leri buraya ekle. **Substring match** uygulanır — URL'de bu metin geçiyorsa istek passthrough olur.
+Add URLs you do not want mocked here. **Substring matching** is used — any URL containing this text passes through.
 
 ```
-Örnek: /api/auth eklenirse
-✗ Mock'lanmaz: https://api.example.com/api/auth/login
-✗ Mock'lanmaz: https://api.example.com/api/auth/refresh
-✓ Mock'lanır: https://api.example.com/api/users
+Example: adding /api/auth
+  -> Not mocked: https://api.example.com/api/auth/login
+  -> Not mocked: https://api.example.com/api/auth/refresh
+  -> Mocked:     https://api.example.com/api/users
 ```
 
-**Kullanım:** Input alanına pattern yaz → Enter veya **"Ekle"** butonu → listeye eklenir. Kaldırmak için ✗ butonuna tıkla.
+**Usage:** Type a pattern → press Enter or click **"Add"** → appears in list. Click ✗ to remove.
 
 #### Domain Filter
 
-Sadece belirli domain'lerden gelen istekleri mock'lamak istiyorsan domain filter kullan. **Boş bırakılırsa tüm domain'ler mock'lanır.**
+When filled, only requests to the listed domains are mocked. **Empty = all domains are mocked.**
 
 ```
-Örnek: api.example.com eklenirse
-✓ Mock'lanır: https://api.example.com/users
-✓ Mock'lanır: https://sub.api.example.com/users  (subdomain desteği)
-✗ Mock'lanmaz: https://other-api.com/users
+Example: adding api.example.com
+  -> Mocked:     https://api.example.com/users
+  -> Mocked:     https://sub.api.example.com/users  (subdomain support)
+  -> Not mocked: https://other-api.com/users
 ```
 
-IP:Port formatı da desteklenir: `15.237.105.224:8080`
+IP:Port format is supported: `15.237.105.224:8080`
 
 #### Factory Reset
 
-**"Tümünü Sıfırla"** butonu ile extension'ın tüm verilerini temizleyebilirsin:
+The **"Reset All"** button wipes all extension data:
 
-- HAR verileri silinir
-- Tüm rule'lar silinir
-- Düzenlenmiş yanıtlar silinir
-- Storage entry'leri silinir
-- Ayarlar varsayılana döner
-- Match history temizlenir
+- HAR data deleted
+- All rules deleted
+- Edited responses deleted
+- Storage entries deleted
+- Settings reset to defaults
+- Match history cleared
 
-> ⚠️ Bu işlem geri alınamaz. Onay penceresi gösterilir.
-
----
-
-## Monitor — Canlı İstek Takibi
-
-**Monitor** sekmesinde extension aktifken gerçek zamanlı istek akışını takip edebilirsin.
-
-### Feed Görünümü
-
-Her satırda şu bilgiler gösterilir:
-
-| Sütun      | Açıklama                                                       |
-| ---------- | -------------------------------------------------------------- |
-| **Method** | HTTP metodu (renkli badge: GET=yeşil, POST=mavi, PUT=turuncu…) |
-| **URL**    | İstek URL'i (uzunsa kırpılır)                                  |
-| **Status** | HTTP durum kodu (renkli: 2xx=yeşil, 4xx=turuncu, 5xx=kırmızı)  |
-| **Zaman**  | Göreli zaman ("şimdi", "5s", "2m", "1h")                       |
-| **Kaynak** | Badge: 🟢 **Rule ✓** / 🔵 **HAR ✓** / ⬜ **→** (passthrough)   |
-
-### İşlemler
-
-- **Event'e tıkla** → Sağ panelde response detayı ve JSON editörü açılır
-- **"Temizle"** butonu → Tüm feed geçmişini sil
-- Maksimum 500 event tutulur; eski event'ler otomatik kırpılır
-- Kullanıcı scroll pozisyonu korunur (auto-scroll compensation)
+> ⚠️ This action is irreversible. A confirmation dialog is shown.
 
 ---
 
-## Response Düzenleme
+## Monitor — Live Request Tracking
 
-Monitor'da bir event'e tıklayınca **Response Viewer** paneli açılır. Bu panelde:
+The **Monitor** tab shows a real-time request feed while the extension is active.
 
-1. **Mevcut yanıtı görüntüle:** HAR'dan veya rule'dan gelen orijinal yanıt JSON formatında gösterilir
-2. **Düzenle:** CodeMirror 6 JSON editöründe değişiklik yap
-3. **Kaydet:** "Kaydet" butonuna bas → bu URL+method kombinasyonu için düzenlenmiş yanıt kalıcı olarak saklanır
+### Feed View
 
-### Düzenlenmiş Yanıt Önceliği
+Each row shows:
 
-Bir yanıt düzenlendiğinde, priority chain'de **en yüksek önceliğe** sahip olur:
+| Column | Description |
+|---|---|
+| **Method** | HTTP method (colored badge: GET=green, POST=blue, PUT=orange, ...) |
+| **URL** | Request URL (truncated if long) |
+| **Status** | HTTP status code (colored: 2xx=green, 4xx=orange, 5xx=red) |
+| **Time** | Relative time ("now", "5s", "2m", "1h") |
+| **Source** | Badge: 🟢 **Rule ✓** / 🔵 **HAR ✓** / ⬜ **→** (passthrough) |
+
+### Actions
+
+- **Click an event** → Response detail and JSON editor open in the right panel
+- **"Clear"** button → Delete all feed history
+- Maximum 500 events are retained; older events are trimmed automatically
+- User scroll position is preserved (auto-scroll compensation)
+
+---
+
+## Response Editor
+
+Clicking an event in Monitor opens the **Response Viewer** panel:
+
+1. **View current response:** Original response from HAR or rule displayed in JSON format
+2. **Edit:** Modify in the CodeMirror 6 JSON editor
+3. **Save:** Click "Save" → the edited response is persisted for this URL+method combination
+
+### Edited Response Priority
+
+An edited response takes the **highest priority** in the chain:
 
 ```
 Edited Response > Rule > HAR > Passthrough
 ```
 
-Bu sayede HAR'daki veya rule'daki yanıtı override edebilir, tek seferlik testler için hızlıca yanıt değiştirebilirsin.
+This lets you override HAR or rule responses for quick one-off tests.
 
-> **Not:** Düzenlenmiş yanıtlar "Factory Reset" ile temizlenir.
+> **Note:** Edited responses are cleared by "Factory Reset".
 
 ---
 
-## Interception Çalışma Prensibi
-
-Extension, web sayfasındaki HTTP isteklerini şu mekanizmayla yakalar:
+## Interception Mechanism
 
 ### 1. Fetch Interception
 
-`window.fetch` fonksiyonu override edilir. Bir `fetch()` çağrısı yapıldığında:
+`window.fetch` is overridden. When `fetch()` is called:
 
-1. URL ve HTTP method çıkarılır
-2. Background Service Worker'a `MATCH_QUERY` mesajı gönderilir
-3. Eşleşme varsa → `new Response(body, {status, headers})` üretilip döndürülür
-4. Eşleşme yoksa → orijinal `fetch()` çağrılır (passthrough)
+1. URL and HTTP method are extracted
+2. A `MATCH_QUERY` message is sent to the Background Service Worker
+3. If matched → `new Response(body, {status, headers})` is returned
+4. If not matched → original `fetch()` is called (passthrough)
 
 ### 2. XHR Interception
 
-`XMLHttpRequest.prototype.open` ve `.send` override edilir:
+`XMLHttpRequest.prototype.open` and `.send` are overridden:
 
-1. `open()` çağrısında method ve URL kaydedilir
-2. `send()` çağrısında Background'a sorgu gönderilir
-3. Eşleşme varsa → `readyState`, `status`, `responseText` property'leri override edilir ve `readystatechange → load → loadend` event'leri dispatch edilir
-4. Eşleşme yoksa → orijinal `send()` çağrılır
+1. `open()` records the method and URL
+2. `send()` sends a query to Background
+3. If matched → `readyState`, `status`, `responseText` are overridden, and `readystatechange → load → loadend` events are dispatched
+4. If not matched → original `send()` is called
 
-> **Not:** **Senkron XHR** istekleri mock'lanmaz (async resolver kullanılamadığı için). Bu istekler her zaman passthrough olur.
+> **Note:** **Synchronous XHR** requests are not mocked (async resolver cannot be used). They always passthrough.
 
-### 3. İletişim Katmanı
+### 3. Communication Layer
 
-Extension üç izole bağlamda çalışır ve aralarında mesajlaşma ile koordine olur:
+The extension runs in three isolated contexts that communicate via messaging:
 
 ```
-┌──────────────┐   chrome.runtime.Port   ┌─────────────────────┐
-│  Popup (UI)  │◄───────────────────────►│  Background          │
-│              │   STATE_SYNC            │  Service Worker      │
-│              │   MATCH_EVENT           │  (StateManager)      │
-└──────────────┘   Komut mesajları       └──────────┬──────────┘
-                                         chrome.runtime.Port │
-                                                             │
-                                         ┌──────────┴──────────┐
-                                         │  Content Script      │
-                                         │  (ISOLATED world)    │
-                                         │  ↕ window.postMessage│
-                                         │  Interceptor         │
-                                         │  (MAIN world)        │
-                                         └─────────────────────┘
++----------------+   chrome.runtime.Port   +---------------------+
+|   Popup (UI)   |<----------------------->|  Background          |
+|                |   STATE_SYNC            |  Service Worker      |
+|                |   MATCH_EVENT           |  (StateManager)      |
++----------------+   Command messages      +----------+----------+
+                                           chrome.runtime.Port |
+                                                               |
+                                           +----------+--------+
+                                           | Content Script     |
+                                           | (ISOLATED world)   |
+                                           | ^^ window.postMsg  |
+                                           | Interceptor        |
+                                           | (MAIN world)       |
+                                           +-------------------+
 ```
 
-- **Popup ↔ Background:** `chrome.runtime.Port` üzerinden (`har-mock-popup` portu)
-- **Content ↔ Background:** `chrome.runtime.Port` üzerinden (`har-mock-content-{id}` portu)
-- **Content (ISOLATED) ↔ Interceptor (MAIN):** `window.postMessage` üzerinden (`__HAR_MOCK__` kanalı)
+- **Popup <-> Background:** `chrome.runtime.Port` (`har-mock-popup` port)
+- **Content <-> Background:** `chrome.runtime.Port` (`har-mock-content-{id}` port)
+- **Content (ISOLATED) <-> Interceptor (MAIN):** `window.postMessage` (`__HAR_MOCK__` channel)
 
 ---
 
-## Öncelik Zinciri (Priority Chain)
+## Priority Chain
 
-Bir HTTP isteği yakalandığında şu sırayla değerlendirilir:
+When an HTTP request is intercepted, it is evaluated in this order:
 
 ```
-1. Extension kapalı mı?           → Evet: Passthrough
-2. Domain filter'da mı?           → Hayır: Passthrough
-3. Exclude list'te mi?            → Evet: Passthrough
-4. Düzenlenmiş yanıt var mı?      → Evet: Edited Response döner ★ En yüksek öncelik
-5. Rule eşleşmesi var mı?         → Evet: Rule yanıtı döner
-6. HAR pattern eşleşmesi var mı?  → Evet: HAR yanıtı döner
-7. Hiçbiri eşleşmedi              → Passthrough (orijinal sunucuya git)
+1. Extension disabled?            -> Passthrough
+2. Domain filter mismatch?        -> Passthrough
+3. In exclude list?               -> Passthrough
+4. Edited response exists?        -> Edited response (highest priority)
+5. Rule match?                    -> Rule response
+6. HAR pattern match?             -> HAR response
+7. No match                       -> Passthrough
 ```
 
-### Detaylı Akış
+### Detailed Flow
 
-| Adım | Kontrol                                                        | Sonuç                                                       |
-| ---- | -------------------------------------------------------------- | ----------------------------------------------------------- |
-| 1    | `settings.enabled === false`                                   | Tüm istekler passthrough                                    |
-| 2    | `domainFilter` dolu ve URL host eşleşmiyor                     | Passthrough                                                 |
-| 3    | `excludeList`'teki bir pattern URL'de substring olarak geçiyor | Passthrough                                                 |
-| 4    | `editedResponses[METHOD:URL]` mevcut                           | Düzenlenmiş yanıt döner                                     |
-| 5    | `evaluate(request, rules)` eşleşme buldu                       | Rule yanıtı döner                                           |
-| 6    | `matchUrl(url, method, patterns)` eşleşme buldu                | HAR yanıtı döner (replay mode'a göre sequential/last-match) |
-| 7    | Hiçbir eşleşme yok                                             | Orijinal istek sunucuya gönderilir                          |
+| Step | Check | Result |
+|---|---|---|
+| 1 | `settings.enabled === false` | All requests passthrough |
+| 2 | `domainFilter` is set and URL host doesn't match | Passthrough |
+| 3 | Exclude list pattern is a substring of the URL | Passthrough |
+| 4 | `editedResponses[METHOD:URL]` exists | Edited response |
+| 5 | `evaluate(request, rules)` finds a match | Rule response |
+| 6 | `matchUrl(url, method, patterns)` finds a match | HAR response (sequential or last-match) |
+| 7 | No match found | Request forwarded to the real server |
 
 ---
 
-## Mimari Genel Bakış
+## Architecture Overview
 
-### Bileşen Yapısı
+### Component Structure
 
 ```
 Extension
-├── Popup (Angular 18 Standalone Components + Tailwind CSS)
-│   ├── AppComponent
-│   │   ├── TabBarComponent          → Controls / Monitor sekme geçişi
-│   │   ├── ControlsTabComponent     → Tüm yapılandırma UI'ı
-│   │   │   ├── HarUploadComponent    → HAR dosya yükleme
-│   │   │   ├── StrategyToggleComponent → Replay modu seçimi
-│   │   │   ├── HmRuleListComponent   → Rule listeleme
-│   │   │   ├── HmRuleFormComponent   → Rule oluşturma/düzenleme formu
-│   │   │   │   └── HmJsonEditorComponent (CodeMirror 6)
-│   │   │   ├── StorageInjectComponent → localStorage/sessionStorage inject
-│   │   │   ├── SettingsSectionComponent → Extension toggle
-│   │   │   └── HmExcludeListComponent → Exclude list & Domain filter
-│   │   └── MonitorTabComponent       → Canlı istek akışı
-│   │       └── HmResponseViewerComponent → Response görüntüleme/düzenleme
-│   └── ExtensionMessagingService     → Background ile iletişim singleton
-│
-├── Background (Service Worker)
-│   ├── StateManager    → Hibrit cache (chrome.storage.local + in-memory)
-│   ├── PortManager     → Content & Popup port yönetimi
-│   ├── MessageHandler  → Mesaj dispatch & işleme
-│   └── KeepAlive       → 24s alarm ile SW idle timeout koruması
-│
-├── Content Script (ISOLATED world)
-│   └── content.ts      → MAIN ↔ Background bridge
-│
-└── Interceptor (MAIN world)
-    ├── MockResolver       → Background'a sorgu gönder, yanıt al
-    ├── FetchInterceptor   → window.fetch override
-    ├── XhrInterceptor     → XMLHttpRequest override
-    └── StorageInjector    → localStorage/sessionStorage inject
++-- Popup (Angular 18 Standalone Components + Tailwind CSS)
+|   +-- AppComponent
+|   |   +-- TabBarComponent           -> Controls / Monitor tab switching
+|   |   +-- ControlsTabComponent      -> All configuration UI
+|   |   |   +-- HarUploadComponent    -> HAR file loading
+|   |   |   +-- StrategyToggleComponent -> Replay mode selection
+|   |   |   +-- HmRuleListComponent   -> Rule listing
+|   |   |   +-- HmRuleFormComponent   -> Rule create/edit form
+|   |   |   |   +-- HmJsonEditorComponent (CodeMirror 6)
+|   |   |   +-- StorageInjectComponent -> localStorage/sessionStorage inject
+|   |   |   +-- SettingsSectionComponent -> Extension toggle
+|   |   |   +-- HmExcludeListComponent -> Exclude list & Domain filter
+|   |   +-- MonitorTabComponent       -> Live request feed
+|   |       +-- HmResponseViewerComponent -> Response view/edit
+|   +-- ExtensionMessagingService     -> Background communication singleton
+|
++-- Background (Service Worker)
+|   +-- StateManager    -> Hybrid cache (chrome.storage.local + in-memory)
+|   +-- PortManager     -> Content & Popup port management
+|   +-- MessageHandler  -> Message dispatch & processing
+|   +-- KeepAlive       -> 24s alarm to prevent SW idle timeout
+|
++-- Content Script (ISOLATED world)
+|   +-- content.ts      -> MAIN <-> Background bridge
+|
++-- Interceptor (MAIN world)
+    +-- MockResolver       -> Send query to Background, receive response
+    +-- FetchInterceptor   -> window.fetch override
+    +-- XhrInterceptor     -> XMLHttpRequest override
+    +-- StorageInjector    -> localStorage/sessionStorage inject
 ```
 
-### Veri Depolama (chrome.storage.local)
+### Data Storage (`chrome.storage.local`)
 
-| Key               | Tip                              | Açıklama                                          |
-| ----------------- | -------------------------------- | ------------------------------------------------- |
-| `harData`         | `HarSessionData \| null`         | Yüklü HAR dosyası (entries + patterns + fileName) |
-| `activeRules`     | `MockRule[]`                     | Kullanıcı tanımlı mock kuralları                  |
-| `matchHistory`    | `MatchEvent[]`                   | Monitor feed geçmişi (max 500)                    |
-| `editedResponses` | `Record<string, EditedResponse>` | Düzenlenmiş yanıtlar (`METHOD:URL` key)           |
-| `settings`        | `ExtensionSettings`              | Genel ayarlar                                     |
-| `storageEntries`  | `StorageEntry[]`                 | Storage inject entry'leri                         |
+| Key | Type | Description |
+|---|---|---|
+| `harData` | `HarSessionData \| null` | Loaded HAR file (entries + patterns + fileName) |
+| `activeRules` | `MockRule[]` | User-defined mock rules |
+| `matchHistory` | `MatchEvent[]` | Monitor feed history (max 500) |
+| `editedResponses` | `Record<string, EditedResponse>` | Edited responses (`METHOD:URL` key) |
+| `settings` | `ExtensionSettings` | General settings |
+| `storageEntries` | `StorageEntry[]` | Storage inject entries |
 
-### Varsayılan Ayarlar
+### Default Settings
 
 ```typescript
 {
@@ -532,41 +527,38 @@ Extension
 
 ---
 
-## Geliştiriciler İçin Build & Test
+## Build & Test for Developers
 
-### Geliştirme Build
+### Development Build
 
 ```bash
-# Tek seferlik build (production)
+# One-time production build
 yarn build:extension
 
-# Geliştirme build (source maps dahil)
+# Development build (with source maps)
 yarn workspace @har-mock/extension build:dev
 ```
 
-### Test
+### Tests
 
 ```bash
-# Extension testlerini çalıştır
 yarn workspace @har-mock/extension test
-
-# Coverage raporu ile
 yarn workspace @har-mock/extension test:coverage
 ```
 
-### Proje Bağımlılıkları
+### Project Dependencies
 
 ```
 @har-mock/extension
-└── @har-mock/core (workspace dependency)
-    ├── HAR parser & validator
-    ├── URL matcher & pattern compiler
-    ├── Auto-parameterization engine
-    ├── Rule engine (evaluate)
-    └── Priority chain (resolve)
++-- @har-mock/core (workspace dependency)
+    +-- HAR parser & validator
+    +-- URL matcher & pattern compiler
+    +-- Auto-parameterization engine
+    +-- Rule engine (evaluate)
+    +-- Priority chain (resolve)
 ```
 
-Core paketini değiştirdikten sonra extension'ı yeniden build etmeyi unutma:
+After modifying the core package, rebuild the extension:
 
 ```bash
 yarn build:core
@@ -575,65 +567,65 @@ yarn build:extension
 
 ---
 
-## Sık Sorulan Sorular (SSS)
+## FAQ
 
-### Extension tüm web sitelerinde mi çalışır?
+### Does the extension work on all websites?
 
-Evet, `<all_urls>` host permission ile tüm HTTP/HTTPS sayfalarında çalışır. Domain filter ile belirli sitelere sınırlandırabilirsin.
+Yes. With `<all_urls>` host permission it works on all HTTP/HTTPS pages. Use Domain Filter to restrict to specific sites.
 
-### HAR dosyası ne kadar büyük olabilir?
+### How large can a HAR file be?
 
-Teknik bir üst sınır yok ama `chrome.storage.local` varsayılan 10MB limiti var. Çok büyük HAR dosyalarında performans düşebilir. Gereksiz kaynakları (image, CSS, JS) temizleyerek dosya boyutunu küçültmeni öneririz.
+No hard technical limit, but `chrome.storage.local` defaults to 10 MB. Performance may degrade with very large files. Filter out unnecessary resources (images, CSS, JS) to reduce size.
 
-### Extension kapatılınca veriler silinir mi?
+### Is data deleted when the extension is closed?
 
-Hayır. `chrome.storage.local` kalıcıdır. HAR, rule'lar ve düzenlenmiş yanıtlar tarayıcı kapansa bile korunur. Silmek için "Tümünü Sıfırla" kullan.
+No. `chrome.storage.local` is persistent — HAR, rules, and edited responses survive browser restarts. Use "Factory Reset" to clear everything.
 
-### Senkron XHR neden mock'lanmıyor?
+### Why is synchronous XHR not mocked?
 
-`XMLHttpRequest` senkron modda çağrıldığında async resolver kullanılamaz. Bu teknik bir kısıttır ve senkron XHR modern web uygulamalarında son derece nadir kullanılır.
+When `XMLHttpRequest` is called in synchronous mode, an async resolver cannot be used. This is a technical limitation. Synchronous XHR is extremely rare in modern web apps.
 
-### Birden fazla HAR dosyası yükleyebilir miyim?
+### Can I load multiple HAR files?
 
-Şu an tek bir HAR dosyası desteklenir. Yeni dosya yüklemek eskisinin yerine geçer. Birden fazla API'nin yanıtlarını tek bir HAR'da birleştirebilirsin.
+Only one HAR file is supported at a time. Loading a new file replaces the existing one. You can merge multiple APIs into a single HAR file using a text editor.
 
-### Rule ve HAR aynı URL'e eşleşirse hangisi kazanır?
+### If both a rule and HAR entry match, which wins?
 
-Rule kazanır. Öncelik sırası: Edited Response > Rule > HAR > Passthrough.
+The rule wins. Priority: Edited Response > Rule > HAR > Passthrough.
 
 ---
 
-## Sorun Giderme
+## Troubleshooting
 
-### Extension aktif ama istekler mock'lanmıyor
+### Extension active but requests not mocked
 
-1. **Extension toggle'ı kontrol et:** Controls → Settings → Extension açık mı?
-2. **HAR yüklü mü?** Controls → HAR accordion'unda dosya adı ve entry sayısı görünüyor mu?
-3. **Domain filter'ı kontrol et:** Boş değilse, hedef domain listede mi?
-4. **Exclude list'i kontrol et:** Hedef URL bir exclude pattern'a eşleşiyor olabilir
-5. **Sayfayı yenile:** Extension yüklendikten sonra sayfa yenilenmeli
-6. **Monitor'ı kontrol et:** İstekler "→" (passthrough) badge'ı ile mi gösteriliyor? Eşleşme bulunamıyor demektir
+1. Check the extension toggle: Controls → Settings → is it enabled?
+2. Is a HAR loaded? Controls → HAR accordion — does it show a file name and entry count?
+3. Check Domain Filter: if not empty, is the target domain listed?
+4. Check Exclude List: does the target URL match an exclude pattern?
+5. Refresh the page after loading the extension
+6. Check Monitor: are requests showing "→" (passthrough)? No match was found
 
-### "Extension context invalidated" hatası
+### "Extension context invalidated" error
 
-Extension güncellendiğinde veya yeniden yüklendiğinde eski content script'ler geçersiz olur. **Sayfayı yenile** (F5) ile çözülür.
+This happens when the extension is updated or reloaded while old content scripts are still running. **Refresh the page** (F5).
 
-### Service Worker uyuyor (idle timeout)
+### Service Worker sleeping (idle timeout)
 
-MV3 service worker'lar 30 saniye işlem olmazsa uyur. Extension bu durumu 24 saniyelik keep-alive alarm ile önler. Yine de sorun yaşıyorsan:
+MV3 service workers sleep after ~30 seconds of inactivity. The extension prevents this with a 24-second keep-alive alarm. If you still have issues:
 
-1. Extension toggle'ını kapat-aç
-2. Popup'ı kapat-aç
-3. Sayfayı yenile
+1. Toggle the extension off and on
+2. Close and reopen the popup
+3. Refresh the page
 
-### Popup boş/yüklenmiyor
+### Popup blank or not loading
 
-1. `chrome://extensions` → extension hatasız mı kontrol et
-2. "Errors" bağlantısına tıkla → konsol hatalarını incele
-3. Extension'ı kaldırıp `dist/` klasöründen tekrar yükle
+1. Check `chrome://extensions` → is the extension error-free?
+2. Click "Errors" to inspect console errors
+3. Remove and reload the extension from the `dist/` folder
 
-### Monitor'da event görünmüyor
+### No events in Monitor
 
-1. Extension enabled mı?
-2. Popup açıkken sayfa yenilendi mi? (Popup açılınca port bağlantısı kurulur)
-3. Domain filter aktifse hedef domain listede mi?
+1. Is the extension enabled?
+2. Was the page refreshed after opening the popup? (The port connection is established when the popup opens)
+3. If Domain Filter is active, is the target domain listed?

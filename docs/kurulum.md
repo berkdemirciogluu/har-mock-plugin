@@ -1,85 +1,82 @@
-# har-mock-plugin — Angular Kurulum Kılavuzu
+# har-mock-plugin — Angular Installation Guide
 
-> **Versiyon:** 0.0.1
-> **Angular Uyumluluğu:** Angular 15+
-> **Ortam:** Yalnızca `isDevMode() === true` olan ortamlarda aktifleşir (production'da otomatik devre dışı)
-
----
-
-## İçindekiler
-
-1. [Ön Koşullar](#ön-koşullar)
-2. [Standart Angular Projesi Kurulumu](#standart-angular-projesi-kurulumu)
-3. [NX Monorepo Kurulumu](#nx-monorepo-kurulumu)
-4. [Yapılandırma Seçenekleri](#yapılandırma-seçenekleri)
-5. [HAR Dosyası Hazırlama](#har-dosyası-hazırlama)
-6. [Guard Bypass Kullanımı](#guard-bypass-kullanımı)
-7. [Doğrulama](#doğrulama)
-8. [Sık Yapılan Hatalar](#sık-yapılan-hatalar)
+> **Version:** 0.0.1
+> **Angular Compatibility:** Angular 15+
+> **Activation:** Plugin activates in any environment as long as `enabled: true`
 
 ---
 
-## Ön Koşullar
+## Table of Contents
 
-| Gereksinim | Minimum Versiyon |
-|------------|-----------------|
-| Node.js    | 18+             |
-| Angular    | 15+             |
-| TypeScript | 4.9+            |
+1. [Prerequisites](#prerequisites)
+2. [Standard Angular Project Setup](#standard-angular-project-setup)
+3. [NX Monorepo Setup](#nx-monorepo-setup)
+4. [Configuration Options](#configuration-options)
+5. [Preparing a HAR File](#preparing-a-har-file)
+6. [Guard Bypass](#guard-bypass)
+7. [Verification](#verification)
+8. [Common Mistakes](#common-mistakes)
 
 ---
 
-## Standart Angular Projesi Kurulumu
+## Prerequisites
 
-### Adım 1: Paketi kur
+| Requirement | Minimum Version |
+|---|---|
+| Node.js | 18+ |
+| Angular | 15+ |
+| TypeScript | 4.9+ |
 
-Plugin henüz npm'de yayınlanmadığı için **yalc** ile lokal olarak bağlanır.
+---
+
+## Standard Angular Project Setup
+
+### Step 1: Install the package
+
+The plugin is not yet published to npm — use **yalc** to link it locally.
 
 ```bash
-# yalc'ı global olarak kur (bir kez)
+# Install yalc globally (once)
 npm install -g yalc
 ```
 
-Bu proje kökünde (har-mock-plugin) plugin'i yayınla:
+Publish the plugin from this project's root:
 
 ```bash
-# har-mock-plugin proje kökünde
+# In the har-mock-plugin project root
 yarn workspace har-mock-plugin build
 cd packages/angular-plugin/dist
 yalc publish
 ```
 
-Çıktı şuna benzer olmalı:
+Expected output:
 
 ```
 har-mock-plugin@0.0.1 published in store.
 ```
 
-Angular uygulamanın kök dizininde paketi ekle:
+Add the package to your Angular app:
 
 ```bash
-# Angular uygulamanın kök dizininde
+# In your Angular app root
 yalc add har-mock-plugin
-npm install   # veya yarn install
+npm install   # or yarn install
 ```
 
-> **Not:** `yalc add` komutu `package.json`'a `"har-mock-plugin": "file:.yalc/har-mock-plugin"` ekler ve
-> `.yalc/` klasörünü oluşturur. Bu klasörü `.gitignore`'a eklemeyi unutma.
+> **Note:** `yalc add` adds `"har-mock-plugin": "file:.yalc/har-mock-plugin"` to `package.json` and creates a `.yalc/` directory. Add it to `.gitignore`.
 
 ```bash
-# .gitignore'a ekle
 echo ".yalc" >> .gitignore
 echo "yalc.lock" >> .gitignore
 ```
 
-### Adım 2: `provideHarMock` ile kayıt yap
+### Step 2: Register with `provideHarMock`
 
 **Standalone (Angular 15+) — `app.config.ts`:**
 
 ```typescript
 import { ApplicationConfig } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { provideHttpClient } from '@angular/common/http';
 import { provideHarMock } from 'har-mock-plugin';
 
 import { routes } from './app.routes';
@@ -87,13 +84,14 @@ import { routes } from './app.routes';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
-    provideHttpClient(),
-    provideHarMock(),   // zero-config: /assets/har-mock.har dosyasını kullanır
+    // ⚠️ Do NOT add provideHttpClient() separately.
+    // provideHarMock() calls provideHttpClient() internally.
+    provideHarMock(), // zero-config: uses /assets/har-mock.har
   ],
 };
 ```
 
-**NgModule tabanlı — `app.module.ts`:**
+**NgModule-based — `app.module.ts`:**
 
 ```typescript
 import { NgModule } from '@angular/core';
@@ -108,57 +106,51 @@ import { AppComponent } from './app.component';
   declarations: [AppComponent],
   imports: [BrowserModule, HttpClientModule, AppRoutingModule],
   providers: [
-    provideHarMock(),  // zero-config
+    provideHarMock(), // zero-config
   ],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
 ```
 
-### Adım 3: HAR dosyasını koy
-
-`src/assets/` klasörüne `har-mock.har` dosyasını ekle:
+### Step 3: Place the HAR file
 
 ```
 my-angular-app/
 └── src/
     └── assets/
-        └── har-mock.har    ← buraya
+        └── har-mock.har    <- default location
 ```
 
-`angular.json`'da assets yapılandırması zaten `src/assets` klasörünü kapsıyorsa ek ayar gerekmez.
+Standard Angular CLI projects already include `src/assets`. No extra config needed.
 
-### Adım 4: Plugin güncellemelerini senkronize et
+### Step 4: Sync plugin updates
 
-`har-mock-plugin` kaynak kodunu değiştirdiğinde:
+When you modify the plugin source:
 
 ```bash
-# har-mock-plugin kökünde
+# In the har-mock-plugin root
 yarn workspace har-mock-plugin build
 cd packages/angular-plugin/dist
-yalc push   # Angular uygulamayı otomatik günceller
+yalc push   # auto-updates your Angular app
 ```
 
 ---
 
-## NX Monorepo Kurulumu
+## NX Monorepo Setup
 
-NX projesinde `har-mock-plugin`'i bir local library olarak eklemek için iki yol var:
+Two approaches:
 
-- **Yol A:** Paketi `libs/` altına kopyala → NX path mapping ile kullan *(önerilen — build gerektirmez)*
-- **Yol B:** Yalc ile bağla → NX uygulaması tüketir *(bağımsız proje senaryosu)*
+- **Path A:** Copy the package into `libs/` and use NX path mapping *(recommended — no build step)*
+- **Path B:** Link with yalc *(independent package scenario)*
 
-### Yol A: `libs/` Altına Local Library Olarak Ekleme (Önerilen)
+### Path A: Local Library under `libs/` (Recommended)
 
-Bu yöntemde `har-mock-plugin`'in kaynak kodunu NX monoreponun `libs/` klasörüne kopyalar ve NX path alias üzerinden import edersin.
-
-#### Adım A-1: Kaynak dosyaları kopyala
+#### Step A-1: Copy source files
 
 ```bash
-# NX monoreponun kök dizininde
 mkdir -p libs/har-mock-plugin/src
 
-# har-mock-plugin projesinin kaynak dosyalarını kopyala
 cp -r /path/to/har-mock-plugin/packages/angular-plugin/src/. \
       libs/har-mock-plugin/src/
 
@@ -166,23 +158,23 @@ cp /path/to/har-mock-plugin/packages/angular-plugin/package.json \
    libs/har-mock-plugin/
 ```
 
-#### Adım A-2: `libs/har-mock-plugin/` yapısını oluştur
+#### Step A-2: Expected directory structure
 
 ```
 libs/
 └── har-mock-plugin/
     ├── src/
-    │   ├── index.ts           ← public API re-export
+    │   ├── index.ts
     │   └── lib/
     │       ├── initializer/
     │       ├── interceptor/
     │       ├── provider/
     │       └── types/
-    ├── ng-package.json        ← (opsiyonel, NX build için)
-    └── project.json           ← NX proje tanımı
+    ├── ng-package.json
+    └── project.json
 ```
 
-`libs/har-mock-plugin/src/index.ts` dosyası:
+`libs/har-mock-plugin/src/index.ts`:
 
 ```typescript
 export { HarMockConfig, MockMode, HAR_MOCK_CONFIG } from './lib/types/har-mock-config.types';
@@ -190,9 +182,7 @@ export { provideHarMock } from './lib/provider/provide-har-mock';
 export { harMockInterceptor, HarLoaderService } from './lib/interceptor';
 ```
 
-#### Adım A-3: NX `project.json` oluştur
-
-`libs/har-mock-plugin/project.json`:
+#### Step A-3: Create NX `project.json`
 
 ```json
 {
@@ -221,9 +211,9 @@ export { harMockInterceptor, HarLoaderService } from './lib/interceptor';
 }
 ```
 
-#### Adım A-4: TypeScript path alias ekle
+#### Step A-4: Add TypeScript path alias
 
-`tsconfig.base.json` (NX monorepo kökü):
+`tsconfig.base.json` (NX monorepo root):
 
 ```json
 {
@@ -235,55 +225,46 @@ export { harMockInterceptor, HarLoaderService } from './lib/interceptor';
 }
 ```
 
-#### Adım A-5: `@har-mock/core` bağımlılığını ekle
-
-`har-mock-plugin` kaynak kodu `@har-mock/core` paketine bağımlıdır. NX monoreponun `package.json`'ına ekle:
+#### Step A-5: Add `@har-mock/core` dependency
 
 ```bash
-# NX monorepo kökünde
-npm install /path/to/har-mock-plugin/packages/core
-# veya yalc ile:
+# With yalc:
 cd /path/to/har-mock-plugin/packages/core && yalc publish
 cd /path/to/nx-project && yalc add @har-mock/core
+
+# Or directly:
+npm install /path/to/har-mock-plugin/packages/core
 ```
 
-#### Adım A-6: Uygulamada kullan
+#### Step A-6: Use in your app
 
 ```typescript
-// apps/my-app/src/app/app.config.ts
-import { provideHarMock } from 'har-mock-plugin';  // path alias üzerinden
+import { provideHarMock } from 'har-mock-plugin';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
-    provideHttpClient(),
-    provideHarMock({
-      harUrl: '/assets/har-mock.har',
-    }),
+    provideHarMock({ harUrl: '/assets/har-mock.har' }),
   ],
 };
 ```
 
----
-
-### Yol B: Yalc ile NX Uygulamasına Bağlama
-
-NX uygulaması, `har-mock-plugin`'i **bağımsız bir paket gibi** tüketmek istiyorsa yalc kullanılır.
+### Path B: yalc Link
 
 ```bash
-# har-mock-plugin projesinde
+cd /path/to/har-mock-plugin
 yarn workspace har-mock-plugin build
 cd packages/angular-plugin/dist
 yalc publish
 
-# NX monorepo kökünde
+cd /path/to/nx-project
 yalc add har-mock-plugin
 npm install
 ```
 
-`tsconfig.base.json`'da herhangi bir path eklemesi gerekmez; `node_modules/har-mock-plugin` üzerinden çözülür.
+No path alias needed — resolved through `node_modules/har-mock-plugin`.
 
-NX uygulama `project.json`'ında `implicitDependencies` ekleyebilirsin:
+Optional: add `implicitDependencies` to your app's `project.json`:
 
 ```json
 {
@@ -293,70 +274,66 @@ NX uygulama `project.json`'ında `implicitDependencies` ekleyebilirsin:
 
 ---
 
-## Yapılandırma Seçenekleri
+## Configuration Options
 
-`provideHarMock(config?: HarMockConfig)` tüm parametreler opsiyoneldir.
+All parameters are optional.
 
 ```typescript
 provideHarMock({
-  // HAR dosyasının URL'i (Angular assets klasöründen yüklenir)
+  // URL of the HAR file (loaded from Angular assets)
   harUrl: '/assets/har-mock.har',     // default
 
-  // Yanıt seçim modu
-  // 'last-match': URL ile eşleşen son entry kullanılır
-  // 'sequential': Her istek için sıradaki entry kullanılır
+  // Response selection mode
+  // 'last-match': last matching HAR entry is used
+  // 'sequential': entries are used in sequence (round-robin)
   mode: 'last-match',                 // default
 
-  // Plugin etkin mi?
-  // Double-lock: isDevMode()=false ise bu değerden bağımsız olarak devre dışı kalır
+  // Enable/disable the plugin
   enabled: true,                      // default
 
-  // Dev modunda route guard'larını bypass et
+  // Remove route guards on bootstrap
   bypassGuards: false,                // default
 
-  // bypassGuards=true iken korunacak guard'lar (silinmez)
-  // Class-based ve functional guard referanslarını destekler
+  // Guards to keep when bypassGuards=true
   preserveGuards: [],                 // default
 
-  // Kural tabanlı mock listesi (HAR'dan önce değerlendirilir)
+  // Inline mock rules (evaluated before HAR)
   rules: [],                          // default
 })
 ```
 
-### `preserveGuards` Detayı
+### `preserveGuards` detail
 
-`bypassGuards: true` etkinken bazı guard'ların silinmemesini istiyorsan `preserveGuards` listesi kullanılır.
+When `bypassGuards: true`, list specific guards here to keep them intact.
 
 ```typescript
 import { BssPermissionGuard } from '@my-app/guards';
 
-// Fonksiyonel guard örneği
-const analyticsGuard = () => true;
+export const analyticsGuard = () => true; // must be a stable reference
 
 provideHarMock({
   bypassGuards: true,
   preserveGuards: [
-    BssPermissionGuard,   // class-based guard — constructor referansı
-    analyticsGuard,       // functional guard — fonksiyon referansı (aynı referans olmalı!)
+    BssPermissionGuard,  // class-based: pass the class itself
+    analyticsGuard,      // functional: must be the SAME reference as in routes
   ],
 });
 ```
 
-> **Önemli:** Fonksiyonel guard'lar için route config'de kullanılan **aynı fonksiyon referansı** geçirilmelidir.
-> Lambda yazarak `[() => true]` geçirmek çalışmaz çünkü her lambda yeni bir referans oluşturur.
+> **Important:** For functional guards, pass the **exact same function reference** used in the route config. A new lambda `[() => true]` always fails because each lambda is a different reference.
 
 ---
 
-## HAR Dosyası Hazırlama
+## Preparing a HAR File
 
-### Tarayıcıdan HAR dışa aktarma
+### Export from Chrome DevTools
 
-1. Chrome DevTools → **Network** sekmesi
-2. Ağ trafiğini kaydet (istekler yapılsın)
-3. Herhangi bir isteğe sağ tıkla → **Save all as HAR with content**
-4. Dosyayı `src/assets/har-mock.har` olarak kaydet
+1. Open Chrome DevTools → **Network** tab
+2. Record network traffic (trigger requests)
+3. Right-click any request → **Save all as HAR with content**
+4. Save the file as `src/assets/har-mock.har`
 
-### HAR dosyası yerleşimi
+### File placement
 
 ```
 my-angular-app/
@@ -365,19 +342,7 @@ my-angular-app/
         └── har-mock.har
 ```
 
-### `angular.json` assets yapılandırması
-
-Varsayılan Angular CLI projelerinde `src/assets` zaten dahildir. Farklı bir yol kullanıyorsan:
-
-```json
-// angular.json → projects → my-app → architect → build → options → assets
-"assets": [
-  "src/favicon.ico",
-  "src/assets"
-]
-```
-
-Özel bir HAR URL'i belirtmek için:
+Custom HAR URL:
 
 ```typescript
 provideHarMock({
@@ -387,110 +352,113 @@ provideHarMock({
 
 ---
 
-## Doğrulama
+## Guard Bypass
 
-Kurulum başarılıysa uygulama başlatıldığında tarayıcı konsolunda şunu görürsün:
+```typescript
+provideHarMock({
+  bypassGuards: true,
+});
+```
+
+On bootstrap (`APP_INITIALIZER`), the plugin traverses all route configs recursively and removes `canActivate`, `canDeactivate`, and `canMatch` guard arrays — except for entries listed in `preserveGuards`. Lazy-loaded routes are cleaned when they load (`RouteConfigLoadEnd`).
+
+If an error occurs during guard removal, it is logged as a `console.warn` and the app bootstraps normally — guards remain intact.
+
+---
+
+## Verification
+
+On successful setup you should see in the browser console:
 
 ```
 [HarMock] HAR loaded: 42 entries
 ```
 
-HTTP isteklerinin mock'landığını doğrulamak için:
+To confirm mocking works:
 
-1. **Chrome DevTools → Network** sekmesini aç
-2. HAR'da tanımlı bir endpoint'e istek yap (örn. `/api/users`)
-3. İstek `(disk cache)` veya çok hızlı tamamlanıyorsa → mock çalışıyor
-4. Response'u incele → HAR'daki yanıtla eşleşmeli
+1. Open Chrome DevTools → **Network** tab
+2. Trigger a request that matches a HAR entry (e.g. `/api/users`)
+3. If the response completes almost instantly → mock is active
+4. Compare the response body with the HAR entry
 
-### Guard bypass doğrulama
+### Guard bypass verification
 
 ```typescript
-// app.component.ts veya herhangi bir component'te
 import { Router } from '@angular/router';
 import { inject } from '@angular/core';
 
-// Router.config'i konsolda incele
 const router = inject(Router);
 console.log(router.config);
-// canActivate dizileri preserveGuards listesindekiler dışında boş olmalı
+// canActivate arrays should be empty (except guards in preserveGuards)
 ```
 
 ---
 
-## Sık Yapılan Hatalar
+## Common Mistakes
 
 ### `Cannot find module 'har-mock-plugin'`
 
-Path alias veya yalc kurulumu eksik. Kontrol et:
-
 ```bash
-# node_modules'de var mı?
 ls node_modules/har-mock-plugin
-
-# yalc ile kurulduysa .yalc'da var mı?
 ls .yalc/har-mock-plugin
 ```
 
-NX kullanıyorsan `tsconfig.base.json`'da path alias'ı kontrol et.
+For NX: verify `paths` in `tsconfig.base.json`.
 
 ---
 
-### `HAR file not found` veya 404 hatası
-
-`src/assets/har-mock.har` dosyasının mevcut olduğunu ve `angular.json` assets'ine dahil edildiğini kontrol et.
+### `HAR file not found` or 404 error
 
 ```bash
 ls src/assets/har-mock.har
 ```
 
----
-
-### Plugin production'da da aktif oluyor
-
-Plugin **double-lock** mekanizması ile korunur: `isDevMode()` false döndüğünde otomatik devre dışı kalır. `enabled: true` olsa bile production build'de çalışmaz.
-
-Kontrol et: `ng build --configuration=production` ile derlendiğinde `isDevMode()` false olur.
+Confirm `src/assets` is listed in `angular.json` assets.
 
 ---
 
-### `preserveGuards` çalışmıyor (guard hâlâ siliniyor)
-
-Fonksiyonel guard kullanıyorsan **aynı referansı** geçirdiğinden emin ol:
+### `preserveGuards` not working (guard still removed)
 
 ```typescript
-// ❌ Yanlış — her çağrıda yeni lambda referansı
+// Wrong — new lambda each time, reference never matches
 provideHarMock({
-  preserveGuards: [() => inject(BssPermissionGuard).canActivate()],
+  preserveGuards: [() => inject(BssGuard).canActivate()],
 });
 
-// ✅ Doğru — modül scope'unda tanımlı sabit referans
-export const bssPermissionGuardFn = () => inject(BssPermissionGuard).canActivate();
-
+// Correct — stable module-level reference
+export const bssGuardFn = () => inject(BssGuard).canActivate();
 provideHarMock({
-  preserveGuards: [bssPermissionGuardFn],
-});
-```
-
-Class-based guard için doğrudan class'ı geçirmek yeterli:
-
-```typescript
-// ✅ Doğru
-provideHarMock({
-  preserveGuards: [BssPermissionGuard],
+  preserveGuards: [bssGuardFn],
 });
 ```
 
 ---
 
-### NX'te circular dependency uyarısı
+### HAR loaded but app crashes (graceful degradation)
 
-`har-mock-plugin` library'sini `libs/` altına eklediysen NX dependency boundary kurallarına dikkat et. `project.json`'da `tags` ile kısıtlama ekle:
+HAR fetch or parse errors are caught silently: a `HarParseError` is logged to `console.warn`, entries are set to `[]`, and all requests passthrough. The app starts normally.
+
+---
+
+### `provideHttpClient` conflict
+
+`provideHarMock()` already calls `provideHttpClient(withInterceptors([...]))` internally.
+
+```typescript
+// Wrong
+providers: [provideHttpClient(), provideHarMock()]
+
+// Correct
+providers: [provideHarMock()]
+```
+
+---
+
+### NX circular dependency warning
 
 ```json
 // libs/har-mock-plugin/project.json
-{
-  "tags": ["scope:shared", "type:util"]
-}
+{ "tags": ["scope:shared", "type:util"] }
 ```
 
-`.eslintrc.json`'da `nx/enforce-module-boundaries` kuralı varsa `scope:shared` tag'ına izin ver.
+Allow `scope:shared` in the `nx/enforce-module-boundaries` ESLint rule.
